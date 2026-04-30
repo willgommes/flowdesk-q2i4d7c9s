@@ -18,17 +18,14 @@ import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
-const signupSchema = z
-  .object({
-    name: z.string().min(2, 'Nome é obrigatório'),
-    email: z.string().email('Email inválido'),
-    password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'As senhas não coincidem',
-    path: ['confirmPassword'],
-  })
+const signupSchema = z.object({
+  name: z.string().min(1, 'O nome é obrigatório').min(2, 'O nome deve ter pelo menos 2 caracteres'),
+  email: z.string().min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
+  password: z
+    .string()
+    .min(1, 'A senha é obrigatória')
+    .min(8, 'A senha deve ter no mínimo 8 caracteres'),
+})
 
 export default function Signup() {
   const [isLoading, setIsLoading] = useState(false)
@@ -38,7 +35,7 @@ export default function Signup() {
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: { name: '', email: '', password: '' },
   })
 
   async function onSubmit(values: z.infer<typeof signupSchema>) {
@@ -50,12 +47,19 @@ export default function Signup() {
         navigate('/')
       } else {
         const fieldErrors = extractFieldErrors(error)
-        if (fieldErrors.email) form.setError('email', { message: fieldErrors.email })
-        if (fieldErrors.password) form.setError('password', { message: fieldErrors.password })
+
+        if (fieldErrors.email) {
+          form.setError('email', { message: 'Este e-mail já está sendo utilizado.' })
+        }
+
+        if (fieldErrors.password) {
+          form.setError('password', { message: fieldErrors.password })
+        }
+
         toast({
           variant: 'destructive',
-          title: 'Erro',
-          description: getErrorMessage(error) || 'Não foi possível criar a conta.',
+          title: 'Erro no cadastro',
+          description: 'Não foi possível criar a conta. Verifique os dados informados.',
         })
       }
     } finally {
@@ -92,7 +96,7 @@ export default function Signup() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>E-mail</FormLabel>
                   <FormControl>
                     <Input placeholder="nome@agencia.com" {...field} />
                   </FormControl>
@@ -106,19 +110,6 @@ export default function Signup() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirmar Senha</FormLabel>
                   <FormControl>
                     <Input type="password" {...field} />
                   </FormControl>
