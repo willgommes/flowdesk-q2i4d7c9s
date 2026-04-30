@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Camera, ImageIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
@@ -19,6 +20,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { AppHeader } from '@/components/AppHeader'
 import { Separator } from '@/components/ui/separator'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ImageCropper } from '@/components/ImageCropper'
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
@@ -35,14 +38,29 @@ const passwordSchema = z
     path: ['confirmNewPassword'],
   })
 
+const PRESET_AVATARS = [
+  'https://img.usecurling.com/ppl/medium?gender=female&seed=1',
+  'https://img.usecurling.com/ppl/medium?gender=male&seed=2',
+  'https://img.usecurling.com/ppl/medium?gender=female&seed=3',
+  'https://img.usecurling.com/ppl/medium?gender=male&seed=4',
+  'https://img.usecurling.com/ppl/medium?gender=female&seed=5',
+  'https://img.usecurling.com/ppl/medium?gender=male&seed=6',
+]
+
 export default function Profile() {
   const { user } = useAuth()
   const { toast } = useToast()
+
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false)
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
+  const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(false)
 
   const avatarUrl = user?.avatar ? pb.files.getURL(user as any, user.avatar) : ''
 
@@ -56,11 +74,55 @@ export default function Profile() {
     defaultValues: { currentPassword: '', newPassword: '', confirmNewPassword: '' },
   })
 
+  useEffect(() => {
+    return () => {
+      if (cropImageUrl) URL.revokeObjectURL(cropImageUrl)
+    }
+  }, [cropImageUrl])
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setAvatarFile(file)
+      if (file.size > 2 * 1024 * 1024) {
+        toast({
+          variant: 'destructive',
+          title: 'Arquivo muito grande',
+          description: 'O arquivo é muito grande. O limite máximo é 2MB.',
+        })
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        return
+      }
+      setCropImageUrl(URL.createObjectURL(file))
+      setIsCropDialogOpen(true)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleSelectPreset = async (url: string) => {
+    if (!user) return
+    setIsProcessing(true)
+    try {
+      const res = await fetch(url)
+      const blob = await res.blob()
+      const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+
+      const formData = new FormData()
+      formData.append('avatar', file)
+
+      await pb.collection('users').update(user.id, formData)
+
+      setAvatarFile(null)
       setAvatarPreview(URL.createObjectURL(file))
+      setIsGalleryDialogOpen(false)
+      toast({ title: 'Sucesso', description: 'Foto de perfil atualizada com sucesso.' })
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível atualizar a imagem.',
+      })
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -74,6 +136,7 @@ export default function Profile() {
         formData.append('avatar', avatarFile)
       }
       await pb.collection('users').update(user.id, formData)
+      setAvatarFile(null)
       toast({
         title: 'Perfil atualizado',
         description: 'Suas informações foram salvas com sucesso.',
@@ -104,7 +167,6 @@ export default function Profile() {
         passwordForm.setError('newPassword', { message: fieldErrors.password })
       if (fieldErrors.passwordConfirm)
         passwordForm.setError('confirmNewPassword', { message: fieldErrors.passwordConfirm })
-
       toast({
         variant: 'destructive',
         title: 'Erro',
@@ -123,19 +185,43 @@ export default function Profile() {
           <div className="flex-1 space-y-8">
             <div>
               <h2 className="text-xl font-semibold tracking-tight mb-4">Informações Pessoais</h2>
+
               <div className="flex items-center gap-6 mb-6">
-                <Avatar
-                  className="h-20 w-20 border shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <AvatarImage src={avatarPreview || avatarUrl} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                    {user?.name?.substring(0, 2).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-sm text-muted-foreground max-w-sm">
-                  Clique na imagem para alterar. A imagem do seu perfil é visível para todos os
-                  membros.
+                <div className="relative inline-block group">
+                  <Avatar
+                    className="h-24 w-24 border shadow-sm cursor-pointer group-hover:opacity-80 transition-opacity"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <AvatarImage src={avatarPreview || avatarUrl} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-2xl">
+                      {user?.name?.substring(0, 2).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-full">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                  {(isProcessing || isUpdating) && (
+                    <div className="absolute inset-0 bg-background/60 flex items-center justify-center rounded-full z-10">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 max-w-sm">
+                  <div className="text-sm text-muted-foreground">
+                    Clique na imagem para enviar uma foto (Max 2MB).
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-fit gap-2"
+                    onClick={() => setIsGalleryDialogOpen(true)}
+                    disabled={isProcessing || isUpdating}
+                    type="button"
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                    Escolher da Galeria
+                  </Button>
                 </div>
                 <input
                   type="file"
@@ -161,8 +247,8 @@ export default function Profile() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" disabled={isUpdating} className="mt-4">
-                    Salvar alterações
+                  <Button type="submit" disabled={isUpdating || isProcessing} className="mt-4">
+                    {isUpdating ? 'Salvando...' : 'Salvar alterações'}
                   </Button>
                 </form>
               </Form>
@@ -225,6 +311,46 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isCropDialogOpen} onOpenChange={setIsCropDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ajustar Imagem</DialogTitle>
+          </DialogHeader>
+          {cropImageUrl && (
+            <ImageCropper
+              imageUrl={cropImageUrl}
+              onCrop={(file) => {
+                setAvatarFile(file)
+                setAvatarPreview(URL.createObjectURL(file))
+                setIsCropDialogOpen(false)
+              }}
+              onCancel={() => setIsCropDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isGalleryDialogOpen} onOpenChange={setIsGalleryDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Escolher da Galeria</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-4 py-4">
+            {PRESET_AVATARS.map((url, i) => (
+              <button
+                key={i}
+                type="button"
+                className="relative aspect-square rounded-full overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary transition-all disabled:opacity-50"
+                onClick={() => handleSelectPreset(url)}
+                disabled={isProcessing}
+              >
+                <img src={url} alt={`Avatar ${i + 1}`} className="object-cover w-full h-full" />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
