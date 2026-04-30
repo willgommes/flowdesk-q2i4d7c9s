@@ -2,7 +2,7 @@ onRecordAfterCreateSuccess((e) => {
   const boardId = e.record.id
   const columns = $app.findCollectionByNameOrId('columns')
 
-  const defaults = ['To Do', 'In Progress', 'Done']
+  const defaults = ['A fazer', 'Em andamento', 'Concluído']
   defaults.forEach((name, i) => {
     const col = new Record(columns)
     col.set('board_id', boardId)

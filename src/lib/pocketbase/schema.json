@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T17:25:03.053Z",
+  "generatedAt": "2026-04-30T18:20:45.095Z",
   "collections": [
     {
       "name": "users",
@@ -139,11 +139,11 @@
       "name": "columns",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "@request.auth.role = \"admin\" || board_id.members ~ @request.auth.id",
+        "view": "@request.auth.role = \"admin\" || board_id.members ~ @request.auth.id",
+        "create": "@request.auth.role = \"admin\" || board_id.members ~ @request.auth.id",
+        "update": "@request.auth.role = \"admin\" || board_id.members ~ @request.auth.id",
+        "delete": "@request.auth.role = \"admin\" || board_id.members ~ @request.auth.id"
       },
       "fields": [
         {

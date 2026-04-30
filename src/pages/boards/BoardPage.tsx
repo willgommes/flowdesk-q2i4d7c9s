@@ -96,10 +96,11 @@ export default function BoardPage() {
 
   const handleAddColumn = async () => {
     try {
+      const maxOrder = columns.length > 0 ? Math.max(...columns.map((c) => c.sort_order)) : -1
       await createColumn({
         board_id: id,
         name: 'Nova Coluna',
-        sort_order: columns.length,
+        sort_order: maxOrder + 1,
         color: '#e2e8f0',
       })
     } catch (err: any) {
