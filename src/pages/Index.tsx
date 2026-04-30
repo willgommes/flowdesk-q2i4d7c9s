@@ -1,12 +1,44 @@
-/* Home Page - Replace this page layout, components, content, behavior with what you want and translate to the language of the user */
-const Index = () => {
+import { useAuth } from '@/hooks/use-auth'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { AppHeader } from '@/components/AppHeader'
+
+export default function Index() {
+  const { user } = useAuth()
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">
-        This is a example page ready to be rewritten with your own content
-      </h1>
-    </div>
+    <>
+      <AppHeader />
+      <div className="p-8 max-w-5xl mx-auto w-full animate-fade-in">
+        <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground mb-8">
+          Bem-vindo, {user?.name.split(' ')[0]}
+        </h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border-border/60 hover-scale shadow-subtle cursor-pointer">
+            <CardHeader>
+              <CardTitle className="text-lg">Quadros</CardTitle>
+              <CardDescription>Seus quadros de processos e campanhas.</CardDescription>
+            </CardHeader>
+            <CardContent className="h-32 flex items-center justify-center border-t border-dashed bg-muted/20">
+              <p className="text-muted-foreground text-sm font-medium">
+                Os quadros aparecerão aqui em breve.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 hover-scale shadow-subtle cursor-pointer">
+            <CardHeader>
+              <CardTitle className="text-lg">Atividades Recentes</CardTitle>
+              <CardDescription>O que precisa da sua atenção hoje.</CardDescription>
+            </CardHeader>
+            <CardContent className="h-32 flex items-center justify-center border-t border-dashed bg-muted/20">
+              <p className="text-muted-foreground text-sm font-medium">
+                Nenhuma atividade pendente.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </>
   )
 }
-
-export default Index
