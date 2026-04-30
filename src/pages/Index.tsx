@@ -31,8 +31,18 @@ import { UpcomingWidget } from '@/components/dashboard/UpcomingWidget'
 import { PriorityWidget } from '@/components/dashboard/PriorityWidget'
 import { BoardsWidget } from '@/components/dashboard/BoardsWidget'
 import { ActivitiesWidget } from '@/components/dashboard/ActivitiesWidget'
+import { AnalyticsTrendsWidget } from '@/components/dashboard/AnalyticsTrendsWidget'
+import { AnalyticsDistributionWidget } from '@/components/dashboard/AnalyticsDistributionWidget'
 
-const DEFAULT_LAYOUT = ['progress', 'upcoming', 'priority', 'boards', 'activities']
+const DEFAULT_LAYOUT = [
+  'progress',
+  'upcoming',
+  'priority',
+  'boards',
+  'activities',
+  'analytics_trends',
+  'analytics_distribution',
+]
 
 export default function Index() {
   const { user } = useAuth()
@@ -190,6 +200,16 @@ export default function Index() {
         return <BoardsWidget boards={boards} loading={loading} />
       case 'activities':
         return <ActivitiesWidget activities={activities} loading={loading} />
+      case 'analytics_trends':
+        return <AnalyticsTrendsWidget cards={cardsData.cards} loading={loading} />
+      case 'analytics_distribution':
+        return (
+          <AnalyticsDistributionWidget
+            cards={cardsData.cards}
+            priorityCards={cardsData.priorityCards}
+            loading={loading}
+          />
+        )
       default:
         return null
     }
@@ -250,7 +270,7 @@ export default function Index() {
             const isDragging = draggedIdx === index
             const isOver = dragOverIdx === index
             const spanClass =
-              id === 'boards' || id === 'activities'
+              id === 'boards' || id === 'activities' || id.startsWith('analytics_')
                 ? 'md:col-span-6 lg:col-span-3'
                 : 'md:col-span-2 lg:col-span-2'
 
