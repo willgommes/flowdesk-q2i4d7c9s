@@ -930,13 +930,27 @@ function Column({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEditing(true)}>Renomear</DropdownMenuItem>
-            <div className="flex p-2 gap-1 justify-center">
-              {['#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b'].map((c) => (
+            <div className="grid grid-cols-4 gap-1.5 p-2 justify-items-center">
+              {[
+                '#e2e8f0',
+                '#64748b',
+                '#ef4444',
+                '#f97316',
+                '#f59e0b',
+                '#84cc16',
+                '#10b981',
+                '#06b6d4',
+                '#3b82f6',
+                '#6366f1',
+                '#8b5cf6',
+                '#ec4899',
+              ].map((c) => (
                 <button
                   key={c}
-                  className="w-5 h-5 rounded-full border border-black/10"
+                  className="w-5 h-5 rounded-full border border-black/10 hover:scale-110 transition-transform"
                   style={{ backgroundColor: c }}
                   onClick={() => onUpdate({ color: c })}
+                  title={c}
                 />
               ))}
             </div>
