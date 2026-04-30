@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Plus, MoreHorizontal, Trash2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, MoreHorizontal, Trash2, Camera, Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -68,11 +68,47 @@ export default function Users() {
   const { toast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [isInviteOpen, setIsInviteOpen] = useState(false)
+  const [uploadingUserId, setUploadingUserId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof inviteSchema>>({
     resolver: zodResolver(inviteSchema),
     defaultValues: { email: '', name: '', role: 'membro' },
   })
+
+  const handleAvatarClick = (userId: string) => {
+    setSelectedUserId(userId)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !selectedUserId) return
+
+    setUploadingUserId(selectedUserId)
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      await pb.collection('users').update(selectedUserId, formData)
+      toast({
+        title: 'Avatar atualizado',
+        description: 'A foto de perfil foi alterada com sucesso.',
+      })
+    } catch (err) {
+      const fieldErrors = extractFieldErrors(err)
+      const errorMsg = fieldErrors.avatar || getErrorMessage(err)
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao atualizar avatar',
+        description: errorMsg,
+      })
+    } finally {
+      setUploadingUserId(null)
+      setSelectedUserId(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const loadUsers = async () => {
     try {
@@ -165,6 +201,13 @@ export default function Users() {
 
   return (
     <>
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/jpeg, image/png, image/webp, image/gif"
+        onChange={handleFileChange}
+      />
       <AppHeader
         rightAction={
           <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
@@ -262,11 +305,16 @@ export default function Users() {
                 <TableRow key={u.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
+                      <Avatar className="h-9 w-9 relative overflow-hidden">
                         <AvatarImage src={u.avatar ? pb.files.getURL(u as any, u.avatar) : ''} />
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {u.name?.substring(0, 2).toUpperCase() || 'U'}
                         </AvatarFallback>
+                        {uploadingUserId === u.id && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          </div>
+                        )}
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="font-medium text-sm leading-tight">
@@ -300,6 +348,13 @@ export default function Users() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => handleAvatarClick(u.id)}
+                          className="cursor-pointer"
+                        >
+                          <Camera className="w-4 h-4 mr-2" /> Alterar Foto
+                        </DropdownMenuItem>
+
                         <DropdownMenuSeparator />
 
                         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal mt-1">
