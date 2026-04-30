@@ -16,12 +16,13 @@ import {
 } from '@/components/ui/form'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 const signupSchema = z
   .object({
     name: z.string().min(2, 'Nome é obrigatório'),
     email: z.string().email('Email inválido'),
-    password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+    password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -43,12 +44,19 @@ export default function Signup() {
   async function onSubmit(values: z.infer<typeof signupSchema>) {
     setIsLoading(true)
     try {
-      const success = await register(values.name, values.email, values.password)
+      const { success, error } = await register(values.name, values.email, values.password)
       if (success) {
         toast({ title: 'Conta criada!', description: 'Seu cadastro foi realizado com sucesso.' })
         navigate('/')
       } else {
-        toast({ variant: 'destructive', title: 'Erro', description: 'Este email já está em uso.' })
+        const fieldErrors = extractFieldErrors(error)
+        if (fieldErrors.email) form.setError('email', { message: fieldErrors.email })
+        if (fieldErrors.password) form.setError('password', { message: fieldErrors.password })
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: getErrorMessage(error) || 'Não foi possível criar a conta.',
+        })
       }
     } finally {
       setIsLoading(false)

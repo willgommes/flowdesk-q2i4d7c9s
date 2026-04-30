@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Calendar, Users, LayoutList } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import pb from '@/lib/pocketbase/client'
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +38,8 @@ export function AppSidebar() {
   if (user.role === 'admin') {
     navigation.push({ name: 'Usuários', href: '/usuarios', icon: Users })
   }
+
+  const avatarUrl = user.avatar ? pb.files.getURL(user as any, user.avatar) : ''
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -84,9 +87,9 @@ export function AppSidebar() {
               className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={avatarUrl} alt={user.name} />
                 <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
-                  {user.name.substring(0, 2).toUpperCase()}
+                  {user.name?.substring(0, 2).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -104,9 +107,9 @@ export function AppSidebar() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={avatarUrl} alt={user.name} />
                   <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
-                    {user.name.substring(0, 2).toUpperCase()}
+                    {user.name?.substring(0, 2).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">

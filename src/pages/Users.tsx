@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
-import { Plus, MoreHorizontal } from 'lucide-react'
+import { Plus, MoreHorizontal, Trash2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useAuth } from '@/hooks/use-auth'
-import { mockDb, User, Role } from '@/lib/mock-db'
+import { useAuth, type User } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { AppHeader } from '@/components/AppHeader'
 import { Button } from '@/components/ui/button'
@@ -39,6 +37,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -48,9 +53,14 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
+import pb from '@/lib/pocketbase/client'
+import { useRealtime } from '@/hooks/use-realtime'
+import { getErrorMessage, extractFieldErrors } from '@/lib/pocketbase/errors'
 
 const inviteSchema = z.object({
   email: z.string().email('Email inválido'),
+  name: z.string().min(2, 'Nome é obrigatório'),
+  role: z.enum(['admin', 'membro', 'cliente']).default('membro'),
 })
 
 export default function Users() {
@@ -61,27 +71,53 @@ export default function Users() {
 
   const form = useForm<z.infer<typeof inviteSchema>>({
     resolver: zodResolver(inviteSchema),
-    defaultValues: { email: '' },
+    defaultValues: { email: '', name: '', role: 'membro' },
   })
 
-  useEffect(() => {
-    if (user?.role === 'admin') {
-      setUsers(mockDb.getUsers())
+  const loadUsers = async () => {
+    try {
+      const records = await pb.collection('users').getFullList<User>({ sort: '-created' })
+      setUsers(records)
+    } catch (err) {
+      console.error(err)
     }
-  }, [user])
-
-  if (user?.role !== 'admin') {
-    return <Navigate to="/" replace />
   }
 
-  const handleInvite = (values: z.infer<typeof inviteSchema>) => {
-    toast({ title: 'Convite enviado', description: `Um email foi enviado para ${values.email}.` })
-    form.reset()
-    setIsInviteOpen(false)
+  useEffect(() => {
+    loadUsers()
+  }, [])
+
+  useRealtime('users', () => {
+    loadUsers()
+  })
+
+  const handleInvite = async (values: z.infer<typeof inviteSchema>) => {
+    try {
+      const tempPassword = Math.random().toString(36).slice(-8) + 'A1!'
+      await pb.collection('users').create({
+        email: values.email,
+        name: values.name,
+        role: values.role,
+        password: tempPassword,
+        passwordConfirm: tempPassword,
+      })
+      await pb.collection('users').requestPasswordReset(values.email)
+
+      toast({
+        title: 'Usuário criado',
+        description: `Um email de redefinição foi enviado para ${values.email}.`,
+      })
+      form.reset()
+      setIsInviteOpen(false)
+    } catch (err) {
+      const fieldErrors = extractFieldErrors(err)
+      if (fieldErrors.email) form.setError('email', { message: fieldErrors.email })
+      toast({ variant: 'destructive', title: 'Erro ao criar', description: getErrorMessage(err) })
+    }
   }
 
-  const handleRoleChange = (userId: string, newRole: Role) => {
-    if (userId === user.id) {
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    if (userId === user?.id) {
       toast({
         variant: 'destructive',
         title: 'Ação não permitida',
@@ -89,33 +125,33 @@ export default function Users() {
       })
       return
     }
-    const updated = mockDb.updateUser(userId, { role: newRole })
-    if (updated) {
-      setUsers(mockDb.getUsers())
+    try {
+      await pb.collection('users').update(userId, { role: newRole })
       toast({
         title: 'Papel atualizado',
         description: `O papel do usuário foi alterado para ${newRole}.`,
       })
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Erro', description: getErrorMessage(err) })
     }
   }
 
-  const handleToggleStatus = (userId: string, currentStatus: string) => {
-    if (userId === user.id) {
+  const handleDelete = async (userId: string) => {
+    if (userId === user?.id) {
       toast({
         variant: 'destructive',
         title: 'Ação não permitida',
-        description: 'Você não pode desativar a si mesmo.',
+        description: 'Você não pode excluir a si mesmo.',
       })
       return
     }
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
-    const updated = mockDb.updateUser(userId, { status: newStatus })
-    if (updated) {
-      setUsers(mockDb.getUsers())
-      toast({
-        title: 'Status atualizado',
-        description: `Usuário ${newStatus === 'active' ? 'ativado' : 'desativado'}.`,
-      })
+    if (!confirm('Tem certeza que deseja excluir este usuário?')) return
+
+    try {
+      await pb.collection('users').delete(userId)
+      toast({ title: 'Usuário excluído', description: 'O usuário foi removido com sucesso.' })
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Erro', description: getErrorMessage(err) })
     }
   }
 
@@ -134,27 +170,62 @@ export default function Users() {
           <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1 shadow-sm">
-                <Plus className="w-4 h-4" /> Convidar Usuário
+                <Plus className="w-4 h-4" /> Adicionar Usuário
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Convidar Novo Usuário</DialogTitle>
+                <DialogTitle>Adicionar Novo Usuário</DialogTitle>
                 <DialogDescription>
-                  Envie um convite para adicionar um novo membro à plataforma.
+                  Crie um novo usuário para ter acesso à plataforma.
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleInvite)} className="space-y-4 pt-4">
                   <FormField
                     control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome Completo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome do usuário" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email do convidado</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input placeholder="nome@agencia.com" {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Papel</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um papel" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="membro">Membro</SelectItem>
+                            <SelectItem value="cliente">Cliente</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -165,7 +236,7 @@ export default function Users() {
                         Cancelar
                       </Button>
                     </DialogClose>
-                    <Button type="submit">Enviar Convite</Button>
+                    <Button type="submit">Adicionar Usuário</Button>
                   </DialogFooter>
                 </form>
               </Form>
@@ -181,25 +252,25 @@ export default function Users() {
               <TableRow>
                 <TableHead>Usuário</TableHead>
                 <TableHead>Papel</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Adicionado em</TableHead>
+                <TableHead>Último Acesso</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((u) => (
-                <TableRow key={u.id} className={u.status === 'inactive' ? 'opacity-60' : ''}>
+                <TableRow key={u.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
-                        <AvatarImage src={u.avatar} />
+                        <AvatarImage src={u.avatar ? pb.files.getURL(u as any, u.avatar) : ''} />
                         <AvatarFallback className="bg-primary/10 text-primary">
-                          {u.name.substring(0, 2).toUpperCase()}
+                          {u.name?.substring(0, 2).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="font-medium text-sm leading-tight">
-                          {u.name} {u.id === user.id && '(Você)'}
+                          {u.name} {u.id === user?.id && '(Você)'}
                         </span>
                         <span className="text-xs text-muted-foreground">{u.email}</span>
                       </div>
@@ -213,18 +284,11 @@ export default function Users() {
                       {u.role}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className={`w-2 h-2 rounded-full ${u.status === 'active' ? 'bg-green-500' : 'bg-muted-foreground'}`}
-                      />
-                      <span className="text-sm capitalize">
-                        {u.status === 'active' ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </div>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDate(u.created)}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(u.createdAt)}
+                    {u.lastActive ? formatDate(u.lastActive) : 'Nunca'}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -243,7 +307,7 @@ export default function Users() {
                         </DropdownMenuLabel>
                         <DropdownMenuRadioGroup
                           value={u.role}
-                          onValueChange={(val) => handleRoleChange(u.id, val as Role)}
+                          onValueChange={(val) => handleRoleChange(u.id, val)}
                         >
                           <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
                           <DropdownMenuRadioItem value="membro">Membro</DropdownMenuRadioItem>
@@ -252,12 +316,10 @@ export default function Users() {
 
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className={
-                            u.status === 'active' ? 'text-destructive focus:text-destructive' : ''
-                          }
-                          onClick={() => handleToggleStatus(u.id, u.status)}
+                          className="text-destructive focus:text-destructive cursor-pointer"
+                          onClick={() => handleDelete(u.id)}
                         >
-                          {u.status === 'active' ? 'Desativar Usuário' : 'Ativar Usuário'}
+                          <Trash2 className="w-4 h-4 mr-2" /> Excluir Usuário
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/form'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -24,7 +25,7 @@ const loginSchema = z.object({
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -36,7 +37,7 @@ export default function Login() {
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true)
     try {
-      const success = await login(values.email, values.password)
+      const { success, error } = await login(values.email, values.password)
       if (success) {
         toast({ title: 'Bem-vindo de volta!', description: 'Login realizado com sucesso.' })
         navigate('/')
@@ -44,7 +45,7 @@ export default function Login() {
         toast({
           variant: 'destructive',
           title: 'Erro de autenticação',
-          description: 'Email ou senha incorretos.',
+          description: getErrorMessage(error) || 'Email ou senha incorretos.',
         })
       }
     } finally {
@@ -114,7 +115,18 @@ export default function Login() {
               type="button"
               variant="outline"
               className="w-full"
-              onClick={() => toast({ description: 'Integração Google em breve.' })}
+              onClick={async () => {
+                const { success, error } = await loginWithGoogle()
+                if (success) {
+                  navigate('/')
+                } else {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Erro',
+                    description: getErrorMessage(error),
+                  })
+                }
+              }}
             >
               Entrar com Google
             </Button>

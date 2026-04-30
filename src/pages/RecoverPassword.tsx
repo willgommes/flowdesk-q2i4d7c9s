@@ -15,6 +15,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 const recoverSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -24,6 +26,7 @@ export default function RecoverPassword() {
   const [isLoading, setIsLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const { toast } = useToast()
+  const { recoverPassword } = useAuth()
 
   const form = useForm<z.infer<typeof recoverSchema>>({
     resolver: zodResolver(recoverSchema),
@@ -32,12 +35,20 @@ export default function RecoverPassword() {
 
   async function onSubmit(values: z.infer<typeof recoverSchema>) {
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setSent(true)
+    try {
+      const { success, error } = await recoverPassword(values.email)
+      if (success) {
+        setSent(true)
+        toast({
+          title: 'Email enviado',
+          description: `Enviamos as instruções para ${values.email}`,
+        })
+      } else {
+        toast({ variant: 'destructive', title: 'Erro', description: getErrorMessage(error) })
+      }
+    } finally {
       setIsLoading(false)
-      toast({ title: 'Email enviado', description: `Enviamos as instruções para ${values.email}` })
-    }, 1000)
+    }
   }
 
   return (
