@@ -1,19 +1,37 @@
 import { Link } from 'react-router-dom'
 import { Calendar, CheckSquare, MessageSquare, Paperclip } from 'lucide-react'
-import { format, isPast, isToday, addDays } from 'date-fns'
+import { format, isToday, addDays, startOfDay, isBefore } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { cn } from '@/lib/utils'
 
 export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
   const isCompleted = card.completed
   const labels = card.expand?.card_labels_via_card_id?.map((cl: any) => cl.expand?.label_id) || []
   const members = card.expand?.card_members_via_card_id?.map((cm: any) => cm.expand?.user_id) || []
 
-  let dateColor = 'text-muted-foreground'
-  if (card.due_date && !isCompleted) {
+  let dateBadgeClass = 'bg-muted text-muted-foreground'
+  let dateText = 'Sem data'
+
+  if (card.due_date) {
     const date = new Date(card.due_date)
-    // If date is today or past, purple
-    if (isToday(date) || isPast(date)) dateColor = 'text-[#AA1677] font-bold'
-    // If date is within 2 days (but not today/past), yellow
-    else if (date <= addDays(new Date(), 2)) dateColor = 'text-[#FFC300] font-bold'
+    const today = startOfDay(new Date())
+    const cardDate = startOfDay(date)
+
+    dateText = format(date, "d 'de' MMM", { locale: ptBR })
+
+    if (isCompleted) {
+      dateBadgeClass = 'bg-green-500/10 text-green-600 dark:text-green-400'
+    } else if (isBefore(cardDate, today)) {
+      dateBadgeClass = 'bg-destructive/10 text-destructive'
+    } else if (isToday(cardDate)) {
+      dateBadgeClass = 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
+    } else if (cardDate <= addDays(today, 7)) {
+      dateBadgeClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+    } else {
+      dateBadgeClass = 'bg-secondary text-secondary-foreground'
+    }
+  } else {
+    dateBadgeClass = 'bg-muted/50 text-muted-foreground border border-dashed border-border'
   }
 
   const checklistCount = card.expand?.checklist_items_via_card_id?.length || 0
@@ -57,12 +75,15 @@ export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
 
       <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
         <div className="flex items-center gap-3">
-          {card.due_date && (
-            <div className={`flex items-center gap-1 ${dateColor}`}>
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{format(new Date(card.due_date), 'MMM d')}</span>
-            </div>
-          )}
+          <div
+            className={cn(
+              'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
+              dateBadgeClass,
+            )}
+          >
+            <Calendar className="w-3 h-3" />
+            <span>{dateText}</span>
+          </div>
           {checklistCount > 0 && (
             <div className="flex items-center gap-1">
               <CheckSquare className="w-3.5 h-3.5" />

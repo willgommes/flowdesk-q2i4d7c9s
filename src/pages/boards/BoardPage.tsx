@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams, Link, useNavigate, Outlet, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, MoreHorizontal, Plus, Settings, Archive, Trash2 } from 'lucide-react'
+import { ArrowLeft, MoreHorizontal, Plus, Settings, Archive, Trash2, FilterX } from 'lucide-react'
+import { startOfDay, isBefore, isToday, addDays } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getBoard, updateBoard, deleteBoard } from '@/services/boards'
@@ -24,6 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { AppHeader } from '@/components/AppHeader'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
@@ -46,7 +54,31 @@ export default function BoardPage() {
   const [draggedColId, setDraggedColId] = useState<string | null>(null)
   const isDraggingRef = useRef(false)
 
+  const [dateFilter, setDateFilter] = useState<string>('all')
+
   const isAdmin = user?.role === 'admin'
+
+  const filteredCards = useMemo(() => {
+    if (dateFilter === 'all') return cards
+
+    const today = startOfDay(new Date())
+
+    return cards.filter((card) => {
+      if (!card.due_date) return false
+      const cardDate = startOfDay(new Date(card.due_date))
+
+      if (dateFilter === 'overdue') {
+        return !card.completed && isBefore(cardDate, today)
+      }
+      if (dateFilter === 'today') {
+        return isToday(cardDate)
+      }
+      if (dateFilter === 'week') {
+        return cardDate >= today && cardDate <= addDays(today, 7)
+      }
+      return true
+    })
+  }, [cards, dateFilter])
 
   const loadData = async () => {
     if (!id) return
@@ -269,6 +301,31 @@ export default function BoardPage() {
         </div>
 
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 mr-2">
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-[180px] h-8 text-xs bg-background/50">
+                <SelectValue placeholder="Filtrar por data" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as tarefas</SelectItem>
+                <SelectItem value="today">Vencendo hoje</SelectItem>
+                <SelectItem value="week">Vencendo esta semana</SelectItem>
+                <SelectItem value="overdue">Atrasadas</SelectItem>
+              </SelectContent>
+            </Select>
+            {dateFilter !== 'all' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={() => setDateFilter('all')}
+                title="Limpar filtros"
+              >
+                <FilterX className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
           <div className="flex -space-x-2 mr-4">
             {board.expand?.members?.map((m: any) => (
               <Avatar key={m.id} className="w-8 h-8 border-2 border-background">
@@ -313,7 +370,7 @@ export default function BoardPage() {
             <Column
               key={col.id}
               column={col}
-              cards={cards.filter((c) => c.column_id === col.id)}
+              cards={filteredCards.filter((c) => c.column_id === col.id)}
               onDragStart={(e: any) => handleDragStart(e, col.id)}
               onDragEnter={(e: any) => handleDragEnter(e, col.id)}
               onDragEnd={(e: any) => handleDragEnd(e, col.id)}
