@@ -8,6 +8,7 @@ import Layout from './components/Layout'
 import Index from './pages/Index'
 import BoardsPage from './pages/boards/BoardsPage'
 import BoardPage from './pages/boards/BoardPage'
+import { CardModalRoute } from './pages/boards/CardModalRoute'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import RecoverPassword from './pages/RecoverPassword'
@@ -77,7 +78,9 @@ const App = () => (
                   <BoardPage />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route path="cards/:cardId" element={<CardModalRoute />} />
+            </Route>
             <Route
               path="/perfil"
               element={

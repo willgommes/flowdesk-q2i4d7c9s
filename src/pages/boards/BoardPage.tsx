@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { BoardModal } from '@/components/boards/BoardModal'
+import { CardItem } from '@/components/cards/CardItem'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,8 @@ import {
 import { AppHeader } from '@/components/AppHeader'
 import pb from '@/lib/pocketbase/client'
 
+import { Outlet, useOutletContext } from 'react-router-dom'
+
 export default function BoardPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -33,6 +36,7 @@ export default function BoardPage() {
 
   const [board, setBoard] = useState<any>(null)
   const [columns, setColumns] = useState<any[]>([])
+  const [cards, setCards] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
 
@@ -46,6 +50,14 @@ export default function BoardPage() {
       setBoard(b)
       const cols = await getBoardColumns(id)
       setColumns(cols)
+
+      const c = await pb.collection('cards').getFullList({
+        filter: `board_id = '${id}'`,
+        expand:
+          'card_labels_via_card_id.label_id,card_members_via_card_id.user_id,comments_via_card_id,checklist_items_via_card_id,attachments_via_card_id',
+        sort: 'sort_order',
+      })
+      setCards(c)
     } catch (err) {
       toast({ title: 'Erro ao carregar quadro', variant: 'destructive' })
       navigate('/boards')
@@ -70,6 +82,13 @@ export default function BoardPage() {
       loadData()
     }
   })
+
+  useRealtime('cards', () => loadData())
+  useRealtime('card_labels', () => loadData())
+  useRealtime('card_members', () => loadData())
+  useRealtime('comments', () => loadData())
+  useRealtime('checklist_items', () => loadData())
+  useRealtime('attachments', () => loadData())
 
   const handleAddColumn = async () => {
     try {
@@ -200,6 +219,7 @@ export default function BoardPage() {
             <Column
               key={col.id}
               column={col}
+              cards={cards.filter((c) => c.column_id === col.id)}
               onDragStart={(e: any) => handleDragStart(e, col.id)}
               onDragEnter={(e: any) => handleDragEnter(e, col.id)}
               onDragEnd={(e: any) => handleDragEnd(e, col.id)}
@@ -210,6 +230,24 @@ export default function BoardPage() {
               }}
               onUpdate={async (data: any) => {
                 await updateColumn(col.id, data)
+              }}
+              onCardDrop={async (cardId: string, colId: string) => {
+                try {
+                  const card = cards.find((c) => c.id === cardId)
+                  if (!card || card.column_id === colId) return
+                  setCards((prev) =>
+                    prev.map((c) => (c.id === cardId ? { ...c, column_id: colId } : c)),
+                  )
+                  await pb.collection('cards').update(cardId, { column_id: colId })
+                  await pb.collection('activity_logs').create({
+                    card_id: cardId,
+                    user_id: user?.id,
+                    action_type: 'move',
+                    description: `Moveu o cartão para outra coluna`,
+                  })
+                } catch {
+                  /* intentionally ignored */
+                }
               }}
             />
           ))}
@@ -230,13 +268,25 @@ export default function BoardPage() {
         board={board}
         onSuccess={loadData}
       />
+      <Outlet context={{ cards, board, loadData }} />
     </div>
   )
 }
 
-function Column({ column, onDragStart, onDragEnter, onDragEnd, onDelete, onUpdate }: any) {
+function Column({
+  column,
+  cards = [],
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
+  onDelete,
+  onUpdate,
+  onCardDrop,
+}: any) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(column.name)
+  const [newCardTitle, setNewCardTitle] = useState('')
+  const [isAdding, setIsAdding] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -294,7 +344,7 @@ function Column({ column, onDragStart, onDragEnter, onDragEnd, onDelete, onUpdat
           >
             <h3 className="font-semibold text-sm truncate">{column.name}</h3>
             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              0
+              {cards.length}
             </span>
           </div>
         )}
@@ -331,13 +381,75 @@ function Column({ column, onDragStart, onDragEnter, onDragEnd, onDelete, onUpdat
         </DropdownMenu>
       </div>
 
-      <div className="p-3 flex-1 overflow-y-auto min-h-[100px] flex flex-col gap-2">
-        <Button
-          variant="ghost"
-          className="w-full text-muted-foreground justify-start text-sm h-8 border border-dashed hover:bg-muted"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Adicionar cartão
-        </Button>
+      <div
+        className="p-3 flex-1 overflow-y-auto min-h-[100px] flex flex-col gap-2"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault()
+          const cardId = e.dataTransfer.getData('cardId')
+          if (cardId) onCardDrop(cardId, column.id)
+        }}
+      >
+        {cards
+          .sort((a: any, b: any) => a.sort_order - b.sort_order)
+          .map((card: any) => (
+            <CardItem
+              key={card.id}
+              card={card}
+              boardId={column.board_id}
+              onDragStart={(e: any) => {
+                e.dataTransfer.setData('cardId', card.id)
+              }}
+            />
+          ))}
+
+        {isAdding ? (
+          <div className="bg-background p-2 rounded-lg border border-border mt-1 shadow-sm">
+            <Input
+              autoFocus
+              value={newCardTitle}
+              onChange={(e) => setNewCardTitle(e.target.value)}
+              placeholder="Título do cartão..."
+              className="h-8 mb-2 text-sm shadow-none focus-visible:ring-1"
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter' && newCardTitle.trim()) {
+                  const title = newCardTitle.trim()
+                  setNewCardTitle('')
+                  setIsAdding(false)
+                  try {
+                    const authId = pb.authStore.record?.id
+                    const newCard = await pb.collection('cards').create({
+                      board_id: column.board_id,
+                      column_id: column.id,
+                      title,
+                      sort_order: cards.length,
+                      created_by: authId,
+                      completed: false,
+                    })
+                    await pb.collection('activity_logs').create({
+                      card_id: newCard.id,
+                      user_id: authId,
+                      action_type: 'creation',
+                      description: 'Criou este cartão',
+                    })
+                  } catch {
+                    /* intentionally ignored */
+                  }
+                }
+                if (e.key === 'Escape') setIsAdding(false)
+              }}
+              onBlur={() => setIsAdding(false)}
+            />
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            onClick={() => setIsAdding(true)}
+            className="w-full text-muted-foreground justify-start text-sm h-8 border border-dashed hover:bg-muted shrink-0 mt-1"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Adicionar cartão
+          </Button>
+        )}
       </div>
     </div>
   )
