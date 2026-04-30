@@ -110,27 +110,29 @@ export default function BoardsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
             {filteredBoards.map((board) => (
               <Link to={`/boards/${board.id}`} key={board.id}>
-                <Card className="h-full border-border/60 hover-scale shadow-subtle transition-all cursor-pointer">
-                  <CardHeader className="pb-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="flex items-center gap-2">
+                <Card className="h-full flex flex-col border-border/60 hover-scale shadow-subtle transition-all cursor-pointer overflow-hidden">
+                  <CardHeader className="pb-4 shrink-0">
+                    <div className="flex justify-between items-start w-full">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="flex items-start gap-2">
                           <div
-                            className="w-3 h-3 rounded-full shrink-0"
+                            className="w-3 h-3 rounded-full shrink-0 mt-1.5"
                             style={{ backgroundColor: board.color || '#FFC300' }}
                           />
-                          <span className="truncate">{board.name}</span>
+                          <span className="break-words whitespace-normal leading-tight">
+                            {board.name}
+                          </span>
                         </CardTitle>
                         {board.client_name && (
-                          <CardDescription className="mt-1 font-medium text-foreground/70 truncate">
+                          <CardDescription className="mt-2 font-medium text-foreground/70 break-words whitespace-normal">
                             {board.client_name}
                           </CardDescription>
                         )}
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">
+                  <CardContent className="flex flex-col flex-1">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 break-words whitespace-normal">
                       {board.description || 'Sem descrição'}
                     </p>
                     <div className="flex items-center justify-between mt-auto">
