@@ -6,6 +6,8 @@ import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 import Layout from './components/Layout'
 import Index from './pages/Index'
+import BoardsPage from './pages/boards/BoardsPage'
+import BoardPage from './pages/boards/BoardPage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import RecoverPassword from './pages/RecoverPassword'
@@ -57,6 +59,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/boards"
+              element={
+                <ProtectedRoute>
+                  <BoardsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/boards/:id"
+              element={
+                <ProtectedRoute>
+                  <BoardPage />
                 </ProtectedRoute>
               }
             />

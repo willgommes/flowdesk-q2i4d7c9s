@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AppHeader } from '@/components/AppHeader'
@@ -14,17 +15,19 @@ export default function Index() {
         </h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-border/60 hover-scale shadow-subtle cursor-pointer">
-            <CardHeader>
-              <CardTitle className="text-lg">Quadros</CardTitle>
-              <CardDescription>Seus quadros de processos e campanhas.</CardDescription>
-            </CardHeader>
-            <CardContent className="h-32 flex items-center justify-center border-t border-dashed bg-muted/20">
-              <p className="text-muted-foreground text-sm font-medium">
-                Os quadros aparecerão aqui em breve.
-              </p>
-            </CardContent>
-          </Card>
+          <Link to="/boards" className="block h-full">
+            <Card className="border-border/60 hover-scale shadow-subtle cursor-pointer h-full">
+              <CardHeader>
+                <CardTitle className="text-lg">Quadros</CardTitle>
+                <CardDescription>Seus quadros de processos e campanhas.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-32 flex items-center justify-center border-t border-dashed bg-muted/20">
+                <p className="text-muted-foreground text-sm font-medium">
+                  Os quadros aparecerão aqui em breve.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="border-border/60 hover-scale shadow-subtle cursor-pointer">
             <CardHeader>
