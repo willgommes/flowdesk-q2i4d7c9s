@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T19:31:41.198Z",
+  "generatedAt": "2026-04-30T19:50:19.339Z",
   "collections": [
     {
       "name": "users",
@@ -48,6 +48,12 @@
         {
           "name": "lastActive",
           "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dashboard_layout",
+          "type": "json",
           "required": false,
           "system": false
         }

@@ -1,0 +1,86 @@
+import { Link } from 'react-router-dom'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { AlertCircleIcon, CheckCircle2, GripVertical } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+export function PriorityWidget({
+  priorityCards,
+  loading,
+}: {
+  priorityCards: any[]
+  loading: boolean
+}) {
+  const priorityTasks = priorityCards.filter((c) => !c.completed).slice(0, 5)
+
+  return (
+    <Card className="border-border/60 shadow-subtle flex flex-col h-full bg-card group/widget">
+      <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0 cursor-grab active:cursor-grabbing">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertCircleIcon className="w-4 h-4 text-red-500" />
+            Alta Prioridade
+          </CardTitle>
+          <CardDescription className="text-xs">Tarefas urgentes em aberto</CardDescription>
+        </div>
+        <GripVertical className="h-4 w-4 text-muted-foreground/30 group-hover/widget:text-foreground transition-colors" />
+      </CardHeader>
+      <CardContent className="flex-1 p-0 px-6 pb-6">
+        {loading ? (
+          <div className="space-y-3 mt-4">
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+          </div>
+        ) : priorityTasks.length > 0 ? (
+          <div className="space-y-2.5 mt-4">
+            {priorityTasks.map((task) => {
+              const isUrgent = task.label?.name === 'Urgente'
+              const isHigh = task.label?.name === 'Alta Prioridade'
+
+              return (
+                <Link key={task.id} to={`/boards/${task.board_id}/cards/${task.id}`}>
+                  <div
+                    className={cn(
+                      'flex flex-col p-2.5 rounded-md border bg-card hover:bg-accent/50 transition-colors group',
+                      isUrgent
+                        ? 'border-red-500/40 bg-red-50/30 dark:bg-red-950/10'
+                        : isHigh
+                          ? 'border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10'
+                          : 'border-border/40',
+                    )}
+                  >
+                    <div className="flex justify-between items-start gap-2 mb-1">
+                      <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                        {task.title}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-[10px] uppercase tracking-wider whitespace-nowrap px-2 py-0.5 rounded-full font-semibold',
+                          isUrgent
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            : isHigh
+                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                              : 'bg-muted text-muted-foreground',
+                        )}
+                      >
+                        {task.label?.name || 'Prioridade'}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <span className="truncate">{task.expand?.board_id?.name || 'Quadro'}</span>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/50 rounded-lg bg-muted/10">
+            <CheckCircle2 className="w-8 h-8 mb-2 text-muted-foreground/30" />
+            <p className="text-sm font-medium">Nenhuma tarefa urgente</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
