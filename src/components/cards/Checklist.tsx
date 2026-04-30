@@ -4,8 +4,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import pb from '@/lib/pocketbase/client'
 
+import { GripVertical } from 'lucide-react'
+
 export function Checklist({ cardId, items, onChange }: any) {
   const [newItem, setNewItem] = useState('')
+  const [draggedId, setDraggedId] = useState<string | null>(null)
 
   const handleAdd = async () => {
     if (!newItem.trim()) return
@@ -16,6 +19,37 @@ export function Checklist({ cardId, items, onChange }: any) {
       sort_order: items.length,
     })
     setNewItem('')
+    onChange()
+  }
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault()
+    if (!draggedId || draggedId === targetId) return
+
+    const newItems = [...items].sort((a, b) => a.sort_order - b.sort_order)
+    const draggedIdx = newItems.findIndex((i) => i.id === draggedId)
+    const targetIdx = newItems.findIndex((i) => i.id === targetId)
+
+    const [draggedItem] = newItems.splice(draggedIdx, 1)
+    newItems.splice(targetIdx, 0, draggedItem)
+
+    // Optimistic update logic could go here if we had local state for items,
+    // but we can just update backend and call onChange
+    await Promise.all(
+      newItems.map((item, idx) =>
+        pb.collection('checklist_items').update(item.id, { sort_order: idx }),
+      ),
+    )
+    setDraggedId(null)
     onChange()
   }
 
@@ -45,7 +79,17 @@ export function Checklist({ cardId, items, onChange }: any) {
         {items
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
           .map((item: any) => (
-            <div key={item.id} className="flex items-center gap-2">
+            <div
+              key={item.id}
+              className={`flex items-center gap-2 p-1 rounded-md transition-colors ${draggedId === item.id ? 'opacity-50 bg-muted' : 'hover:bg-muted/50'}`}
+              draggable
+              onDragStart={(e) => handleDragStart(e, item.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, item.id)}
+            >
+              <div className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+                <GripVertical className="w-4 h-4" />
+              </div>
               <Checkbox
                 checked={item.completed}
                 onCheckedChange={() => toggle(item.id, item.completed)}

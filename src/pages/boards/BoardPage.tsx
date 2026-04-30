@@ -132,6 +132,8 @@ export default function BoardPage() {
       const draggedIdx = newCols.findIndex((c) => c.id === draggedColId)
       const targetIdx = newCols.findIndex((c) => c.id === targetId)
 
+      if (draggedIdx === -1 || targetIdx === -1) return prev
+
       const temp = newCols[draggedIdx]
       newCols[draggedIdx] = newCols[targetIdx]
       newCols[targetIdx] = temp
@@ -231,22 +233,65 @@ export default function BoardPage() {
               onUpdate={async (data: any) => {
                 await updateColumn(col.id, data)
               }}
-              onCardDrop={async (cardId: string, colId: string) => {
+              onCardDrop={async (cardId: string, colId: string, targetCardId?: string) => {
                 try {
                   const card = cards.find((c) => c.id === cardId)
-                  if (!card || card.column_id === colId) return
-                  setCards((prev) =>
-                    prev.map((c) => (c.id === cardId ? { ...c, column_id: colId } : c)),
-                  )
-                  await pb.collection('cards').update(cardId, { column_id: colId })
-                  await pb.collection('activity_logs').create({
-                    card_id: cardId,
-                    user_id: user?.id,
-                    action_type: 'move',
-                    description: `Moveu o cartão para outra coluna`,
+                  if (!card) return
+
+                  const currentCards = [...cards]
+                  const oldColId = card.column_id
+
+                  // Move card to new column
+                  card.column_id = colId
+
+                  // Filter cards for the target column
+                  let colCards = currentCards
+                    .filter((c) => c.column_id === colId && c.id !== cardId)
+                    .sort((a, b) => a.sort_order - b.sort_order)
+
+                  if (targetCardId) {
+                    const targetIdx = colCards.findIndex((c) => c.id === targetCardId)
+                    if (targetIdx >= 0) {
+                      colCards.splice(targetIdx, 0, card)
+                    } else {
+                      colCards.push(card)
+                    }
+                  } else {
+                    colCards.push(card)
+                  }
+
+                  // Update sort_order locally
+                  colCards.forEach((c, idx) => {
+                    c.sort_order = idx
                   })
-                } catch {
-                  /* intentionally ignored */
+
+                  setCards((prev) =>
+                    prev.map((c) => {
+                      const updated = colCards.find((cc) => cc.id === c.id)
+                      return updated
+                        ? { ...c, column_id: updated.column_id, sort_order: updated.sort_order }
+                        : c
+                    }),
+                  )
+
+                  if (oldColId !== colId) {
+                    await pb.collection('cards').update(cardId, { column_id: colId })
+                    await pb.collection('activity_logs').create({
+                      card_id: cardId,
+                      user_id: user?.id,
+                      action_type: 'move',
+                      description: 'Moveu o cartão para outra coluna',
+                    })
+                  }
+
+                  // Sync sort_orders sequentially or in parallel
+                  await Promise.all(
+                    colCards.map((c) =>
+                      pb.collection('cards').update(c.id, { sort_order: c.sort_order }),
+                    ),
+                  )
+                } catch (err) {
+                  console.error(err)
                 }
               }}
             />
@@ -268,7 +313,7 @@ export default function BoardPage() {
         board={board}
         onSuccess={loadData}
       />
-      <Outlet context={{ cards, board, loadData }} />
+      <Outlet context={{ cards, board, columns, loadData }} />
     </div>
   )
 }
@@ -312,7 +357,7 @@ function Column({
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
       onDragEnd={onDragEnd}
-      className="shrink-0 w-[300px] max-h-full flex flex-col bg-background/50 rounded-xl border border-border/50 shadow-subtle cursor-grab active:cursor-grabbing transition-colors hover:border-border"
+      className="shrink-0 w-[300px] max-h-full flex flex-col bg-background/50 rounded-xl border border-border/50 shadow-subtle cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-border"
     >
       <div
         className="p-3 flex items-center justify-between group border-b border-border/50"
@@ -399,6 +444,12 @@ function Column({
               boardId={column.board_id}
               onDragStart={(e: any) => {
                 e.dataTransfer.setData('cardId', card.id)
+              }}
+              onDropCard={(e: any, targetCard: any) => {
+                const cardId = e.dataTransfer.getData('cardId')
+                if (cardId && cardId !== targetCard.id) {
+                  onCardDrop(cardId, column.id, targetCard.id)
+                }
               }}
             />
           ))}

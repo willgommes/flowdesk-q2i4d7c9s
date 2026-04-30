@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Calendar, CheckSquare, MessageSquare, Paperclip } from 'lucide-react'
 import { format, isPast, isToday, addDays } from 'date-fns'
 
-export function CardItem({ card, boardId, onDragStart }: any) {
+export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
   const isCompleted = card.completed
   const labels = card.expand?.card_labels_via_card_id?.map((cl: any) => cl.expand?.label_id) || []
   const members = card.expand?.card_members_via_card_id?.map((cm: any) => cm.expand?.user_id) || []
@@ -10,7 +10,9 @@ export function CardItem({ card, boardId, onDragStart }: any) {
   let dateColor = 'text-muted-foreground'
   if (card.due_date && !isCompleted) {
     const date = new Date(card.due_date)
-    if (isPast(date) || isToday(date)) dateColor = 'text-[#AA1677] font-bold'
+    // If date is today or past, purple
+    if (isToday(date) || isPast(date)) dateColor = 'text-[#AA1677] font-bold'
+    // If date is within 2 days (but not today/past), yellow
     else if (date <= addDays(new Date(), 2)) dateColor = 'text-[#FFC300] font-bold'
   }
 
@@ -24,6 +26,13 @@ export function CardItem({ card, boardId, onDragStart }: any) {
       className={`block bg-background p-3 rounded-lg border border-border shadow-sm hover:border-primary/50 transition-colors ${isCompleted ? 'opacity-60' : ''}`}
       draggable
       onDragStart={(e) => onDragStart(e, card)}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        if (onDropCard) {
+          e.stopPropagation()
+          onDropCard(e, card)
+        }
+      }}
     >
       {labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">

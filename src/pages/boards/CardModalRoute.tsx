@@ -5,7 +5,7 @@ import { CardDetail } from '@/components/cards/CardDetail'
 export function CardModalRoute() {
   const { cardId } = useParams()
   const navigate = useNavigate()
-  const { cards, board, loadData } = useOutletContext<any>()
+  const { cards, board, columns, loadData } = useOutletContext<any>()
 
   const card = cards.find((c: any) => c.id === cardId)
 
@@ -22,7 +22,13 @@ export function CardModalRoute() {
         <DialogDescription className="sr-only">
           Visualização e edição do cartão Kanban.
         </DialogDescription>
-        <CardDetail card={card} board={board} onChange={loadData} onClose={handleClose} />
+        <CardDetail
+          card={card}
+          board={board}
+          columns={columns}
+          onChange={loadData}
+          onClose={handleClose}
+        />
       </DialogContent>
     </Dialog>
   )

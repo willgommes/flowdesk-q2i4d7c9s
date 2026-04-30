@@ -38,14 +38,21 @@ export function ActivityLog({ cardId }: { cardId: string }) {
           Ocultar
         </Button>
       </div>
-      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+      <div className="space-y-4 max-h-[300px] overflow-y-auto pl-2 border-l-2 border-border/50 ml-2">
         {logs.map((log) => (
-          <div key={log.id} className="flex gap-2 text-sm items-start">
-            <span className="font-medium shrink-0">{log.expand?.user_id?.name || 'Alguém'}</span>
-            <span className="text-muted-foreground">{log.description}</span>
-            <span className="text-xs text-muted-foreground ml-auto shrink-0 pt-0.5">
-              {new Date(log.created).toLocaleDateString()}
-            </span>
+          <div key={log.id} className="relative flex gap-3 text-sm items-start">
+            <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary/50 border-2 border-background" />
+            <div className="flex flex-col">
+              <div className="flex gap-1.5 items-center">
+                <span className="font-semibold text-foreground">
+                  {log.expand?.user_id?.name || 'Alguém'}
+                </span>
+                <span className="text-muted-foreground">{log.description}</span>
+              </div>
+              <span className="text-xs text-muted-foreground mt-0.5">
+                {new Date(log.created).toLocaleString()}
+              </span>
+            </div>
           </div>
         ))}
       </div>

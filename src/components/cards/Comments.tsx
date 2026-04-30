@@ -73,11 +73,11 @@ export function Comments({ cardId, comments, onChange }: any) {
                       {new Date(c.created).toLocaleString()}
                     </span>
                   </div>
-                  {c.user_id === user?.id && (
+                  {(c.user_id === user?.id || user?.role === 'admin') && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive transition-opacity"
                       onClick={() => remove(c.id)}
                     >
                       ×

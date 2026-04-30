@@ -9,13 +9,23 @@ import {
   Activity,
   Trash2,
   Clock,
+  ArrowRightLeft,
+  Copy,
 } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { Checklist } from './Checklist'
@@ -35,7 +45,7 @@ const LABEL_COLORS = [
   '#14b8a6',
 ]
 
-export function CardDetail({ card, board, onChange, onClose }: any) {
+export function CardDetail({ card, board, columns = [], onChange, onClose }: any) {
   const { user } = useAuth()
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
@@ -93,6 +103,35 @@ export function CardDetail({ card, board, onChange, onClose }: any) {
     if (!confirm('Excluir este cartão permanentemente?')) return
     await pb.collection('cards').delete(card.id)
     onClose()
+  }
+
+  const handleDuplicate = async () => {
+    try {
+      const newCard = await pb.collection('cards').create({
+        board_id: card.board_id,
+        column_id: card.column_id,
+        title: `${card.title} (Cópia)`,
+        description: card.description,
+        due_date: card.due_date,
+        sort_order: card.sort_order + 1,
+        created_by: user.id,
+        completed: false,
+      })
+      await logAct('creation', `Duplicou o cartão ${card.title}`, newCard.id)
+      onChange()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // Custom log function for duplicate
+  const logAct = async (type: string, desc: string, targetCardId: string = card.id) => {
+    await pb.collection('activity_logs').create({
+      card_id: targetCardId,
+      user_id: user.id,
+      action_type: type,
+      description: desc,
+    })
   }
 
   const labels = card.expand?.card_labels_via_card_id || []
@@ -381,18 +420,34 @@ export function CardDetail({ card, board, onChange, onClose }: any) {
                 <Clock className="w-4 h-4 mr-2" /> Data de Entrega
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-3" align="end">
-              <h4 className="font-semibold text-sm mb-3">Prazo</h4>
-              <Input
-                type="date"
-                value={card.due_date ? new Date(card.due_date).toISOString().split('T')[0] : ''}
-                onChange={async (e) => {
-                  const newDate = e.target.value ? new Date(e.target.value).toISOString() : null
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={card.due_date ? new Date(card.due_date) : undefined}
+                onSelect={async (date) => {
+                  const newDate = date ? date.toISOString() : null
                   await pb.collection('cards').update(card.id, { due_date: newDate })
-                  await logAct('date_change', `Alterou a data de entrega`)
+                  await logAct('date_change', 'Alterou a data de entrega')
                   onChange()
                 }}
+                initialFocus
               />
+              {card.due_date && (
+                <div className="p-3 border-t border-border">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-destructive hover:text-destructive"
+                    onClick={async () => {
+                      await pb.collection('cards').update(card.id, { due_date: null })
+                      await logAct('date_change', 'Removeu a data de entrega')
+                      onChange()
+                    }}
+                  >
+                    Remover data
+                  </Button>
+                </div>
+              )}
             </PopoverContent>
           </Popover>
         </div>
@@ -401,13 +456,56 @@ export function CardDetail({ card, board, onChange, onClose }: any) {
           <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
             Ações
           </h4>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="secondary"
+                className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+              >
+                <ArrowRightLeft className="w-4 h-4 mr-2" /> Mover
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3" align="end">
+              <h4 className="font-semibold text-sm mb-3">Mover para Coluna</h4>
+              <Select
+                value={card.column_id}
+                onValueChange={async (val) => {
+                  if (val === card.column_id) return
+                  await pb.collection('cards').update(card.id, { column_id: val })
+                  await logAct('move', 'Moveu o cartão via menu de ações')
+                  onChange()
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a coluna" />
+                </SelectTrigger>
+                <SelectContent>
+                  {columns.map((col: any) => (
+                    <SelectItem key={col.id} value={col.id}>
+                      {col.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          <Button
+            variant="secondary"
+            className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+            onClick={handleDuplicate}
+          >
+            <Copy className="w-4 h-4 mr-2" /> Duplicar
+          </Button>
+
           <Button
             variant="secondary"
             className="w-full justify-start bg-destructive/10 hover:bg-destructive/20 border border-transparent hover:border-destructive/30"
             onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4 mr-2 text-destructive" />{' '}
-            <span className="text-destructive font-medium">Excluir Cartão</span>
+            <span className="text-destructive font-medium">Excluir</span>
           </Button>
         </div>
       </div>
