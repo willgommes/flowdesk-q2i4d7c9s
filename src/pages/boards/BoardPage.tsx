@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { BoardModal } from '@/components/boards/BoardModal'
+import { ArchivedCardsSheet } from '@/components/boards/ArchivedCardsSheet'
 import { CardItem } from '@/components/cards/CardItem'
 import {
   DropdownMenu,
@@ -73,6 +74,7 @@ export default function BoardPage() {
   const [cards, setCards] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [archivedSheetOpen, setArchivedSheetOpen] = useState(false)
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [boardName, setBoardName] = useState('')
@@ -437,6 +439,16 @@ export default function BoardPage() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setArchivedSheetOpen(true)}
+            className="h-8 text-xs bg-background/50 shrink-0"
+          >
+            <Archive className="w-3.5 h-3.5 sm:mr-2" />
+            <span className="hidden sm:inline">Itens Arquivados</span>
+          </Button>
 
           <Button
             variant="outline"
@@ -818,6 +830,11 @@ export default function BoardPage() {
         onOpenChange={setEditModalOpen}
         board={board}
         onSuccess={loadData}
+      />
+      <ArchivedCardsSheet
+        open={archivedSheetOpen}
+        onOpenChange={setArchivedSheetOpen}
+        boardId={id!}
       />
       <Outlet context={{ cards, board, columns, loadData }} />
     </div>
