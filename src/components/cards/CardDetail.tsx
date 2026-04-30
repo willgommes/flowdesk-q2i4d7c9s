@@ -66,9 +66,9 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
     }
   }
 
-  const logAct = async (type: string, desc: string) => {
+  const logAct = async (type: string, desc: string, targetCardId: string = card.id) => {
     await pb.collection('activity_logs').create({
-      card_id: card.id,
+      card_id: targetCardId,
       user_id: user.id,
       action_type: type,
       description: desc,
@@ -122,16 +122,6 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
     } catch (err) {
       console.error(err)
     }
-  }
-
-  // Custom log function for duplicate
-  const logAct = async (type: string, desc: string, targetCardId: string = card.id) => {
-    await pb.collection('activity_logs').create({
-      card_id: targetCardId,
-      user_id: user.id,
-      action_type: type,
-      description: desc,
-    })
   }
 
   const labels = card.expand?.card_labels_via_card_id || []
