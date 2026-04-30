@@ -59,10 +59,12 @@ export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
               l && (
                 <div
                   key={l.id}
-                  className="w-8 h-2 rounded-full"
+                  className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none truncate max-w-full shadow-sm"
                   style={{ backgroundColor: l.color }}
                   title={l.name}
-                />
+                >
+                  {l.name}
+                </div>
               ),
           )}
         </div>

@@ -12,6 +12,10 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowDownUp,
+  LayoutDashboard,
+  List as ListIcon,
+  Search,
+  X,
 } from 'lucide-react'
 import { startOfDay, isBefore, isToday, addDays } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
@@ -44,9 +48,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { AppHeader } from '@/components/AppHeader'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import { cn } from '@/lib/utils'
 
 export default function BoardPage() {
   const { id } = useParams()
@@ -67,6 +81,8 @@ export default function BoardPage() {
   const isDraggingRef = useRef(false)
 
   const [dateFilter, setDateFilter] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [view, setView] = useState<'kanban' | 'list'>('kanban')
 
   const isAdmin = user?.role === 'admin'
 
@@ -130,26 +146,36 @@ export default function BoardPage() {
   }
 
   const filteredCards = useMemo(() => {
-    if (dateFilter === 'all') return cards
+    let result = cards
 
-    const today = startOfDay(new Date())
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(
+        (c) => c.title?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q),
+      )
+    }
 
-    return cards.filter((card) => {
-      if (!card.due_date) return false
-      const cardDate = startOfDay(new Date(card.due_date))
+    if (dateFilter !== 'all') {
+      const today = startOfDay(new Date())
+      result = result.filter((card) => {
+        if (!card.due_date) return false
+        const cardDate = startOfDay(new Date(card.due_date))
 
-      if (dateFilter === 'overdue') {
-        return !card.completed && isBefore(cardDate, today)
-      }
-      if (dateFilter === 'today') {
-        return isToday(cardDate)
-      }
-      if (dateFilter === 'week') {
-        return cardDate >= today && cardDate <= addDays(today, 7)
-      }
-      return true
-    })
-  }, [cards, dateFilter])
+        if (dateFilter === 'overdue') {
+          return !card.completed && isBefore(cardDate, today)
+        }
+        if (dateFilter === 'today') {
+          return isToday(cardDate)
+        }
+        if (dateFilter === 'week') {
+          return cardDate >= today && cardDate <= addDays(today, 7)
+        }
+        return true
+      })
+    }
+
+    return result
+  }, [cards, dateFilter, searchQuery])
 
   const loadData = async () => {
     if (!id) return
@@ -193,6 +219,7 @@ export default function BoardPage() {
 
   useRealtime('cards', () => loadData())
   useRealtime('card_labels', () => loadData())
+  useRealtime('labels', () => loadData())
   useRealtime('card_members', () => loadData())
   useRealtime('comments', () => loadData())
   useRealtime('checklist_items', () => loadData())
@@ -324,7 +351,7 @@ export default function BoardPage() {
     <div className="flex flex-col h-screen overflow-hidden bg-muted/10">
       <AppHeader />
 
-      <div className="bg-background border-b px-6 py-4 flex items-center justify-between shrink-0">
+      <div className="bg-background border-b px-6 py-4 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link to="/boards">
@@ -371,20 +398,55 @@ export default function BoardPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <div className="relative shrink-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar cartões..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-40 lg:w-56 pl-9 pr-8 h-8 text-xs bg-background/50 focus-visible:ring-1"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
+
+          <Tabs
+            value={view}
+            onValueChange={(v) => setView(v as 'kanban' | 'list')}
+            className="h-8 shrink-0"
+          >
+            <TabsList className="h-8 bg-background/50 border border-border">
+              <TabsTrigger value="kanban" className="h-6 text-xs px-2.5">
+                <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" /> Quadro
+              </TabsTrigger>
+              <TabsTrigger value="list" className="h-6 text-xs px-2.5">
+                <ListIcon className="w-3.5 h-3.5 mr-1.5" /> Lista
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <Button
             variant="outline"
             size="sm"
             onClick={handleSortByDueDate}
-            className="h-8 text-xs bg-background/50 hidden sm:flex"
+            className="h-8 text-xs bg-background/50 hidden xl:flex shrink-0"
           >
             <ArrowDownUp className="w-3.5 h-3.5 mr-2" />
-            Ordenar por Prazo
+            Ordenar
           </Button>
 
-          <div className="flex items-center gap-2 mr-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[180px] h-8 text-xs bg-background/50">
+              <SelectTrigger className="w-[140px] lg:w-[180px] h-8 text-xs bg-background/50">
                 <SelectValue placeholder="Filtrar por data" />
               </SelectTrigger>
               <SelectContent>
@@ -407,7 +469,7 @@ export default function BoardPage() {
             )}
           </div>
 
-          <div className="flex -space-x-2 mr-4">
+          <div className="flex -space-x-2 shrink-0 ml-2">
             {board.expand?.members?.map((m: any) => (
               <Avatar key={m.id} className="w-8 h-8 border-2 border-background">
                 <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : ''} />
@@ -421,7 +483,7 @@ export default function BoardPage() {
           {isAdmin && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="shrink-0 ml-1">
                   <MoreHorizontal className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -475,117 +537,266 @@ export default function BoardPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 animate-fade-in">
-        <div className="flex gap-6 h-full items-start">
-          {columns.map((col) => (
-            <Column
-              key={col.id}
-              column={col}
-              cards={filteredCards.filter((c) => c.column_id === col.id)}
-              onDragStart={(e: any) => handleDragStart(e, col.id)}
-              onDragEnter={(e: any) => handleDragEnter(e, col.id)}
-              onDragEnd={(e: any) => handleDragEnd(e, col.id)}
-              onDelete={async () => {
-                if (confirm('Excluir coluna?')) {
+      <div
+        className={cn(
+          'flex-1 overflow-x-auto p-6 animate-fade-in',
+          view === 'kanban' ? 'overflow-y-hidden' : 'overflow-y-auto',
+        )}
+      >
+        {view === 'kanban' ? (
+          <div className="flex gap-6 h-full items-start">
+            {columns.map((col) => (
+              <Column
+                key={col.id}
+                column={col}
+                cards={filteredCards.filter((c) => c.column_id === col.id)}
+                onDragStart={(e: any) => handleDragStart(e, col.id)}
+                onDragEnter={(e: any) => handleDragEnter(e, col.id)}
+                onDragEnd={(e: any) => handleDragEnd(e, col.id)}
+                onDelete={async () => {
+                  if (confirm('Excluir coluna?')) {
+                    try {
+                      await deleteColumn(col.id)
+                    } catch (err) {
+                      toast({
+                        title: 'Erro ao excluir',
+                        description: getErrorMessage(err),
+                        variant: 'destructive',
+                      })
+                    }
+                  }
+                }}
+                onUpdate={async (data: any) => {
                   try {
-                    await deleteColumn(col.id)
+                    await updateColumn(col.id, data)
                   } catch (err) {
                     toast({
-                      title: 'Erro ao excluir',
+                      title: 'Erro ao atualizar',
                       description: getErrorMessage(err),
                       variant: 'destructive',
                     })
                   }
-                }
-              }}
-              onUpdate={async (data: any) => {
-                try {
-                  await updateColumn(col.id, data)
-                } catch (err) {
-                  toast({
-                    title: 'Erro ao atualizar',
-                    description: getErrorMessage(err),
-                    variant: 'destructive',
-                  })
-                }
-              }}
-              onCardDrop={async (cardId: string, colId: string, targetCardId?: string) => {
-                try {
-                  const card = cards.find((c) => c.id === cardId)
-                  if (!card) return
+                }}
+                onCardDrop={async (cardId: string, colId: string, targetCardId?: string) => {
+                  try {
+                    const card = cards.find((c) => c.id === cardId)
+                    if (!card) return
 
-                  const currentCards = [...cards]
-                  const oldColId = card.column_id
+                    const currentCards = [...cards]
+                    const oldColId = card.column_id
 
-                  // Move card to new column
-                  card.column_id = colId
+                    // Move card to new column
+                    card.column_id = colId
 
-                  // Filter cards for the target column
-                  let colCards = currentCards
-                    .filter((c) => c.column_id === colId && c.id !== cardId)
-                    .sort((a, b) => a.sort_order - b.sort_order)
+                    // Filter cards for the target column
+                    let colCards = currentCards
+                      .filter((c) => c.column_id === colId && c.id !== cardId)
+                      .sort((a, b) => a.sort_order - b.sort_order)
 
-                  if (targetCardId) {
-                    const targetIdx = colCards.findIndex((c) => c.id === targetCardId)
-                    if (targetIdx >= 0) {
-                      colCards.splice(targetIdx, 0, card)
+                    if (targetCardId) {
+                      const targetIdx = colCards.findIndex((c) => c.id === targetCardId)
+                      if (targetIdx >= 0) {
+                        colCards.splice(targetIdx, 0, card)
+                      } else {
+                        colCards.push(card)
+                      }
                     } else {
                       colCards.push(card)
                     }
-                  } else {
-                    colCards.push(card)
-                  }
 
-                  // Update sort_order locally
-                  colCards.forEach((c, idx) => {
-                    c.sort_order = idx
-                  })
+                    // Update sort_order locally
+                    colCards.forEach((c, idx) => {
+                      c.sort_order = idx
+                    })
 
-                  setCards((prev) =>
-                    prev.map((c) => {
-                      const updated = colCards.find((cc) => cc.id === c.id)
-                      return updated
-                        ? { ...c, column_id: updated.column_id, sort_order: updated.sort_order }
-                        : c
-                    }),
-                  )
+                    setCards((prev) =>
+                      prev.map((c) => {
+                        const updated = colCards.find((cc) => cc.id === c.id)
+                        return updated
+                          ? { ...c, column_id: updated.column_id, sort_order: updated.sort_order }
+                          : c
+                      }),
+                    )
 
-                  if (oldColId !== colId) {
-                    await pb.collection('cards').update(cardId, { column_id: colId })
-                    await pb.collection('activity_logs').create({
-                      card_id: cardId,
-                      user_id: user?.id,
-                      action_type: 'move',
-                      description: 'Moveu o cartão para outra coluna',
+                    if (oldColId !== colId) {
+                      await pb.collection('cards').update(cardId, { column_id: colId })
+                      await pb.collection('activity_logs').create({
+                        card_id: cardId,
+                        user_id: user?.id,
+                        action_type: 'move',
+                        description: 'Moveu o cartão para outra coluna',
+                      })
+                    }
+
+                    // Sync sort_orders sequentially
+                    await Promise.all(
+                      colCards.map((c) =>
+                        pb.collection('cards').update(c.id, { sort_order: c.sort_order }),
+                      ),
+                    )
+                  } catch (err) {
+                    console.error(err)
+                    toast({
+                      title: 'Erro ao mover cartão',
+                      description: getErrorMessage(err),
+                      variant: 'destructive',
                     })
                   }
+                }}
+              />
+            ))}
 
-                  // Sync sort_orders sequentially
-                  await Promise.all(
-                    colCards.map((c) =>
-                      pb.collection('cards').update(c.id, { sort_order: c.sort_order }),
-                    ),
-                  )
-                } catch (err) {
-                  console.error(err)
-                  toast({
-                    title: 'Erro ao mover cartão',
-                    description: getErrorMessage(err),
-                    variant: 'destructive',
-                  })
-                }
-              }}
-            />
-          ))}
+            <Button
+              variant="ghost"
+              className="shrink-0 w-[280px] h-[50px] bg-background/50 border border-dashed border-border/60 hover:bg-background justify-start"
+              onClick={handleAddColumn}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Adicionar coluna
+            </Button>
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto space-y-8 pb-12">
+            {columns.map((col) => {
+              const colCards = filteredCards
+                .filter((c) => c.column_id === col.id)
+                .sort((a, b) => a.sort_order - b.sort_order)
 
-          <Button
-            variant="ghost"
-            className="shrink-0 w-[280px] h-[50px] bg-background/50 border border-dashed border-border/60 hover:bg-background justify-start"
-            onClick={handleAddColumn}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Adicionar coluna
-          </Button>
-        </div>
+              if (colCards.length === 0) return null
+
+              return (
+                <div key={col.id} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full shadow-sm"
+                      style={{ backgroundColor: col.color || '#e2e8f0' }}
+                    />
+                    <h3 className="font-semibold text-lg">{col.name}</h3>
+                    <span className="text-muted-foreground text-xs font-medium bg-muted px-2 py-0.5 rounded-full border border-border/50">
+                      {colCards.length} {colCards.length === 1 ? 'cartão' : 'cartões'}
+                    </span>
+                  </div>
+
+                  <div className="bg-background rounded-xl border border-border shadow-sm overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow>
+                          <TableHead className="w-[45%]">Título</TableHead>
+                          <TableHead>Etiquetas</TableHead>
+                          <TableHead>Membros</TableHead>
+                          <TableHead className="w-[140px]">Prazo</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {colCards.map((card) => {
+                          const labels =
+                            card.expand?.card_labels_via_card_id?.map(
+                              (cl: any) => cl.expand?.label_id,
+                            ) || []
+                          const members =
+                            card.expand?.card_members_via_card_id?.map(
+                              (cm: any) => cm.expand?.user_id,
+                            ) || []
+
+                          return (
+                            <TableRow
+                              key={card.id}
+                              className={cn(
+                                'cursor-pointer hover:bg-muted/50 transition-colors',
+                                card.completed && 'opacity-60 bg-muted/20',
+                              )}
+                              onClick={() => navigate(`/boards/${id}/cards/${card.id}`)}
+                            >
+                              <TableCell className="font-medium py-3">
+                                <span
+                                  className={
+                                    card.completed ? 'line-through text-muted-foreground' : ''
+                                  }
+                                >
+                                  {card.title}
+                                </span>
+                              </TableCell>
+                              <TableCell className="py-3">
+                                <div className="flex flex-wrap gap-1.5">
+                                  {labels.map(
+                                    (l: any) =>
+                                      l && (
+                                        <div
+                                          key={l.id}
+                                          className="px-2 py-0.5 rounded text-[10px] font-semibold text-white leading-none shadow-sm"
+                                          style={{ backgroundColor: l.color }}
+                                          title={l.name}
+                                        >
+                                          {l.name}
+                                        </div>
+                                      ),
+                                  )}
+                                  {labels.length === 0 && (
+                                    <span className="text-xs text-muted-foreground">-</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3">
+                                <div className="flex -space-x-1.5">
+                                  {members.map(
+                                    (m: any) =>
+                                      m && (
+                                        <Avatar
+                                          key={m.id}
+                                          className="w-7 h-7 border-2 border-background shadow-sm"
+                                          title={m.name}
+                                        >
+                                          <AvatarImage
+                                            src={m.avatar ? pb.files.getURL(m, m.avatar) : ''}
+                                          />
+                                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                                            {m.name.substring(0, 2).toUpperCase()}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                      ),
+                                  )}
+                                  {members.length === 0 && (
+                                    <span className="text-xs text-muted-foreground ml-1.5">-</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3">
+                                {card.due_date ? (
+                                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                                    <CalendarDays className="w-3.5 h-3.5" />
+                                    {isBefore(
+                                      startOfDay(new Date(card.due_date)),
+                                      startOfDay(new Date()),
+                                    ) && !card.completed ? (
+                                      <span className="text-destructive">
+                                        {new Date(card.due_date).toLocaleDateString('pt-BR')}
+                                      </span>
+                                    ) : (
+                                      new Date(card.due_date).toLocaleDateString('pt-BR')
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )
+            })}
+
+            {filteredCards.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground border-2 border-dashed border-border rounded-xl bg-background/30">
+                <Search className="w-10 h-10 mb-4 opacity-20" />
+                <p className="text-lg font-medium">Nenhum cartão encontrado</p>
+                <p className="text-sm">Tente ajustar seus filtros ou termo de busca.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <BoardModal
