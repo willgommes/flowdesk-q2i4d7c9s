@@ -78,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password: password || '',
         passwordConfirm: password || '',
+        role: 'membro',
       })
       const authData = await pb.collection('users').authWithPassword(email, password || '')
       if (authData.record) {

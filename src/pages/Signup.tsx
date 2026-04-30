@@ -18,14 +18,23 @@ import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
-const signupSchema = z.object({
-  name: z.string().min(1, 'O nome é obrigatório').min(2, 'O nome deve ter pelo menos 2 caracteres'),
-  email: z.string().min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
-  password: z
-    .string()
-    .min(1, 'A senha é obrigatória')
-    .min(8, 'A senha deve ter no mínimo 8 caracteres'),
-})
+const signupSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'O nome é obrigatório')
+      .min(2, 'O nome deve ter pelo menos 2 caracteres'),
+    email: z.string().min(1, 'O e-mail é obrigatório').email('Formato de e-mail inválido'),
+    password: z
+      .string()
+      .min(1, 'A senha é obrigatória')
+      .min(8, 'A senha deve ter no mínimo 8 caracteres'),
+    passwordConfirm: z.string().min(1, 'A confirmação de senha é obrigatória'),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: 'As senhas não coincidem',
+    path: ['passwordConfirm'],
+  })
 
 export default function Signup() {
   const [isLoading, setIsLoading] = useState(false)
@@ -35,7 +44,7 @@ export default function Signup() {
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: '', email: '', password: '' },
+    defaultValues: { name: '', email: '', password: '', passwordConfirm: '' },
   })
 
   async function onSubmit(values: z.infer<typeof signupSchema>) {
@@ -47,19 +56,31 @@ export default function Signup() {
         navigate('/')
       } else {
         const fieldErrors = extractFieldErrors(error)
+        let hasFieldErrors = false
 
         if (fieldErrors.email) {
-          form.setError('email', { message: 'Este e-mail já está sendo utilizado.' })
+          form.setError('email', { message: fieldErrors.email })
+          hasFieldErrors = true
         }
-
         if (fieldErrors.password) {
           form.setError('password', { message: fieldErrors.password })
+          hasFieldErrors = true
+        }
+        if (fieldErrors.passwordConfirm) {
+          form.setError('passwordConfirm', { message: fieldErrors.passwordConfirm })
+          hasFieldErrors = true
+        }
+        if (fieldErrors.name) {
+          form.setError('name', { message: fieldErrors.name })
+          hasFieldErrors = true
         }
 
         toast({
           variant: 'destructive',
           title: 'Erro no cadastro',
-          description: 'Não foi possível criar a conta. Verifique os dados informados.',
+          description: hasFieldErrors
+            ? 'Verifique os erros nos campos informados.'
+            : getErrorMessage(error) || 'Não foi possível criar a conta.',
         })
       }
     } finally {
@@ -110,6 +131,19 @@ export default function Signup() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="passwordConfirm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirmar Senha</FormLabel>
                   <FormControl>
                     <Input type="password" {...field} />
                   </FormControl>
