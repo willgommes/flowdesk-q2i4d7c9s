@@ -41,7 +41,7 @@ export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
   return (
     <Link
       to={`/boards/${boardId}/cards/${card.id}`}
-      className={`block bg-background p-3 rounded-lg border border-border shadow-sm hover:border-primary/50 transition-colors ${isCompleted ? 'opacity-60' : ''}`}
+      className={`block w-full overflow-hidden bg-background p-3 rounded-lg border border-border shadow-sm hover:border-primary/50 transition-colors ${isCompleted ? 'opacity-60' : ''}`}
       draggable
       onDragStart={(e) => onDragStart(e, card)}
       onDragOver={(e) => e.preventDefault()}
@@ -69,14 +69,26 @@ export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
           )}
         </div>
       )}
-      <h4
-        className={`text-sm font-medium mb-2 ${isCompleted ? 'line-through text-muted-foreground' : ''}`}
-      >
-        {card.title}
-      </h4>
+      <div className="flex items-start gap-2 mb-2 w-full">
+        <div
+          className={cn(
+            'w-2 h-2 rounded-full shrink-0 mt-1.5',
+            isCompleted ? 'bg-green-500' : 'bg-yellow-500',
+          )}
+          aria-hidden="true"
+        />
+        <h4
+          className={cn(
+            'text-sm font-medium break-words whitespace-normal leading-snug flex-1 min-w-0',
+            isCompleted ? 'line-through text-muted-foreground' : '',
+          )}
+        >
+          {card.title}
+        </h4>
+      </div>
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground mt-3 w-full">
+        <div className="flex flex-wrap items-center gap-3">
           <div
             className={cn(
               'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
