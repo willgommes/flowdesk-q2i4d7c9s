@@ -1,6 +1,18 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams, Link, useNavigate, Outlet, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, MoreHorizontal, Plus, Settings, Archive, Trash2, FilterX } from 'lucide-react'
+import {
+  ArrowLeft,
+  MoreHorizontal,
+  Plus,
+  Settings,
+  Archive,
+  Trash2,
+  FilterX,
+  CalendarDays,
+  CheckCircle2,
+  AlertCircle,
+  ArrowDownUp,
+} from 'lucide-react'
 import { startOfDay, isBefore, isToday, addDays } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -57,6 +69,65 @@ export default function BoardPage() {
   const [dateFilter, setDateFilter] = useState<string>('all')
 
   const isAdmin = user?.role === 'admin'
+
+  const stats = useMemo(() => {
+    const today = startOfDay(new Date())
+    let completed = 0
+    let overdue = 0
+
+    cards.forEach((card) => {
+      if (card.completed) {
+        completed++
+      } else if (card.due_date && isBefore(startOfDay(new Date(card.due_date)), today)) {
+        overdue++
+      }
+    })
+
+    return { total: cards.length, completed, overdue }
+  }, [cards])
+
+  const handleSortByDueDate = async () => {
+    if (!cards.length) return
+
+    const newCards = [...cards]
+    const updatedCards: any[] = []
+
+    columns.forEach((col) => {
+      const colCards = newCards.filter((c) => c.column_id === col.id)
+
+      colCards.sort((a, b) => {
+        if (!a.due_date && !b.due_date) return a.sort_order - b.sort_order
+        if (!a.due_date) return 1
+        if (!b.due_date) return -1
+
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+      })
+
+      colCards.forEach((c, idx) => {
+        if (c.sort_order !== idx) {
+          c.sort_order = idx
+          updatedCards.push(c)
+        }
+      })
+    })
+
+    if (updatedCards.length === 0) {
+      toast({ title: 'Cartões já estão ordenados' })
+      return
+    }
+
+    setCards(newCards)
+
+    try {
+      await Promise.all(
+        updatedCards.map((c) => pb.collection('cards').update(c.id, { sort_order: c.sort_order })),
+      )
+      toast({ title: 'Cartões ordenados por prazo' })
+    } catch (err) {
+      toast({ title: 'Erro ao ordenar cartões', variant: 'destructive' })
+      loadData()
+    }
+  }
 
   const filteredCards = useMemo(() => {
     if (dateFilter === 'all') return cards
@@ -301,6 +372,16 @@ export default function BoardPage() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSortByDueDate}
+            className="h-8 text-xs bg-background/50 hidden sm:flex"
+          >
+            <ArrowDownUp className="w-3.5 h-3.5 mr-2" />
+            Ordenar por Prazo
+          </Button>
+
           <div className="flex items-center gap-2 mr-2">
             <Select value={dateFilter} onValueChange={setDateFilter}>
               <SelectTrigger className="w-[180px] h-8 text-xs bg-background/50">
@@ -361,6 +442,36 @@ export default function BoardPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+        </div>
+      </div>
+
+      <div className="bg-background/60 border-b px-6 py-2.5 flex items-center gap-6 shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] text-sm">
+        <div className="flex items-center gap-2 min-w-max">
+          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+            <CalendarDays className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <span className="text-muted-foreground">Total de Tarefas:</span>
+          <span className="font-semibold">{stats.total}</span>
+        </div>
+
+        <div className="w-px h-4 bg-border shrink-0"></div>
+
+        <div className="flex items-center gap-2 min-w-max">
+          <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          </div>
+          <span className="text-muted-foreground">Concluídas:</span>
+          <span className="font-semibold text-emerald-600">{stats.completed}</span>
+        </div>
+
+        <div className="w-px h-4 bg-border shrink-0"></div>
+
+        <div className="flex items-center gap-2 min-w-max">
+          <div className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center">
+            <AlertCircle className="w-3.5 h-3.5 text-destructive" />
+          </div>
+          <span className="text-muted-foreground">Atrasadas:</span>
+          <span className="font-semibold text-destructive">{stats.overdue}</span>
         </div>
       </div>
 
