@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, Outlet, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, MoreHorizontal, Plus, Settings, Archive, Trash2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getBoard, updateBoard } from '@/services/boards'
+import { getBoard, updateBoard, deleteBoard } from '@/services/boards'
 import {
   getBoardColumns,
   createColumn,
@@ -21,12 +21,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AppHeader } from '@/components/AppHeader'
 import pb from '@/lib/pocketbase/client'
-
-import { Outlet, useOutletContext } from 'react-router-dom'
 
 export default function BoardPage() {
   const { id } = useParams()
@@ -40,8 +39,13 @@ export default function BoardPage() {
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
 
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [boardName, setBoardName] = useState('')
+
   const [draggedColId, setDraggedColId] = useState<string | null>(null)
   const isDraggingRef = useRef(false)
+
+  const isAdmin = user?.role === 'admin'
 
   const loadData = async () => {
     if (!id) return
@@ -96,6 +100,7 @@ export default function BoardPage() {
         board_id: id,
         name: 'Nova Coluna',
         sort_order: columns.length,
+        color: '#e2e8f0',
       })
     } catch (err: any) {
       toast({ title: 'Erro ao adicionar coluna', description: err.message, variant: 'destructive' })
@@ -110,6 +115,35 @@ export default function BoardPage() {
       navigate('/boards')
     } catch (err) {
       toast({ title: 'Erro ao arquivar', variant: 'destructive' })
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Tem certeza que deseja excluir este quadro? Esta ação não pode ser desfeita.'))
+      return
+    if (!confirm('Dupla confirmação: Excluir permanentemente?')) return
+    try {
+      await deleteBoard(id!)
+      toast({ title: 'Quadro excluído com sucesso' })
+      navigate('/boards')
+    } catch (err) {
+      toast({ title: 'Erro ao excluir quadro', variant: 'destructive' })
+    }
+  }
+
+  const handleBoardNameUpdate = async () => {
+    setIsEditingName(false)
+    if (boardName !== board.name && boardName.trim()) {
+      try {
+        await updateBoard(id!, { name: boardName })
+        setBoard((prev: any) => ({ ...prev, name: boardName }))
+        toast({ title: 'Nome atualizado' })
+      } catch (err) {
+        toast({ title: 'Erro ao atualizar nome', variant: 'destructive' })
+        setBoardName(board.name)
+      }
+    } else {
+      setBoardName(board.name)
     }
   }
 
@@ -163,8 +197,6 @@ export default function BoardPage() {
       </div>
     )
 
-  const isAdmin = user?.role === 'admin'
-
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-muted/10">
       <AppHeader />
@@ -177,13 +209,39 @@ export default function BoardPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-display font-semibold tracking-tight flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{ backgroundColor: board.color || '#FFC300' }}
+            {isEditingName && isAdmin ? (
+              <Input
+                value={boardName}
+                onChange={(e) => setBoardName(e.target.value)}
+                onBlur={handleBoardNameUpdate}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleBoardNameUpdate()
+                  if (e.key === 'Escape') {
+                    setIsEditingName(false)
+                    setBoardName(board.name)
+                  }
+                }}
+                autoFocus
+                className="h-8 text-xl font-semibold w-64"
               />
-              {board.name}
-            </h1>
+            ) : (
+              <h1
+                className={`text-2xl font-display font-semibold tracking-tight flex items-center gap-2 ${isAdmin ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                onClick={() => {
+                  if (isAdmin) {
+                    setIsEditingName(true)
+                    setBoardName(board.name)
+                  }
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: board.color || '#e2e8f0' }}
+                />
+                {board.name}
+              </h1>
+            )}
+
             {board.client_name && (
               <p className="text-sm text-muted-foreground">{board.client_name}</p>
             )}
@@ -203,14 +261,28 @@ export default function BoardPage() {
           </div>
 
           {isAdmin && (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setEditModalOpen(true)}>
-                <Settings className="w-4 h-4 mr-2" /> Editar
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleArchive}>
-                <Archive className="w-4 h-4 mr-2" /> Arquivar
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEditModalOpen(true)}>
+                  <Settings className="w-4 h-4 mr-2" /> Editar Quadro
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleArchive}>
+                  <Archive className="w-4 h-4 mr-2" /> Arquivar Quadro
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir Quadro
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
@@ -284,7 +356,7 @@ export default function BoardPage() {
                     })
                   }
 
-                  // Sync sort_orders sequentially or in parallel
+                  // Sync sort_orders sequentially
                   await Promise.all(
                     colCards.map((c) =>
                       pb.collection('cards').update(c.id, { sort_order: c.sort_order }),
@@ -362,7 +434,7 @@ function Column({
       <div
         className="p-3 flex items-center justify-between group border-b border-border/50"
         style={{
-          borderTop: `4px solid ${column.color || '#e5e7eb'}`,
+          borderTop: `4px solid ${column.color || '#e2e8f0'}`,
           borderTopLeftRadius: '12px',
           borderTopRightRadius: '12px',
         }}
@@ -407,7 +479,7 @@ function Column({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEditing(true)}>Renomear</DropdownMenuItem>
             <div className="flex p-2 gap-1 justify-center">
-              {['#e5e7eb', '#FFC300', '#AA1677', '#3b82f6', '#10b981'].map((c) => (
+              {['#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b'].map((c) => (
                 <button
                   key={c}
                   className="w-5 h-5 rounded-full border border-black/10"

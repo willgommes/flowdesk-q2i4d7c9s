@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { getUsers } from '@/services/users'
 import { createBoard, updateBoard } from '@/services/boards'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 
 interface BoardModalProps {
   open: boolean
@@ -24,6 +25,8 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
     if (open) {
@@ -99,7 +102,7 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
           <div className="space-y-2">
             <Label>Cor</Label>
             <div className="flex gap-2">
-              {['#FFC300', '#AA1677', '#3b82f6', '#10b981', '#6b7280'].map((c) => (
+              {['#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b'].map((c) => (
                 <button
                   key={c}
                   type="button"
@@ -110,21 +113,23 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
               ))}
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Membros</Label>
-            <div className="max-h-32 overflow-y-auto space-y-1 border rounded-md p-2">
-              {users.map((u) => (
-                <label key={u.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={members.includes(u.id)}
-                    onChange={() => toggleMember(u.id)}
-                  />
-                  {u.name} ({u.email})
-                </label>
-              ))}
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label>Membros</Label>
+              <div className="max-h-32 overflow-y-auto space-y-1 border rounded-md p-2">
+                {users.map((u) => (
+                  <label key={u.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={members.includes(u.id)}
+                      onChange={() => toggleMember(u.id)}
+                    />
+                    {u.name} ({u.email})
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={loading || !name.trim()}>
               {loading ? 'Salvando...' : 'Salvar'}

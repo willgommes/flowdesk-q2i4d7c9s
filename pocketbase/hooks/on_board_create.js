@@ -1,12 +1,16 @@
 onRecordAfterCreateSuccess((e) => {
-  const cols = ['A fazer', 'Em andamento', 'Concluído']
-  const columnsCol = $app.findCollectionByNameOrId('columns')
-  for (let i = 0; i < cols.length; i++) {
-    const col = new Record(columnsCol)
-    col.set('board_id', e.record.id)
-    col.set('name', cols[i])
+  const boardId = e.record.id
+  const columns = $app.findCollectionByNameOrId('columns')
+
+  const defaults = ['To Do', 'In Progress', 'Done']
+  defaults.forEach((name, i) => {
+    const col = new Record(columns)
+    col.set('board_id', boardId)
+    col.set('name', name)
     col.set('sort_order', i)
+    col.set('color', '#e2e8f0')
     $app.save(col)
-  }
-  return e.next()
+  })
+
+  e.next()
 }, 'boards')

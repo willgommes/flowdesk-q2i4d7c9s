@@ -15,6 +15,7 @@ import RecoverPassword from './pages/RecoverPassword'
 import Profile from './pages/Profile'
 import Users from './pages/Users'
 import NotFound from './pages/NotFound'
+import CalendarPage from './pages/Calendar'
 
 const ProtectedRoute = ({
   children,
@@ -81,6 +82,14 @@ const App = () => (
             >
               <Route path="cards/:cardId" element={<CardModalRoute />} />
             </Route>
+            <Route
+              path="/calendario"
+              element={
+                <ProtectedRoute>
+                  <CalendarPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/perfil"
               element={

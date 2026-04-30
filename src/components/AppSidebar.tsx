@@ -32,7 +32,7 @@ export function AppSidebar() {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Quadros', href: '/boards', icon: LayoutList },
-    { name: 'Calendário', href: '/#', icon: Calendar },
+    { name: 'Calendário', href: '/calendario', icon: Calendar },
   ]
 
   if (user.role === 'admin') {

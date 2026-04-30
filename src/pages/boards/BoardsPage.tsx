@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BoardModal } from '@/components/boards/BoardModal'
 import pb from '@/lib/pocketbase/client'
+import { formatDistanceToNow } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 export default function BoardsPage() {
   const { user } = useAuth()
@@ -143,7 +145,12 @@ export default function BoardsPage() {
                         ))}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(board.updated).toLocaleDateString()}
+                        {board.updated
+                          ? formatDistanceToNow(new Date(board.updated), {
+                              addSuffix: true,
+                              locale: ptBR,
+                            })
+                          : ''}
                       </span>
                     </div>
                   </CardContent>
