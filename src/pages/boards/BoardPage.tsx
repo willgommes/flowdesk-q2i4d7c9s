@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { AppHeader } from '@/components/AppHeader'
 import pb from '@/lib/pocketbase/client'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function BoardPage() {
   const { id } = useParams()
@@ -96,15 +97,20 @@ export default function BoardPage() {
 
   const handleAddColumn = async () => {
     try {
-      const maxOrder = columns.length > 0 ? Math.max(...columns.map((c) => c.sort_order)) : -1
+      const maxOrder =
+        columns.length > 0 ? Math.max(...columns.map((c) => Number(c.sort_order) || 0)) : -1
       await createColumn({
         board_id: id,
         name: 'Nova Coluna',
-        sort_order: maxOrder + 1,
+        sort_order: Math.floor(maxOrder + 1),
         color: '#e2e8f0',
       })
     } catch (err: any) {
-      toast({ title: 'Erro ao adicionar coluna', description: err.message, variant: 'destructive' })
+      toast({
+        title: 'Erro ao adicionar coluna',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
     }
   }
 
@@ -188,6 +194,11 @@ export default function BoardPage() {
       loadData()
     } catch (err) {
       console.error(err)
+      toast({
+        title: 'Erro ao reordenar',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
     }
   }
 
@@ -300,11 +311,27 @@ export default function BoardPage() {
               onDragEnd={(e: any) => handleDragEnd(e, col.id)}
               onDelete={async () => {
                 if (confirm('Excluir coluna?')) {
-                  await deleteColumn(col.id)
+                  try {
+                    await deleteColumn(col.id)
+                  } catch (err) {
+                    toast({
+                      title: 'Erro ao excluir',
+                      description: getErrorMessage(err),
+                      variant: 'destructive',
+                    })
+                  }
                 }
               }}
               onUpdate={async (data: any) => {
-                await updateColumn(col.id, data)
+                try {
+                  await updateColumn(col.id, data)
+                } catch (err) {
+                  toast({
+                    title: 'Erro ao atualizar',
+                    description: getErrorMessage(err),
+                    variant: 'destructive',
+                  })
+                }
               }}
               onCardDrop={async (cardId: string, colId: string, targetCardId?: string) => {
                 try {
@@ -365,6 +392,11 @@ export default function BoardPage() {
                   )
                 } catch (err) {
                   console.error(err)
+                  toast({
+                    title: 'Erro ao mover cartão',
+                    description: getErrorMessage(err),
+                    variant: 'destructive',
+                  })
                 }
               }}
             />
@@ -401,6 +433,7 @@ function Column({
   onUpdate,
   onCardDrop,
 }: any) {
+  const { toast } = useToast()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(column.name)
   const [newCardTitle, setNewCardTitle] = useState('')
@@ -546,7 +579,7 @@ function Column({
                       board_id: column.board_id,
                       column_id: column.id,
                       title,
-                      sort_order: cards.length,
+                      sort_order: Math.floor(cards.length),
                       created_by: authId,
                       completed: false,
                     })
@@ -556,8 +589,12 @@ function Column({
                       action_type: 'creation',
                       description: 'Criou este cartão',
                     })
-                  } catch {
-                    /* intentionally ignored */
+                  } catch (err: any) {
+                    toast({
+                      title: 'Erro ao criar cartão',
+                      description: getErrorMessage(err),
+                      variant: 'destructive',
+                    })
                   }
                 }
                 if (e.key === 'Escape') setIsAdding(false)
