@@ -90,16 +90,20 @@ export default function BoardPage() {
     const today = startOfDay(new Date())
     let completed = 0
     let overdue = 0
+    let open = 0
 
     cards.forEach((card) => {
       if (card.completed) {
         completed++
-      } else if (card.due_date && isBefore(startOfDay(new Date(card.due_date)), today)) {
-        overdue++
+      } else {
+        open++
+        if (card.due_date && isBefore(startOfDay(new Date(card.due_date)), today)) {
+          overdue++
+        }
       }
     })
 
-    return { total: cards.length, completed, overdue }
+    return { total: cards.length, completed, overdue, open }
   }, [cards])
 
   const handleSortByDueDate = async () => {
@@ -186,7 +190,7 @@ export default function BoardPage() {
       setColumns(cols)
 
       const c = await pb.collection('cards').getFullList({
-        filter: `board_id = '${id}'`,
+        filter: `board_id = '${id}' && archived != true`,
         expand:
           'card_labels_via_card_id.label_id,card_members_via_card_id.user_id,comments_via_card_id,checklist_items_via_card_id,attachments_via_card_id',
         sort: 'sort_order',
@@ -514,6 +518,16 @@ export default function BoardPage() {
           </div>
           <span className="text-muted-foreground">Total de Tarefas:</span>
           <span className="font-semibold">{stats.total}</span>
+        </div>
+
+        <div className="w-px h-4 bg-border shrink-0"></div>
+
+        <div className="flex items-center gap-2 min-w-max">
+          <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+            <LayoutDashboard className="w-3.5 h-3.5 text-blue-600" />
+          </div>
+          <span className="text-muted-foreground">Em aberto:</span>
+          <span className="font-semibold text-blue-600">{stats.open}</span>
         </div>
 
         <div className="w-px h-4 bg-border shrink-0"></div>

@@ -11,6 +11,7 @@ import {
   Clock,
   ArrowRightLeft,
   Copy,
+  Archive,
 } from 'lucide-react'
 import {
   Select,
@@ -122,6 +123,13 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
     } catch (err) {
       console.error(err)
     }
+  }
+
+  const handleArchive = async () => {
+    if (!confirm('Deseja arquivar este cartão? Ele não aparecerá mais no quadro.')) return
+    await pb.collection('cards').update(card.id, { archived: true })
+    await logAct('move', 'Arquivou o cartão')
+    onClose()
   }
 
   const labels = card.expand?.card_labels_via_card_id || []
@@ -487,6 +495,14 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             onClick={handleDuplicate}
           >
             <Copy className="w-4 h-4 mr-2" /> Duplicar
+          </Button>
+
+          <Button
+            variant="secondary"
+            className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+            onClick={handleArchive}
+          >
+            <Archive className="w-4 h-4 mr-2" /> Arquivar
           </Button>
 
           <Button
