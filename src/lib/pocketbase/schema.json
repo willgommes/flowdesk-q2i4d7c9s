@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T18:23:04.657Z",
+  "generatedAt": "2026-04-30T18:27:59.909Z",
   "collections": [
     {
       "name": "users",
@@ -162,7 +162,7 @@
         {
           "name": "sort_order",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {
@@ -234,7 +234,7 @@
         {
           "name": "sort_order",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {

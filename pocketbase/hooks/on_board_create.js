@@ -9,7 +9,7 @@ onRecordAfterCreateSuccess((e) => {
     col.set('name', name)
     col.set('sort_order', i)
     col.set('color', '#e2e8f0')
-    $app.save(col)
+    $app.saveNoValidate(col)
   })
 
   e.next()

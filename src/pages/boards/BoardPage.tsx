@@ -98,7 +98,14 @@ export default function BoardPage() {
   const handleAddColumn = async () => {
     try {
       const maxOrder =
-        columns.length > 0 ? Math.max(...columns.map((c) => Number(c.sort_order) || 0)) : -1
+        columns.length > 0
+          ? Math.max(
+              ...columns.map((c) => {
+                const val = Number(c.sort_order)
+                return isNaN(val) ? 0 : val
+              }),
+            )
+          : -1
       await createColumn({
         board_id: id,
         name: 'Nova Coluna',
@@ -185,13 +192,12 @@ export default function BoardPage() {
 
   const handleDragEnd = async (e: React.DragEvent, colId: string) => {
     setDraggedColId(null)
-    isDraggingRef.current = false
     const el = document.getElementById(`col-${colId}`)
     if (el) el.style.opacity = '1'
 
     try {
       await updateColumnOrder(columns.map((c) => ({ id: c.id, sort_order: c.sort_order })))
-      loadData()
+      await loadData()
     } catch (err) {
       console.error(err)
       toast({
@@ -199,6 +205,8 @@ export default function BoardPage() {
         description: getErrorMessage(err),
         variant: 'destructive',
       })
+    } finally {
+      isDraggingRef.current = false
     }
   }
 
