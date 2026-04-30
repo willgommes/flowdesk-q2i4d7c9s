@@ -7,6 +7,7 @@ export interface User {
   email: string
   role: 'admin' | 'membro' | 'cliente'
   avatar?: string
+  theme?: 'light' | 'dark'
   created: string
   updated: string
   lastActive?: string
@@ -25,6 +26,7 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: any }>
   logout: () => void
   recoverPassword: (email: string) => Promise<{ success: boolean; error?: any }>
+  updateTheme: (theme: 'light' | 'dark') => Promise<{ success: boolean; error?: any }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -35,13 +37,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setIsLoading(false)
+    const handleTheme = (currentUser: User | null) => {
+      if (currentUser?.theme === 'dark') {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    }
+
+    handleTheme(user) // Initial load
+
     const unsubscribe = pb.authStore.onChange((_token, record) => {
-      setUser((record as unknown as User) || null)
+      const newUser = (record as unknown as User) || null
+      setUser(newUser)
+      handleTheme(newUser)
     })
     return () => {
       unsubscribe()
     }
   }, [])
+
+  const updateTheme = async (theme: 'light' | 'dark') => {
+    if (!user) return { success: false }
+    try {
+      await pb.collection('users').update(user.id, { theme })
+      return { success: true }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
 
   const login = async (email: string, password?: string) => {
     try {
@@ -107,7 +131,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginWithGoogle, register, logout, recoverPassword }}
+      value={{
+        user,
+        isLoading,
+        login,
+        loginWithGoogle,
+        register,
+        logout,
+        recoverPassword,
+        updateTheme,
+      }}
     >
       {children}
     </AuthContext.Provider>

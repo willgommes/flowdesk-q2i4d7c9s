@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T19:54:53.471Z",
+  "generatedAt": "2026-04-30T20:01:47.801Z",
   "collections": [
     {
       "name": "users",
@@ -56,6 +56,13 @@
           "type": "json",
           "required": false,
           "system": false
+        },
+        {
+          "name": "theme",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["light", "dark"]
         }
       ],
       "indexes": [

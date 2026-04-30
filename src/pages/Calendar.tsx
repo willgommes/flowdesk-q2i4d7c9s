@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [cards, setCards] = useState<any[]>([])
+  const [draggedCardId, setDraggedCardId] = useState<string | null>(null)
 
   const loadCards = async () => {
     try {
@@ -117,8 +118,50 @@ export default function CalendarPage() {
               return (
                 <div
                   key={day.toString()}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    if (draggedCardId) {
+                      e.currentTarget.classList.add('bg-primary/10')
+                    }
+                  }}
+                  onDragLeave={(e) => {
+                    e.currentTarget.classList.remove('bg-primary/10')
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault()
+                    e.currentTarget.classList.remove('bg-primary/10')
+                    const cardId = e.dataTransfer.getData('text/plain')
+                    if (!cardId) return
+
+                    const targetDate = new Date(day)
+                    const originalCard = cards.find((c) => c.id === cardId)
+                    if (originalCard && originalCard.due_date) {
+                      const origDate = new Date(originalCard.due_date)
+                      targetDate.setUTCHours(
+                        origDate.getUTCHours(),
+                        origDate.getUTCMinutes(),
+                        origDate.getUTCSeconds(),
+                      )
+                    } else {
+                      targetDate.setUTCHours(12, 0, 0)
+                    }
+
+                    try {
+                      setCards((prev) =>
+                        prev.map((c) =>
+                          c.id === cardId ? { ...c, due_date: targetDate.toISOString() } : c,
+                        ),
+                      )
+                      await pb
+                        .collection('cards')
+                        .update(cardId, { due_date: targetDate.toISOString() })
+                    } catch (err) {
+                      console.error('Failed to update card due date', err)
+                      loadCards()
+                    }
+                  }}
                   className={cn(
-                    'min-h-[100px] border-b border-r p-1 sm:p-2 transition-colors flex flex-col',
+                    'min-h-[100px] border-b border-r p-1 sm:p-2 transition-colors flex flex-col relative',
                     !isCurrentMonth && 'bg-muted/20 text-muted-foreground/50',
                     (i + 1) % 7 === 0 && 'border-r-0',
                   )}
@@ -140,7 +183,13 @@ export default function CalendarPage() {
                         <Link
                           key={card.id}
                           to={`/boards/${card.board_id}/cards/${card.id}`}
-                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm transition-opacity hover:opacity-80 border"
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', card.id)
+                            setDraggedCardId(card.id)
+                          }}
+                          onDragEnd={() => setDraggedCardId(null)}
+                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm transition-opacity hover:opacity-80 border cursor-grab active:cursor-grabbing"
                           style={{
                             backgroundColor: `${boardColor}15`,
                             borderColor: `${boardColor}30`,

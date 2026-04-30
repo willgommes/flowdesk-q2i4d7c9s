@@ -13,8 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Download, FileSpreadsheet, FileText } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
 
 import { OverdueAlert } from '@/components/dashboard/OverdueAlert'
 import { ProgressWidget } from '@/components/dashboard/ProgressWidget'
@@ -127,6 +136,48 @@ export default function Index() {
     }
   }
 
+  const handleExportCSV = async () => {
+    try {
+      const explicitBoardIds = boards.map((b: any) => b.id)
+      const boardFilter =
+        user?.role === 'admin' ? '' : explicitBoardIds.map((id) => `board_id="${id}"`).join(' || ')
+
+      const allCards = await pb.collection('cards').getFullList({
+        expand: 'board_id,column_id',
+        filter: boardFilter ? `(${boardFilter}) && archived != true` : 'archived != true',
+      })
+
+      const escapeCSV = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`
+      const csvRows = ['Título,Quadro,Coluna,Data de Vencimento,Concluído,Prioridade']
+
+      allCards.forEach((c) => {
+        const title = escapeCSV(c.title)
+        const board = escapeCSV(c.expand?.board_id?.name)
+        const column = escapeCSV(c.expand?.column_id?.name)
+        const dueDate = c.due_date ? escapeCSV(format(new Date(c.due_date), 'dd/MM/yyyy')) : '""'
+        const completed = c.completed ? '"Sim"' : '"Não"'
+        const priority = cardsData.priorityCards.find((pc) => pc.id === c.id)
+          ? '"Alta"'
+          : '"Normal"'
+        csvRows.push(`${title},${board},${column},${dueDate},${completed},${priority}`)
+      })
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'relatorio_flowdesk.csv'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to export CSV', err)
+    }
+  }
+
+  const handleExportPDF = () => {
+    window.print()
+  }
+
   const renderWidget = (id: string) => {
     switch (id) {
       case 'progress':
@@ -152,23 +203,43 @@ export default function Index() {
           <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Bem-vindo, {user?.name?.split(' ')[0] || 'Usuário'}
           </h1>
-          <div className="flex items-center gap-2 z-10">
-            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              Filtrar por membro:
-            </span>
-            <Select value={selectedMember} onValueChange={setSelectedMember}>
-              <SelectTrigger className="w-[200px] bg-background">
-                <SelectValue placeholder="Todos os membros" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os membros</SelectItem>
-                {users.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-4 z-10 flex-wrap justify-end">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Filtrar por membro:
+              </span>
+              <Select value={selectedMember} onValueChange={setSelectedMember}>
+                <SelectTrigger className="w-[200px] bg-background">
+                  <SelectValue placeholder="Todos os membros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os membros</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Exportar Relatórios
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportCSV} className="cursor-pointer gap-2">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Exportar CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer gap-2">
+                  <FileText className="w-4 h-4" />
+                  Exportar PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -206,6 +277,93 @@ export default function Index() {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      {/* Print-only View */}
+      <div
+        id="print-report"
+        className="hidden print:block absolute top-0 left-0 w-full min-h-screen bg-white text-black p-10 z-[9999]"
+      >
+        <div className="border-b-2 border-black pb-4 mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold font-display tracking-tight">
+              Relatório de Produtividade
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              FlowDesk • {format(new Date(), 'dd/MM/yyyy HH:mm')}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-semibold">{user?.name}</p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
+          </div>
+        </div>
+
+        <div className="mb-10">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2 border-b pb-2">
+            Resumo Geral
+          </h2>
+          <div className="grid grid-cols-3 gap-6 mb-4">
+            <div className="p-4 border rounded-lg">
+              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider mb-1">
+                Total de Tarefas
+              </p>
+              <p className="text-3xl font-bold">{cardsData.cards.length}</p>
+            </div>
+            <div className="p-4 border rounded-lg border-green-200 bg-green-50">
+              <p className="text-sm text-green-700 font-medium uppercase tracking-wider mb-1">
+                Concluídas
+              </p>
+              <p className="text-3xl font-bold text-green-800">
+                {cardsData.cards.filter((c) => c.completed).length}
+              </p>
+            </div>
+            <div className="p-4 border rounded-lg border-amber-200 bg-amber-50">
+              <p className="text-sm text-amber-700 font-medium uppercase tracking-wider mb-1">
+                Pendentes
+              </p>
+              <p className="text-3xl font-bold text-amber-800">
+                {cardsData.cards.filter((c) => !c.completed).length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2 border-b pb-2">
+            Cartões Prioritários / Em Atraso
+          </h2>
+          {cardsData.priorityCards.length > 0 ? (
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 text-sm">
+                    <th className="border-b p-3 font-semibold">Tarefa</th>
+                    <th className="border-b p-3 font-semibold">Quadro</th>
+                    <th className="border-b p-3 font-semibold">Vencimento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cardsData.priorityCards.map((c) => (
+                    <tr key={c.id} className="border-b last:border-0">
+                      <td className="p-3 font-medium">{c.title}</td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {c.expand?.board_id?.name || '-'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {c.due_date ? format(new Date(c.due_date), 'dd/MM/yyyy') : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-gray-500 italic p-4 border rounded-lg bg-gray-50 text-center">
+              Nenhum cartão prioritário ou em atraso no momento.
+            </p>
+          )}
         </div>
       </div>
     </>

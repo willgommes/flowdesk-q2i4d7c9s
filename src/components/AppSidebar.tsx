@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Calendar, Users, LayoutList } from 'lucide-react'
+import { LayoutDashboard, Calendar, Users, LayoutList, Moon, Sun } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import {
@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function AppSidebar() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateTheme } = useAuth()
   const location = useLocation()
   const { state } = useSidebar()
 
@@ -121,6 +121,17 @@ export function AppSidebar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link to="/perfil">Meu Perfil</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.preventDefault()
+                const newTheme = user.theme === 'dark' ? 'light' : 'dark'
+                updateTheme(newTheme)
+              }}
+              className="cursor-pointer flex items-center justify-between"
+            >
+              <span>Modo Escuro</span>
+              {user.theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={logout}
