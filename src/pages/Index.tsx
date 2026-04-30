@@ -4,7 +4,15 @@ import { AppHeader } from '@/components/AppHeader'
 import { getBoards } from '@/services/boards'
 import { getRecentActivities } from '@/services/activity_logs'
 import { getDashboardData } from '@/services/dashboard'
+import { getUsers } from '@/services/users'
 import { useRealtime } from '@/hooks/use-realtime'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import pb from '@/lib/pocketbase/client'
 import { cn } from '@/lib/utils'
 
@@ -26,10 +34,16 @@ export default function Index() {
     priorityCards: [],
   })
   const [loading, setLoading] = useState(true)
+  const [users, setUsers] = useState<any[]>([])
+  const [selectedMember, setSelectedMember] = useState<string>('all')
 
   const [layout, setLayout] = useState<string[]>(DEFAULT_LAYOUT)
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+
+  useEffect(() => {
+    getUsers().then(setUsers).catch(console.error)
+  }, [])
 
   useEffect(() => {
     if (
@@ -45,16 +59,19 @@ export default function Index() {
 
   const loadData = async () => {
     try {
+      setLoading(true)
       const boardsData = await getBoards()
       setBoards(boardsData)
 
       const explicitBoardIds = boardsData.map((b: any) => b.id)
       const boardIds = user?.role === 'admin' ? undefined : explicitBoardIds
 
-      const activitiesData = await getRecentActivities(boardIds)
-      setActivities(activitiesData.items)
+      const memberFilter = selectedMember === 'all' ? undefined : selectedMember
 
-      const dData = await getDashboardData(explicitBoardIds)
+      const activitiesData = await getRecentActivities(boardIds, memberFilter)
+      setActivities(activitiesData.items || activitiesData)
+
+      const dData = await getDashboardData(explicitBoardIds, memberFilter)
       setCardsData(dData)
     } catch (e) {
       console.error(e)
@@ -65,13 +82,14 @@ export default function Index() {
 
   useEffect(() => {
     loadData()
-  }, [user])
+  }, [user, selectedMember])
 
   useRealtime('boards', () => loadData())
   useRealtime('activity_logs', () => loadData())
   useRealtime('cards', () => loadData())
   useRealtime('card_labels', () => loadData())
   useRealtime('labels', () => loadData())
+  useRealtime('card_members', () => loadData())
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIdx(index)
@@ -130,9 +148,29 @@ export default function Index() {
     <>
       <AppHeader />
       <div className="p-8 max-w-6xl mx-auto w-full animate-fade-in pb-20">
-        <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground mb-8">
-          Bem-vindo, {user?.name?.split(' ')[0] || 'Usuário'}
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
+            Bem-vindo, {user?.name?.split(' ')[0] || 'Usuário'}
+          </h1>
+          <div className="flex items-center gap-2 z-10">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+              Filtrar por membro:
+            </span>
+            <Select value={selectedMember} onValueChange={setSelectedMember}>
+              <SelectTrigger className="w-[200px] bg-background">
+                <SelectValue placeholder="Todos os membros" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os membros</SelectItem>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <OverdueAlert cards={cardsData.cards} />
 

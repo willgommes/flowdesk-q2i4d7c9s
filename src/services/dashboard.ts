@@ -1,10 +1,22 @@
 import pb from '@/lib/pocketbase/client'
 
-export const getDashboardData = async (boardIds: string[]) => {
+export const getDashboardData = async (boardIds: string[], memberId?: string) => {
   if (!boardIds || boardIds.length === 0) return { cards: [], priorityCards: [] }
 
+  let assignedCardIds = new Set<string>()
+  if (memberId) {
+    try {
+      const members = await pb.collection('card_members').getFullList({
+        filter: `user_id='${memberId}'`,
+      })
+      members.forEach((m) => assignedCardIds.add(m.card_id))
+    } catch (e) {
+      console.error('Failed to fetch card members', e)
+    }
+  }
+
   const chunkSize = 30
-  const cards: any[] = []
+  let cards: any[] = []
   const labels: any[] = []
 
   for (let i = 0; i < boardIds.length; i += chunkSize) {
@@ -21,6 +33,10 @@ export const getDashboardData = async (boardIds: string[]) => {
       filter: `(name='Urgente' || name='Alta Prioridade') && (${boardsFilter})`,
     })
     labels.push(...chunkLabels)
+  }
+
+  if (memberId) {
+    cards = cards.filter((c) => assignedCardIds.has(c.id))
   }
 
   let priorityCards: any[] = []
@@ -51,7 +67,9 @@ export const getDashboardData = async (boardIds: string[]) => {
     const uniqueCards = new Map()
     for (const c of pCardsRaw) {
       if (c && !uniqueCards.has(c.id)) {
-        uniqueCards.set(c.id, c)
+        if (!memberId || assignedCardIds.has(c.id)) {
+          uniqueCards.set(c.id, c)
+        }
       }
     }
     priorityCards = Array.from(uniqueCards.values())
