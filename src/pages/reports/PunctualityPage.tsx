@@ -101,12 +101,12 @@ export default function PunctualityPage() {
 
     logs.completionLogs?.forEach((log) => {
       const card = log.expand?.card_id
-      if (!card || !card.due_date) return
+      if (!card || !card.due_date || !card.completed) return
 
-      const completionDate = parseISO(log.created)
-      const dueDate = parseISO(card.due_date)
+      const updatedDate = parseISO(card.updated)
+      const dueDate = endOfDay(parseISO(card.due_date))
 
-      const isDelayed = isAfter(completionDate, dueDate)
+      const isDelayed = isAfter(updatedDate, dueDate)
 
       const board = card.expand?.board_id
       const client = board?.expand?.client_id
@@ -141,15 +141,15 @@ export default function PunctualityPage() {
     logs.completionLogs?.forEach((log) => {
       const card = log.expand?.card_id
       const user = log.expand?.user_id
-      if (!card || !user || !card.due_date) return
+      if (!card || !user || !card.due_date || !card.completed) return
 
       if (!userStats[user.id]) {
         userStats[user.id] = { user, onTime: 0, delayed: 0 }
       }
 
-      const completionDate = parseISO(log.created)
-      const dueDate = parseISO(card.due_date)
-      const isDelayed = isAfter(completionDate, dueDate)
+      const updatedDate = parseISO(card.updated)
+      const dueDate = endOfDay(parseISO(card.due_date))
+      const isDelayed = isAfter(updatedDate, dueDate)
 
       if (isDelayed) userStats[user.id].delayed++
       else userStats[user.id].onTime++

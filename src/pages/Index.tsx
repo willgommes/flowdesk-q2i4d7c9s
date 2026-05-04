@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Download, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react'
-import { isToday, parseISO } from 'date-fns'
+import { isToday, parseISO, getHours } from 'date-fns'
 import pb from '@/lib/pocketbase/client'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -50,6 +50,9 @@ const DEFAULT_LAYOUT = [
 export default function Index() {
   const { user } = useAuth()
   const [boards, setBoards] = useState<any[]>([])
+
+  const now = new Date()
+  const isAfter10AM = getHours(now) >= 10
   const [activities, setActivities] = useState<any[]>([])
   const [cardsData, setCardsData] = useState<{ cards: any[]; priorityCards: any[] }>({
     cards: [],
@@ -270,6 +273,7 @@ export default function Index() {
         <OverdueAlert cards={cardsData.cards} />
 
         {user?.role === 'admin' &&
+          isAfter10AM &&
           users.filter(
             (u) =>
               u.role === 'membro' &&
@@ -278,7 +282,7 @@ export default function Index() {
             <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 dark:bg-amber-950/30 dark:border-amber-900/50">
               <h3 className="text-amber-800 dark:text-amber-200 font-semibold mb-3 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5" />
-                Membros com Briefing Pendente (
+                Membros com Briefing Pendente após as 10:00 (
                 {
                   users.filter(
                     (u) =>

@@ -29,7 +29,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
-import { X, Upload, FileText, FileImage } from 'lucide-react'
+import { X, Upload, FileText, FileImage, Trash2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
@@ -42,6 +42,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [contractFiles, setContractFiles] = useState<File[]>([])
   const [brandAssetsFiles, setBrandAssetsFiles] = useState<File[]>([])
+
+  const [savedContracts, setSavedContracts] = useState<string[]>([])
+  const [savedBrandAssets, setSavedBrandAssets] = useState<string[]>([])
+  const [fileToDelete, setFileToDelete] = useState<{
+    type: 'contract' | 'brand_assets'
+    filename: string
+  } | null>(null)
 
   const [newColorHex, setNewColorHex] = useState('#000000')
   const [newColorName, setNewColorName] = useState('')
@@ -59,10 +66,26 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
         setName(client.name)
         setStatus(client.status)
         setPalette(client.palette || [])
+        setSavedContracts(
+          Array.isArray(client.contract)
+            ? client.contract
+            : client.contract
+              ? [client.contract]
+              : [],
+        )
+        setSavedBrandAssets(
+          Array.isArray(client.brand_assets)
+            ? client.brand_assets
+            : client.brand_assets
+              ? [client.brand_assets]
+              : [],
+        )
       } else {
         setName('')
         setStatus('active')
         setPalette([])
+        setSavedContracts([])
+        setSavedBrandAssets([])
       }
       setLogoFile(null)
       setContractFiles([])
@@ -71,6 +94,7 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
       setNewColorName('')
       setShowArchiveConfirm(false)
       setPendingFormData(null)
+      setFileToDelete(null)
     }
   }, [open, client])
 
@@ -117,6 +141,38 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
 
   const handleRemoveBrandAssetFile = (idx: number) => {
     setBrandAssetsFiles(brandAssetsFiles.filter((_, i) => i !== idx))
+  }
+
+  const handleDeleteSavedFileConfirm = async () => {
+    if (!fileToDelete || !client) return
+    try {
+      setLoading(true)
+
+      const isContract = fileToDelete.type === 'contract'
+      const currentFiles = isContract ? savedContracts : savedBrandAssets
+      const newFiles = currentFiles.filter((f) => f !== fileToDelete.filename)
+
+      const fieldValue = newFiles.length > 0 ? newFiles : ''
+
+      await pb.collection('clients').update(client.id, {
+        [fileToDelete.type]: fieldValue,
+      })
+
+      if (isContract) setSavedContracts(newFiles)
+      else setSavedBrandAssets(newFiles)
+
+      toast({ title: 'Arquivo removido com sucesso' })
+      onSuccess()
+    } catch (err) {
+      toast({
+        title: 'Erro ao remover arquivo',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+      setFileToDelete(null)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,16 +234,6 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
       setShowArchiveConfirm(false)
       setPendingFormData(null)
     }
-  }
-
-  const getContractsArray = () => {
-    if (!client?.contract) return []
-    return Array.isArray(client.contract) ? client.contract : [client.contract]
-  }
-
-  const getBrandAssetsArray = () => {
-    if (!client?.brand_assets) return []
-    return Array.isArray(client.brand_assets) ? client.brand_assets : [client.brand_assets]
   }
 
   return (
@@ -407,16 +453,16 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                       </Button>
                     </div>
 
-                    {getBrandAssetsArray().length > 0 && brandAssetsFiles.length === 0 && (
+                    {savedBrandAssets.length > 0 && brandAssetsFiles.length === 0 && (
                       <div className="text-xs text-muted-foreground mt-2 border border-border/60 p-3 rounded-md bg-muted/10">
                         <p className="mb-2 font-medium text-foreground">
-                          Ativos salvos ({getBrandAssetsArray().length}):
+                          Ativos salvos ({savedBrandAssets.length}):
                         </p>
                         <div className="flex gap-2 overflow-x-auto pb-2">
-                          {getBrandAssetsArray().map((c: string, i: number) => (
+                          {savedBrandAssets.map((c: string, i: number) => (
                             <div
                               key={i}
-                              className="w-12 h-12 border rounded bg-background shrink-0 flex items-center justify-center overflow-hidden"
+                              className="relative group w-12 h-12 border rounded bg-background shrink-0 flex items-center justify-center overflow-hidden"
                               title={c}
                             >
                               {c.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i) ? (
@@ -427,6 +473,19 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                               ) : (
                                 <FileImage className="w-5 h-5 text-muted-foreground" />
                               )}
+                              <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-8 h-8 text-destructive hover:text-destructive hover:bg-destructive/20"
+                                  onClick={() =>
+                                    setFileToDelete({ type: 'brand_assets', filename: c })
+                                  }
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -493,15 +552,29 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                       </Button>
                     </div>
 
-                    {getContractsArray().length > 0 && contractFiles.length === 0 && (
+                    {savedContracts.length > 0 && contractFiles.length === 0 && (
                       <div className="text-xs text-muted-foreground mt-2 border border-border/60 p-3 rounded-md bg-muted/10">
                         <p className="mb-1 font-medium text-foreground">
-                          Contratos salvos ({getContractsArray().length}):
+                          Contratos salvos ({savedContracts.length}):
                         </p>
-                        <ul className="space-y-1 list-disc list-inside pl-1">
-                          {getContractsArray().map((c: string, i: number) => (
-                            <li key={i} className="truncate">
-                              {c}
+                        <ul className="space-y-2 mt-2">
+                          {savedContracts.map((c: string, i: number) => (
+                            <li
+                              key={i}
+                              className="flex items-center justify-between bg-background p-2 rounded border shadow-sm"
+                            >
+                              <span className="truncate mr-2 flex-1" title={c}>
+                                {c}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="w-6 h-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setFileToDelete({ type: 'contract', filename: c })}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </li>
                           ))}
                         </ul>
@@ -581,6 +654,28 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
               }}
             >
               Sim, arquivar quadros
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!fileToDelete} onOpenChange={(open) => !open && setFileToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover arquivo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover este arquivo? Esta ação atualizará o cliente
+              imediatamente e não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSavedFileConfirm}
+              disabled={loading}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {loading ? 'Removendo...' : 'Sim, remover'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
