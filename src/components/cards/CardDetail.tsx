@@ -29,6 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
@@ -260,22 +261,58 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           />
         </div>
 
-        {labels.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {labels.map(
-              (cl: any) =>
-                cl.expand?.label_id && (
-                  <div
-                    key={cl.id}
-                    className="px-3 py-1 rounded-md text-xs font-medium text-white flex items-center shadow-sm"
-                    style={{ backgroundColor: cl.expand.label_id.color }}
-                  >
-                    {cl.expand.label_id.name}
-                  </div>
-                ),
-            )}
+        <div className="flex flex-wrap gap-6">
+          <div className="space-y-1.5">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase">Membros</h4>
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {members.length > 0 ? (
+                members.map((cm: any) => {
+                  const m = cm.expand?.user_id
+                  if (!m) return null
+                  return (
+                    <Tooltip key={cm.id}>
+                      <TooltipTrigger asChild>
+                        <Avatar className="w-8 h-8 border border-border shadow-sm cursor-help">
+                          <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : undefined} />
+                          <AvatarFallback className="text-xs font-medium">
+                            {m.name?.[0]?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{m.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                })
+              ) : (
+                <span className="text-sm text-muted-foreground italic h-8 flex items-center">
+                  Nenhum
+                </span>
+              )}
+            </div>
           </div>
-        )}
+
+          {labels.length > 0 && (
+            <div className="space-y-1.5">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase">Etiquetas</h4>
+              <div className="flex flex-wrap gap-2">
+                {labels.map(
+                  (cl: any) =>
+                    cl.expand?.label_id && (
+                      <div
+                        key={cl.id}
+                        className="px-3 py-1.5 rounded-md text-xs font-medium text-white flex items-center shadow-sm h-8"
+                        style={{ backgroundColor: cl.expand.label_id.color }}
+                      >
+                        {cl.expand.label_id.name}
+                      </div>
+                    ),
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="space-y-3">
           <h3 className="text-lg font-semibold flex items-center gap-2">
