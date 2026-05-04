@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Search, LayoutTemplate } from 'lucide-react'
+import { Plus, Search, LayoutTemplate, ListTodo } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getBoards } from '@/services/boards'
@@ -19,6 +19,7 @@ import { ptBR } from 'date-fns/locale'
 export default function BoardsPage() {
   const { user } = useAuth()
   const [boards, setBoards] = useState<any[]>([])
+  const [cardCounts, setCardCounts] = useState<Record<string, number>>({})
   const [archived, setArchived] = useState(false)
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
@@ -28,6 +29,22 @@ export default function BoardsPage() {
     try {
       const data = await getBoards(archived)
       setBoards(data)
+
+      const counts: Record<string, number> = {}
+      await Promise.all(
+        data.map(async (board) => {
+          try {
+            const res = await pb.collection('cards').getList(1, 1, {
+              filter: `board_id = '${board.id}'`,
+              fields: 'id',
+            })
+            counts[board.id] = res.totalItems
+          } catch {
+            counts[board.id] = 0
+          }
+        }),
+      )
+      setCardCounts(counts)
     } catch (err) {
       console.error(err)
     } finally {
@@ -40,6 +57,10 @@ export default function BoardsPage() {
   }, [archived])
 
   useRealtime('boards', () => {
+    loadBoards()
+  })
+
+  useRealtime('cards', () => {
     loadBoards()
   })
 
@@ -135,6 +156,16 @@ export default function BoardsPage() {
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-4 break-words whitespace-normal">
                       {board.description || 'Sem descrição'}
                     </p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full font-medium border border-border/50">
+                        <ListTodo className="w-3.5 h-3.5" />
+                        <span>
+                          {cardCounts[board.id] === undefined
+                            ? '...'
+                            : `${cardCounts[board.id]} ${cardCounts[board.id] === 1 ? 'tarefa' : 'tarefas'}`}
+                        </span>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-between mt-auto">
                       <div className="flex -space-x-2">
                         {board.expand?.members?.map((m: any) => (
