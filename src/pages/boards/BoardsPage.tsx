@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Plus, Search, LayoutTemplate, ListTodo, Briefcase } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  Plus,
+  Search,
+  LayoutTemplate,
+  ListTodo,
+  Briefcase,
+  MoreHorizontal,
+  Archive,
+  Trash2,
+  ArchiveRestore,
+} from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getBoards } from '@/services/boards'
+import { getBoards, updateBoard, deleteBoard } from '@/services/boards'
 import { getClients } from '@/services/clients'
 import {
   Select,
@@ -20,6 +30,24 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BoardModal } from '@/components/boards/BoardModal'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -36,6 +64,9 @@ export default function BoardsPage() {
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string>('all')
+  const [boardToDelete, setBoardToDelete] = useState<any>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const navigate = useNavigate()
 
   const loadBoards = async () => {
     try {
@@ -101,6 +132,31 @@ export default function BoardsPage() {
   })
 
   const isAdmin = user?.role === 'admin'
+
+  const toggleArchiveBoard = async (board: any) => {
+    try {
+      await updateBoard(board.id, { archived: !board.archived })
+      toast.success(`Quadro ${board.archived ? 'desarquivado' : 'arquivado'} com sucesso.`)
+      loadBoards()
+    } catch (err: any) {
+      toast.error('Erro ao atualizar o quadro: ' + err.message)
+    }
+  }
+
+  const handleDeleteBoard = async () => {
+    if (!boardToDelete) return
+    setIsDeleting(true)
+    try {
+      await deleteBoard(boardToDelete.id)
+      toast.success('Quadro excluído com sucesso.')
+      setBoardToDelete(null)
+      loadBoards()
+    } catch (err: any) {
+      toast.error('Erro ao excluir o quadro: ' + err.message)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full min-h-screen">
@@ -179,102 +235,170 @@ export default function BoardsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
             {filteredBoards.map((board) => (
-              <Link to={`/boards/${board.id}`} key={board.id}>
-                <Card className="h-full flex flex-col border-border/60 hover-scale shadow-subtle transition-all cursor-pointer overflow-hidden">
-                  <CardHeader className="pb-4 shrink-0">
-                    <div className="flex justify-between items-start w-full">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="flex items-start gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full shrink-0 mt-1.5"
-                            style={{ backgroundColor: board.color || '#FFC300' }}
-                          />
-                          <span className="break-words whitespace-normal leading-tight">
-                            {board.name}
+              <Card
+                key={board.id}
+                onClick={() => navigate(`/boards/${board.id}`)}
+                className="h-full flex flex-col border-border/60 hover-scale shadow-subtle transition-all cursor-pointer overflow-hidden group relative"
+              >
+                <CardHeader className="pb-4 shrink-0">
+                  <div className="flex justify-between items-start w-full">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <CardTitle className="flex items-start gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full shrink-0 mt-1.5"
+                          style={{ backgroundColor: board.color || '#FFC300' }}
+                        />
+                        <span className="break-words whitespace-normal leading-tight">
+                          {board.name}
+                        </span>
+                      </CardTitle>
+                      {(board.client_name || board.expand?.client_id) && (
+                        <CardDescription className="mt-2 font-medium text-foreground/70 break-words whitespace-normal flex items-center gap-1.5">
+                          {board.expand?.client_id?.logo && (
+                            <img
+                              src={pb.files.getURL(
+                                board.expand.client_id,
+                                board.expand.client_id.logo,
+                              )}
+                              alt=""
+                              className="w-4 h-4 object-contain rounded-sm"
+                            />
+                          )}
+                          <span className="truncate">
+                            {board.expand?.client_id?.name || board.client_name}
                           </span>
-                        </CardTitle>
-                        {(board.client_name || board.expand?.client_id) && (
-                          <CardDescription className="mt-2 font-medium text-foreground/70 break-words whitespace-normal flex items-center gap-1.5">
-                            {board.expand?.client_id?.logo && (
-                              <img
-                                src={pb.files.getURL(
-                                  board.expand.client_id,
-                                  board.expand.client_id.logo,
-                                )}
-                                alt=""
-                                className="w-4 h-4 object-contain rounded-sm"
-                              />
-                            )}
-                            <span className="truncate">
-                              {board.expand?.client_id?.name || board.client_name}
-                            </span>
-                          </CardDescription>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex flex-col flex-1">
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 break-words whitespace-normal">
-                      {board.description || 'Sem descrição'}
-                    </p>
-                    <div className="flex flex-col gap-2 mb-4">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1.5 font-medium">
-                          <ListTodo className="w-3.5 h-3.5" />
-                          <span>
-                            {cardCounts[board.id] === undefined
-                              ? '...'
-                              : `${cardCounts[board.id].completed}/${cardCounts[board.id].total} tarefas concluídas`}
-                          </span>
-                        </div>
-                        {cardCounts[board.id] !== undefined && cardCounts[board.id].total > 0 && (
-                          <span>
-                            {Math.round(
-                              (cardCounts[board.id].completed / cardCounts[board.id].total) * 100,
-                            )}
-                            %
-                          </span>
-                        )}
-                      </div>
-                      {cardCounts[board.id] !== undefined && cardCounts[board.id].total > 0 && (
-                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className="bg-primary h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${(cardCounts[board.id].completed / cardCounts[board.id].total) * 100}%`,
-                            }}
-                          />
-                        </div>
+                        </CardDescription>
                       )}
                     </div>
-                    <div className="flex items-center justify-between mt-auto">
-                      <div className="flex -space-x-2">
-                        {board.expand?.members?.map((m: any) => (
-                          <Avatar key={m.id} className="w-8 h-8 border-2 border-background">
-                            <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : ''} />
-                            <AvatarFallback className="text-xs bg-primary/10">
-                              {m.name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        ))}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {board.updated
-                          ? formatDistanceToNow(new Date(board.updated), {
-                              addSuffix: true,
-                              locale: ptBR,
-                            })
-                          : ''}
-                      </span>
+                    <div
+                      className="shrink-0 flex items-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 data-[state=open]:opacity-100"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => toggleArchiveBoard(board)}>
+                            {board.archived ? (
+                              <ArchiveRestore className="w-4 h-4 mr-2" />
+                            ) : (
+                              <Archive className="w-4 h-4 mr-2" />
+                            )}
+                            {board.archived ? 'Desarquivar' : 'Arquivar'}
+                          </DropdownMenuItem>
+                          {isAdmin && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                onClick={() => setBoardToDelete(board)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex flex-col flex-1">
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4 break-words whitespace-normal">
+                    {board.description || 'Sem descrição'}
+                  </p>
+                  <div className="flex flex-col gap-2 mb-4">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <ListTodo className="w-3.5 h-3.5" />
+                        <span>
+                          {cardCounts[board.id] === undefined
+                            ? '...'
+                            : `${cardCounts[board.id].completed}/${cardCounts[board.id].total} tarefas concluídas`}
+                        </span>
+                      </div>
+                      {cardCounts[board.id] !== undefined && cardCounts[board.id].total > 0 && (
+                        <span>
+                          {Math.round(
+                            (cardCounts[board.id].completed / cardCounts[board.id].total) * 100,
+                          )}
+                          %
+                        </span>
+                      )}
+                    </div>
+                    {cardCounts[board.id] !== undefined && cardCounts[board.id].total > 0 && (
+                      <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-primary h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${(cardCounts[board.id].completed / cardCounts[board.id].total) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex -space-x-2">
+                      {board.expand?.members?.map((m: any) => (
+                        <Avatar key={m.id} className="w-8 h-8 border-2 border-background">
+                          <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : ''} />
+                          <AvatarFallback className="text-xs bg-primary/10">
+                            {m.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {board.updated
+                        ? formatDistanceToNow(new Date(board.updated), {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })
+                        : ''}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
 
         <BoardModal open={modalOpen} onOpenChange={setModalOpen} onSuccess={loadBoards} />
+
+        <AlertDialog
+          open={!!boardToDelete}
+          onOpenChange={(open) => !open && !isDeleting && setBoardToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir quadro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o quadro <strong>{boardToDelete?.name}</strong>? Esta
+                ação é irreversível e excluirá todas as colunas, cartões e anexos associados a ele.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleDeleteBoard()
+                }}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )
