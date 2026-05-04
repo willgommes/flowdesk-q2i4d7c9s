@@ -8,7 +8,6 @@ migrate(
     }
 
     if (!col.fields.getByName('is_system')) {
-      const { BoolField } = require('pocketbase/models/schema')
       col.fields.add(new BoolField({ name: 'is_system' }))
     }
 

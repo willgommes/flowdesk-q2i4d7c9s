@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T17:36:04.237Z",
+  "generatedAt": "2026-05-04T17:39:37.239Z",
   "collections": [
     {
       "name": "users",
@@ -306,14 +306,14 @@
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
         "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "update": "@request.auth.id != '' && is_system = false",
+        "delete": "@request.auth.id != '' && is_system = false"
       },
       "fields": [
         {
           "name": "board_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "boards"
         },
@@ -342,6 +342,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "is_system",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
