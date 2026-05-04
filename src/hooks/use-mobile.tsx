@@ -1,4 +1,3 @@
-/* Use Mobile Hook - A hook that checks if the screen is mobile - from shadcn/ui (exposes useIsMobile) */
 import * as React from 'react'
 
 const MOBILE_BREAKPOINT = 768

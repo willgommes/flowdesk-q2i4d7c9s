@@ -216,8 +216,8 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   }
 
   return (
-    <div className="flex h-full max-h-full flex-col md:flex-row">
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-background">
+    <div className="flex h-auto md:h-full md:max-h-full flex-col md:flex-row md:overflow-hidden">
+      <div className="flex-1 md:overflow-y-auto p-4 md:p-6 space-y-6 md:space-y-8 bg-background">
         <div className="space-y-2">
           <div className="flex items-center text-sm text-muted-foreground gap-2 font-medium">
             <LayoutTemplate className="w-4 h-4" />
@@ -329,8 +329,8 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
       </div>
 
-      <div className="w-full md:w-[280px] shrink-0 bg-muted/20 p-6 space-y-6 border-l border-border overflow-y-auto">
-        <div className="space-y-2">
+      <div className="w-full md:w-[280px] shrink-0 bg-muted/20 p-4 md:p-6 space-y-6 border-t md:border-t-0 md:border-l border-border md:overflow-y-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-2">
           <Button
             variant={card.completed ? 'outline' : 'default'}
             className="w-full justify-start font-semibold shadow-sm"
@@ -352,229 +352,233 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           )}
         </div>
 
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             Adicionar ao cartão
           </h4>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="secondary"
-                className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
-              >
-                <Users className="w-4 h-4 mr-2" /> Membros
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-3" align="end">
-              <h4 className="font-semibold text-sm mb-3">Membros do Quadro</h4>
-              <div className="space-y-1">
-                {board.expand?.members?.map((m: any) => {
-                  const isAssigned = members.some((cm: any) => cm.user_id === m.id)
-                  return (
-                    <div
-                      key={m.id}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded-md transition-colors"
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                >
+                  <Users className="w-4 h-4 mr-2" /> Membros
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3" align="end">
+                <h4 className="font-semibold text-sm mb-3">Membros do Quadro</h4>
+                <div className="space-y-1">
+                  {board.expand?.members?.map((m: any) => {
+                    const isAssigned = members.some((cm: any) => cm.user_id === m.id)
+                    return (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded-md transition-colors"
+                        onClick={async () => {
+                          if (isAssigned) {
+                            const cm = members.find((x: any) => x.user_id === m.id)
+                            await pb.collection('card_members').delete(cm.id)
+                            await logAct('assignment_remove', `Removeu ${m.name} do cartão`)
+                          } else {
+                            await pb
+                              .collection('card_members')
+                              .create({ card_id: card.id, user_id: m.id })
+                            await logAct('assignment_add', `Atribuiu ${m.name} ao cartão`)
+                          }
+                          onChange()
+                        }}
+                      >
+                        <Checkbox checked={isAssigned} readOnly />
+                        <Avatar className="w-6 h-6">
+                          <AvatarFallback className="text-[10px]">{m.name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm flex-1 truncate font-medium">{m.name}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                >
+                  <Tag className="w-4 h-4 mr-2" /> Etiquetas
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3" align="end">
+                <h4 className="font-semibold text-sm mb-3">Etiquetas</h4>
+                <div className="space-y-1 max-h-48 overflow-auto mb-3">
+                  {boardLabels.map((l: any) => {
+                    const isActive = labels.some((cl: any) => cl.label_id === l.id)
+                    return (
+                      <div
+                        key={l.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1.5 rounded-md transition-colors"
+                        onClick={() => toggleLabel(l)}
+                      >
+                        <Checkbox checked={isActive} readOnly />
+                        <div
+                          className="flex-1 px-2 py-1 rounded-md text-xs font-medium text-white shadow-sm"
+                          style={{ backgroundColor: l.color }}
+                        >
+                          {l.name}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    const data = new FormData(e.currentTarget)
+                    createLabel(data.get('name') as string, data.get('color') as string)
+                    e.currentTarget.reset()
+                  }}
+                  className="space-y-3 border-t pt-3 mt-2"
+                >
+                  <Input
+                    name="name"
+                    placeholder="Nova etiqueta..."
+                    required
+                    className="h-8 text-sm"
+                  />
+                  <div className="flex flex-wrap gap-1.5 justify-between">
+                    {LABEL_COLORS.map((c) => (
+                      <label key={c} className="cursor-pointer relative">
+                        <input
+                          type="radio"
+                          name="color"
+                          value={c}
+                          required
+                          className="sr-only peer"
+                        />
+                        <div
+                          className="w-6 h-6 rounded-md shadow-sm peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-primary transition-all"
+                          style={{ backgroundColor: c }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <Button type="submit" size="sm" className="w-full h-8">
+                    Criar Etiqueta
+                  </Button>
+                </form>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                >
+                  <Clock className="w-4 h-4 mr-2" /> Data de Entrega
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={card.due_date ? new Date(card.due_date) : undefined}
+                  onSelect={async (date) => {
+                    const newDate = date ? date.toISOString() : null
+                    await pb.collection('cards').update(card.id, { due_date: newDate })
+                    await logAct('date_change', 'Alterou a data de entrega')
+                    onChange()
+                  }}
+                  initialFocus
+                />
+                {card.due_date && (
+                  <div className="p-3 border-t border-border">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-destructive hover:text-destructive"
                       onClick={async () => {
-                        if (isAssigned) {
-                          const cm = members.find((x: any) => x.user_id === m.id)
-                          await pb.collection('card_members').delete(cm.id)
-                          await logAct('assignment_remove', `Removeu ${m.name} do cartão`)
-                        } else {
-                          await pb
-                            .collection('card_members')
-                            .create({ card_id: card.id, user_id: m.id })
-                          await logAct('assignment_add', `Atribuiu ${m.name} ao cartão`)
-                        }
+                        await pb.collection('cards').update(card.id, { due_date: null })
+                        await logAct('date_change', 'Removeu a data de entrega')
                         onChange()
                       }}
                     >
-                      <Checkbox checked={isAssigned} readOnly />
-                      <Avatar className="w-6 h-6">
-                        <AvatarFallback className="text-[10px]">{m.name?.[0]}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm flex-1 truncate font-medium">{m.name}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="secondary"
-                className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
-              >
-                <Tag className="w-4 h-4 mr-2" /> Etiquetas
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-3" align="end">
-              <h4 className="font-semibold text-sm mb-3">Etiquetas</h4>
-              <div className="space-y-1 max-h-48 overflow-auto mb-3">
-                {boardLabels.map((l: any) => {
-                  const isActive = labels.some((cl: any) => cl.label_id === l.id)
-                  return (
-                    <div
-                      key={l.id}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1.5 rounded-md transition-colors"
-                      onClick={() => toggleLabel(l)}
-                    >
-                      <Checkbox checked={isActive} readOnly />
-                      <div
-                        className="flex-1 px-2 py-1 rounded-md text-xs font-medium text-white shadow-sm"
-                        style={{ backgroundColor: l.color }}
-                      >
-                        {l.name}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const data = new FormData(e.currentTarget)
-                  createLabel(data.get('name') as string, data.get('color') as string)
-                  e.currentTarget.reset()
-                }}
-                className="space-y-3 border-t pt-3 mt-2"
-              >
-                <Input
-                  name="name"
-                  placeholder="Nova etiqueta..."
-                  required
-                  className="h-8 text-sm"
-                />
-                <div className="flex flex-wrap gap-1.5 justify-between">
-                  {LABEL_COLORS.map((c) => (
-                    <label key={c} className="cursor-pointer relative">
-                      <input
-                        type="radio"
-                        name="color"
-                        value={c}
-                        required
-                        className="sr-only peer"
-                      />
-                      <div
-                        className="w-6 h-6 rounded-md shadow-sm peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-primary transition-all"
-                        style={{ backgroundColor: c }}
-                      />
-                    </label>
-                  ))}
-                </div>
-                <Button type="submit" size="sm" className="w-full h-8">
-                  Criar Etiqueta
-                </Button>
-              </form>
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="secondary"
-                className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
-              >
-                <Clock className="w-4 h-4 mr-2" /> Data de Entrega
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={card.due_date ? new Date(card.due_date) : undefined}
-                onSelect={async (date) => {
-                  const newDate = date ? date.toISOString() : null
-                  await pb.collection('cards').update(card.id, { due_date: newDate })
-                  await logAct('date_change', 'Alterou a data de entrega')
-                  onChange()
-                }}
-                initialFocus
-              />
-              {card.due_date && (
-                <div className="p-3 border-t border-border">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-destructive hover:text-destructive"
-                    onClick={async () => {
-                      await pb.collection('cards').update(card.id, { due_date: null })
-                      await logAct('date_change', 'Removeu a data de entrega')
-                      onChange()
-                    }}
-                  >
-                    Remover data
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
+                      Remover data
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
-        <div className="space-y-2 pt-6">
-          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+        <div className="space-y-3 pt-2 md:pt-6">
+          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             Ações
           </h4>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="secondary"
-                className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
-              >
-                <ArrowRightLeft className="w-4 h-4 mr-2" /> Mover
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-3" align="end">
-              <h4 className="font-semibold text-sm mb-3">Mover para Coluna</h4>
-              <Select
-                value={card.column_id}
-                onValueChange={async (val) => {
-                  if (val === card.column_id) return
-                  await pb.collection('cards').update(card.id, { column_id: val })
-                  await logAct('move', 'Moveu o cartão via menu de ações')
-                  onChange()
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a coluna" />
-                </SelectTrigger>
-                <SelectContent>
-                  {columns.map((col: any) => (
-                    <SelectItem key={col.id} value={col.id}>
-                      {col.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </PopoverContent>
-          </Popover>
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                >
+                  <ArrowRightLeft className="w-4 h-4 mr-2" /> Mover
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3" align="end">
+                <h4 className="font-semibold text-sm mb-3">Mover para Coluna</h4>
+                <Select
+                  value={card.column_id}
+                  onValueChange={async (val) => {
+                    if (val === card.column_id) return
+                    await pb.collection('cards').update(card.id, { column_id: val })
+                    await logAct('move', 'Moveu o cartão via menu de ações')
+                    onChange()
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a coluna" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {columns.map((col: any) => (
+                      <SelectItem key={col.id} value={col.id}>
+                        {col.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </PopoverContent>
+            </Popover>
 
-          <Button
-            variant="secondary"
-            className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
-            onClick={handleDuplicate}
-          >
-            <Copy className="w-4 h-4 mr-2" /> Duplicar
-          </Button>
+            <Button
+              variant="secondary"
+              className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+              onClick={handleDuplicate}
+            >
+              <Copy className="w-4 h-4 mr-2" /> Duplicar
+            </Button>
 
-          <Button
-            variant="secondary"
-            className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
-            onClick={handleArchive}
-          >
-            <Archive className="w-4 h-4 mr-2" /> Arquivar
-          </Button>
+            <Button
+              variant="secondary"
+              className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+              onClick={handleArchive}
+            >
+              <Archive className="w-4 h-4 mr-2" /> Arquivar
+            </Button>
 
-          <Button
-            variant="secondary"
-            className="w-full justify-start bg-destructive/10 hover:bg-destructive/20 border border-transparent hover:border-destructive/30"
-            onClick={handleDelete}
-          >
-            <Trash2 className="w-4 h-4 mr-2 text-destructive" />{' '}
-            <span className="text-destructive font-medium">Excluir</span>
-          </Button>
+            <Button
+              variant="secondary"
+              className="w-full justify-start bg-destructive/10 hover:bg-destructive/20 border border-transparent hover:border-destructive/30"
+              onClick={handleDelete}
+            >
+              <Trash2 className="w-4 h-4 mr-2 text-destructive" />{' '}
+              <span className="text-destructive font-medium">Excluir</span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
