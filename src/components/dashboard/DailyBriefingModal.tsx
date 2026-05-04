@@ -56,7 +56,7 @@ export function DailyBriefingModal() {
         await pb.collection('activity_logs').create({
           user_id: user.id,
           action_type: 'briefing_read',
-          description: 'Leu o resumo diário',
+          description: 'Usuário confirmou leitura do briefing diário',
         })
       } catch (error) {
         console.error('Failed to log briefing acknowledgment', error)
@@ -102,8 +102,10 @@ export function DailyBriefingModal() {
     if (!isSameSection) return
 
     try {
-      await pb.collection('cards').update(sourceCard.id, { sort_order: targetCard.sort_order })
-      await pb.collection('cards').update(targetCard.id, { sort_order: sourceCard.sort_order })
+      const sourceOrder = sourceCard.sort_order || 0
+      const targetOrder = targetCard.sort_order || 0
+      await pb.collection('cards').update(sourceCard.id, { sort_order: targetOrder })
+      await pb.collection('cards').update(targetCard.id, { sort_order: sourceOrder })
     } catch (error) {
       console.error('Failed to reorder', error)
     }

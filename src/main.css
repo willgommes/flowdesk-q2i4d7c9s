@@ -41,6 +41,12 @@
     --sidebar-accent-foreground: 321 77% 38%;
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 321 77% 38%;
+
+    --chart-1: 0 84.2% 60.2%;
+    --chart-2: 142.1 70.6% 45.3%;
+    --chart-3: 217.2 91.2% 59.8%;
+    --chart-4: 47.9 95.8% 53.1%;
+    --chart-5: 27.2 98.5% 53.9%;
   }
 
   .dark {
@@ -72,6 +78,12 @@
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 321 77% 58%;
+
+    --chart-1: 0 62.8% 30.6%;
+    --chart-2: 142.1 70.6% 45.3%;
+    --chart-3: 217.2 91.2% 59.8%;
+    --chart-4: 47.9 95.8% 53.1%;
+    --chart-5: 27.2 98.5% 53.9%;
   }
 
   * {

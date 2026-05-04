@@ -12,18 +12,29 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, CartesianGrid } from 'rechar
 import { subDays, isAfter, parseISO } from 'date-fns'
 
 export default function PunctualityPage() {
-  const [logs, setLogs] = useState<any[]>([])
+  const [logs, setLogs] = useState<{ completionLogs: any[]; incompleteCards: any[] }>({
+    completionLogs: [],
+    incompleteCards: [],
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchLogs = async () => {
       try {
         const sevenDaysAgo = subDays(new Date(), 7).toISOString()
-        const records = await pb.collection('activity_logs').getFullList({
+        const now = new Date().toISOString()
+
+        const completionLogs = await pb.collection('activity_logs').getFullList({
           filter: `action_type = 'completion' && created >= '${sevenDaysAgo}'`,
           expand: 'card_id,card_id.board_id,card_id.board_id.client_id',
         })
-        setLogs(records)
+
+        const incompleteCards = await pb.collection('cards').getFullList({
+          filter: `completed = false && due_date != '' && due_date < '${now}' && due_date >= '${sevenDaysAgo}'`,
+          expand: 'board_id,board_id.client_id',
+        })
+
+        setLogs({ completionLogs, incompleteCards })
       } catch (err) {
         console.error(err)
       } finally {
@@ -39,23 +50,9 @@ export default function PunctualityPage() {
     const clientMap: Record<string, { onTime: number; delayed: number }> = {}
     const boardMap: Record<string, { onTime: number; delayed: number }> = {}
 
-    logs.forEach((log) => {
-      const card = log.expand?.card_id
-      if (!card || !card.due_date) return
-
-      const completionDate = parseISO(log.created)
-      const dueDate = parseISO(card.due_date)
-
-      const isDelayed = isAfter(completionDate, dueDate)
-
+    const addStat = (isDelayed: boolean, boardName: string, clientName: string) => {
       if (isDelayed) delayed++
       else onTime++
-
-      const board = card.expand?.board_id
-      const client = board?.expand?.client_id
-
-      const boardName = board?.name || 'Desconhecido'
-      const clientName = client?.name || board?.client_name || 'Sem Cliente'
 
       if (!boardMap[boardName]) boardMap[boardName] = { onTime: 0, delayed: 0 }
       if (!clientMap[clientName]) clientMap[clientName] = { onTime: 0, delayed: 0 }
@@ -67,6 +64,34 @@ export default function PunctualityPage() {
         boardMap[boardName].onTime++
         clientMap[clientName].onTime++
       }
+    }
+
+    logs.completionLogs?.forEach((log) => {
+      const card = log.expand?.card_id
+      if (!card || !card.due_date) return
+
+      const completionDate = parseISO(log.created)
+      const dueDate = parseISO(card.due_date)
+
+      const isDelayed = isAfter(completionDate, dueDate)
+
+      const board = card.expand?.board_id
+      const client = board?.expand?.client_id
+
+      const boardName = board?.name || 'Desconhecido'
+      const clientName = client?.name || board?.client_name || 'Sem Cliente'
+
+      addStat(isDelayed, boardName, clientName)
+    })
+
+    logs.incompleteCards?.forEach((card) => {
+      const board = card.expand?.board_id
+      const client = board?.expand?.client_id
+
+      const boardName = board?.name || 'Desconhecido'
+      const clientName = client?.name || board?.client_name || 'Sem Cliente'
+
+      addStat(true, boardName, clientName)
     })
 
     return {
@@ -92,7 +117,7 @@ export default function PunctualityPage() {
 
   const chartConfig = {
     onTime: { label: 'No Prazo', color: 'hsl(var(--chart-2))' },
-    delayed: { label: 'Atrasado', color: 'hsl(var(--chart-5))' },
+    delayed: { label: 'Atrasado', color: 'hsl(var(--chart-1))' },
   }
 
   return (
