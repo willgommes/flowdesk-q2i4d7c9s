@@ -20,7 +20,8 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { Download, FileSpreadsheet, FileText } from 'lucide-react'
+import { Download, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react'
+import { isToday, parseISO } from 'date-fns'
 import pb from '@/lib/pocketbase/client'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -266,6 +267,45 @@ export default function Index() {
         </div>
 
         <OverdueAlert cards={cardsData.cards} />
+
+        {user?.role === 'admin' &&
+          users.filter(
+            (u) =>
+              u.role === 'membro' &&
+              (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))),
+          ).length > 0 && (
+            <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 dark:bg-amber-950/30 dark:border-amber-900/50">
+              <h3 className="text-amber-800 dark:text-amber-200 font-semibold mb-3 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Membros com Briefing Pendente (
+                {
+                  users.filter(
+                    (u) =>
+                      u.role === 'membro' &&
+                      (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))),
+                  ).length
+                }
+                )
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {users
+                  .filter(
+                    (u) =>
+                      u.role === 'membro' &&
+                      (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))),
+                  )
+                  .map((u) => (
+                    <Badge
+                      key={u.id}
+                      variant="outline"
+                      className="bg-background text-amber-700 border-amber-200 dark:text-amber-300 dark:border-amber-800"
+                    >
+                      {u.name}
+                    </Badge>
+                  ))}
+              </div>
+            </div>
+          )}
 
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
           {layout.map((id, index) => {

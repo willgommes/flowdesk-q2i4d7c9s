@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, MoreHorizontal, Trash2, Camera, Loader2 } from 'lucide-react'
+import { Plus, MoreHorizontal, Trash2, Camera, Loader2, AlertCircle } from 'lucide-react'
+import { isToday, parseISO } from 'date-fns'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -317,8 +319,18 @@ export default function Users() {
                         )}
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="font-medium text-sm leading-tight">
+                        <span className="font-medium text-sm leading-tight flex items-center gap-2">
                           {u.name} {u.id === user?.id && '(Você)'}
+                          {u.role === 'membro' &&
+                            (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))) &&
+                            new Date().getHours() >= 10 && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <AlertCircle className="w-4 h-4 text-destructive" />
+                                </TooltipTrigger>
+                                <TooltipContent>Briefing diário pendente (Atrasado)</TooltipContent>
+                              </Tooltip>
+                            )}
                         </span>
                         <span className="text-xs text-muted-foreground">{u.email}</span>
                       </div>

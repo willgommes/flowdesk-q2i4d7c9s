@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T15:07:52.946Z",
+  "generatedAt": "2026-05-04T15:15:32.047Z",
   "collections": [
     {
       "name": "users",
@@ -640,7 +640,8 @@
             "comment_add",
             "date_change",
             "completion",
-            "briefing_read"
+            "briefing_read",
+            "briefing_pending"
           ]
         },
         {
