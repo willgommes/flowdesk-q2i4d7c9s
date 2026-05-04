@@ -235,10 +235,13 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   }
 
   const deleteLabel = async (labelId: string) => {
-    if (!confirm('Excluir esta etiqueta permanentemente?')) return
-    await pb.collection('labels').delete(labelId)
-    await fetchLabels()
-    onChange()
+    const existing = labels.find((cl: any) => cl.label_id === labelId)
+    if (existing) {
+      await pb.collection('card_labels').delete(existing.id)
+      const labelName = existing.expand?.label_id?.name || 'etiqueta'
+      await logAct('label_remove', `Removeu a etiqueta "${labelName}"`)
+      onChange()
+    }
   }
 
   return (
@@ -472,17 +475,20 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                             >
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                deleteLabel(l.id)
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            {isActive && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                title="Remover do cartão"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  deleteLabel(l.id)
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                         )}
                       </div>
