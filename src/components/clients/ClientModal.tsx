@@ -29,7 +29,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
-import { X, Upload, FileText, FileImage, Trash2 } from 'lucide-react'
+import { X, Upload, FileText, FileImage, Trash2, Eye } from 'lucide-react'
+import { DocumentPreviewModal } from '@/components/clients/DocumentPreviewModal'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
@@ -38,6 +39,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
   const [name, setName] = useState('')
   const [status, setStatus] = useState('active')
   const [palette, setPalette] = useState<any[]>([])
+
+  const [contractStatus, setContractStatus] = useState<string>('pending_signature')
+  const [contractExpirationDate, setContractExpirationDate] = useState<string>('')
+
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [previewFilename, setPreviewFilename] = useState('')
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [contractFiles, setContractFiles] = useState<File[]>([])
@@ -66,6 +74,10 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
         setName(client.name)
         setStatus(client.status)
         setPalette(client.palette || [])
+        setContractStatus(client.contract_status || 'pending_signature')
+        setContractExpirationDate(
+          client.contract_expiration_date ? client.contract_expiration_date.split('T')[0] : '',
+        )
         setSavedContracts(
           Array.isArray(client.contract)
             ? client.contract
@@ -84,6 +96,8 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
         setName('')
         setStatus('active')
         setPalette([])
+        setContractStatus('pending_signature')
+        setContractExpirationDate('')
         setSavedContracts([])
         setSavedBrandAssets([])
       }
@@ -152,10 +166,8 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
       const currentFiles = isContract ? savedContracts : savedBrandAssets
       const newFiles = currentFiles.filter((f) => f !== fileToDelete.filename)
 
-      const fieldValue = newFiles.length > 0 ? newFiles : ''
-
       await pb.collection('clients').update(client.id, {
-        [fileToDelete.type]: fieldValue,
+        [`${fileToDelete.type}-`]: fileToDelete.filename,
       })
 
       if (isContract) setSavedContracts(newFiles)
@@ -183,6 +195,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
     formData.append('name', name)
     formData.append('status', status)
     formData.append('palette', JSON.stringify(palette))
+    formData.append('contract_status', contractStatus)
+
+    if (contractExpirationDate) {
+      formData.append('contract_expiration_date', new Date(contractExpirationDate).toISOString())
+    } else {
+      formData.append('contract_expiration_date', '')
+    }
 
     if (logoFile) {
       formData.append('logo', logoFile)
@@ -234,6 +253,12 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
       setShowArchiveConfirm(false)
       setPendingFormData(null)
     }
+  }
+
+  const openPreview = (url: string, filename: string) => {
+    setPreviewUrl(url)
+    setPreviewFilename(filename)
+    setPreviewOpen(true)
   }
 
   return (
@@ -473,7 +498,16 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                               ) : (
                                 <FileImage className="w-5 h-5 text-muted-foreground" />
                               )}
-                              <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute inset-0 bg-black/50 hidden group-hover:flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-8 h-8 text-white hover:text-white hover:bg-white/20"
+                                  onClick={() => openPreview(pb.files.getURL(client, c), c)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
                                 <Button
                                   type="button"
                                   variant="ghost"
@@ -526,7 +560,37 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
 
                 {/* ABA CONTRATOS */}
                 <TabsContent value="contracts" className="space-y-6 mt-0 animate-fade-in">
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                      <Label>Status do Contrato</Label>
+                      <Select
+                        value={contractStatus}
+                        onValueChange={setContractStatus}
+                        disabled={loading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Em Vigência</SelectItem>
+                          <SelectItem value="expired">Expirado</SelectItem>
+                          <SelectItem value="signed">Assinado</SelectItem>
+                          <SelectItem value="pending_signature">Aguardando Assinatura</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                      <Label>Data de Vencimento</Label>
+                      <Input
+                        type="date"
+                        value={contractExpirationDate}
+                        onChange={(e) => setContractExpirationDate(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-border/40">
                     <Label>Contratos e Documentos Legais</Label>
                     <div>
                       <Input
@@ -563,18 +627,29 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                               key={i}
                               className="flex items-center justify-between bg-background p-2 rounded border shadow-sm"
                             >
-                              <span className="truncate mr-2 flex-1" title={c}>
+                              <span className="truncate mr-2 flex-1 text-sm" title={c}>
                                 {c}
                               </span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="w-6 h-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => setFileToDelete({ type: 'contract', filename: c })}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-7 h-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  onClick={() => openPreview(pb.files.getURL(client, c), c)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-7 h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => setFileToDelete({ type: 'contract', filename: c })}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -680,6 +755,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DocumentPreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        url={previewUrl}
+        filename={previewFilename}
+      />
     </>
   )
 }

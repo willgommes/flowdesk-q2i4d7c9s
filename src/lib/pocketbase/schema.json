@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T15:45:20.947Z",
+  "generatedAt": "2026-05-04T16:08:20.357Z",
   "collections": [
     {
       "name": "users",
@@ -726,6 +726,19 @@
         {
           "name": "brand_assets",
           "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "contract_status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["active", "expired", "signed", "pending_signature"]
+        },
+        {
+          "name": "contract_expiration_date",
+          "type": "date",
           "required": false,
           "system": false
         }

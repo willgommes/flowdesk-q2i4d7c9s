@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { getClients, deleteClient } from '@/services/clients'
 import { ClientModal } from '@/components/clients/ClientModal'
 import { ClientIdentitySheet } from '@/components/clients/ClientIdentitySheet'
+import { DocumentPreviewModal } from '@/components/clients/DocumentPreviewModal'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import pb from '@/lib/pocketbase/client'
@@ -54,6 +55,10 @@ export default function ClientsPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetClient, setSheetClient] = useState<any>(null)
+
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [previewFilename, setPreviewFilename] = useState('')
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const [fileSearch, setFileSearch] = useState('')
 
@@ -179,6 +184,42 @@ export default function ClientsPage() {
     setSheetOpen(true)
   }
 
+  const openPreview = (url: string, filename: string) => {
+    setPreviewUrl(url)
+    setPreviewFilename(filename)
+    setPreviewOpen(true)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20'
+      case 'expired':
+        return 'bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20'
+      case 'signed':
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20'
+      case 'pending_signature':
+        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+      default:
+        return 'bg-muted text-muted-foreground'
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'Em Vigência'
+      case 'expired':
+        return 'Expirado'
+      case 'signed':
+        return 'Assinado'
+      case 'pending_signature':
+        return 'Aguardando Assinatura'
+      default:
+        return 'Desconhecido'
+    }
+  }
+
   return (
     <div className="flex flex-col h-full min-h-screen bg-muted/10">
       <AppHeader />
@@ -256,7 +297,7 @@ export default function ClientsPage() {
                             >
                               {client.name}
                             </CardTitle>
-                            <CardDescription className="mt-1.5">
+                            <CardDescription className="mt-1.5 flex flex-wrap gap-1">
                               <Badge
                                 variant={
                                   client.status === 'active'
@@ -273,6 +314,14 @@ export default function ClientsPage() {
                                     ? 'Inativo'
                                     : 'Arquivado'}
                               </Badge>
+                              {client.contract_status && (
+                                <Badge
+                                  className={`font-medium text-[10px] ${getStatusColor(client.contract_status)}`}
+                                  variant="outline"
+                                >
+                                  {getStatusLabel(client.contract_status)}
+                                </Badge>
+                              )}
                             </CardDescription>
                           </div>
                         </div>
@@ -424,14 +473,20 @@ export default function ClientsPage() {
                     {filteredBrandAssets.map((asset, i) => {
                       const isImg = asset.filename.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i)
                       return (
-                        <a
+                        <div
                           key={i}
-                          href={pb.files.getURL(asset.client, asset.filename)}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="group border rounded-lg overflow-hidden bg-muted/10 hover:border-primary/50 transition-all flex flex-col shadow-sm"
                         >
-                          <div className="aspect-square bg-background flex items-center justify-center p-4 border-b group-hover:bg-muted/30 transition-colors">
+                          <div
+                            className="aspect-square bg-background flex items-center justify-center p-4 border-b group-hover:bg-muted/30 transition-colors cursor-pointer relative"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              openPreview(
+                                pb.files.getURL(asset.client, asset.filename),
+                                asset.filename,
+                              )
+                            }}
+                          >
                             {isImg ? (
                               <img
                                 src={pb.files.getURL(asset.client, asset.filename)}
@@ -441,16 +496,23 @@ export default function ClientsPage() {
                             ) : (
                               <FileImage className="w-12 h-12 text-muted-foreground/50" />
                             )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Button variant="secondary" size="sm" className="pointer-events-none">
+                                Visualizar
+                              </Button>
+                            </div>
                           </div>
-                          <div className="p-3 bg-card">
-                            <p className="text-xs font-medium truncate" title={asset.filename}>
-                              {asset.filename}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
-                              {asset.clientName}
-                            </p>
+                          <div className="p-3 bg-card relative z-10 flex flex-col justify-between h-full">
+                            <div>
+                              <p className="text-xs font-medium truncate" title={asset.filename}>
+                                {asset.filename}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                {asset.clientName}
+                              </p>
+                            </div>
                           </div>
-                        </a>
+                        </div>
                       )
                     })}
                   </div>
@@ -500,16 +562,27 @@ export default function ClientsPage() {
                         </TableCell>
                         <TableCell>{new Date(c.updated).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild>
-                            <a
-                              href={pb.files.getURL(c.client, c.filename)}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                openPreview(pb.files.getURL(c.client, c.filename), c.filename)
+                              }
                             >
-                              <Download className="w-4 h-4 sm:mr-2" />
-                              <span className="hidden sm:inline">Baixar</span>
-                            </a>
-                          </Button>
+                              Visualizar
+                            </Button>
+                            <Button variant="ghost" size="sm" asChild>
+                              <a
+                                href={pb.files.getURL(c.client, c.filename)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Download className="w-4 h-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Baixar</span>
+                              </a>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -537,6 +610,12 @@ export default function ClientsPage() {
         )}
 
         <ClientIdentitySheet open={sheetOpen} onOpenChange={setSheetOpen} client={sheetClient} />
+        <DocumentPreviewModal
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+          url={previewUrl}
+          filename={previewFilename}
+        />
       </div>
     </div>
   )

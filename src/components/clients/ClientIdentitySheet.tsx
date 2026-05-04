@@ -1,13 +1,25 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Copy, Download, Briefcase, FileImage, FileText } from 'lucide-react'
+import { useState } from 'react'
+import { Copy, Download, Briefcase, FileImage, FileText, Eye } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DocumentPreviewModal } from '@/components/clients/DocumentPreviewModal'
 
 export function ClientIdentitySheet({ open, onOpenChange, client }: any) {
   const { toast } = useToast()
 
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [previewFilename, setPreviewFilename] = useState('')
+  const [previewOpen, setPreviewOpen] = useState(false)
+
   if (!client) return null
+
+  const openPreview = (url: string, filename: string) => {
+    setPreviewUrl(url)
+    setPreviewFilename(filename)
+    setPreviewOpen(true)
+  }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -97,14 +109,14 @@ export function ClientIdentitySheet({ open, onOpenChange, client }: any) {
                   {brandAssets.map((filename: string, idx: number) => {
                     const isImage = filename.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i)
                     return (
-                      <a
+                      <div
                         key={idx}
-                        href={pb.files.getURL(client, filename)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="border rounded-lg p-2 flex flex-col items-center justify-center bg-muted/10 hover:border-primary/50 transition-colors gap-2 group cursor-pointer"
+                        className="border rounded-lg p-2 flex flex-col items-center justify-center bg-muted/10 hover:border-primary/50 transition-colors gap-2 group relative overflow-hidden"
                       >
-                        <div className="w-full aspect-video flex items-center justify-center bg-background rounded border group-hover:bg-muted/30">
+                        <div
+                          className="w-full aspect-video flex items-center justify-center bg-background rounded border group-hover:bg-muted/30 cursor-pointer relative"
+                          onClick={() => openPreview(pb.files.getURL(client, filename), filename)}
+                        >
                           {isImage ? (
                             <img
                               src={pb.files.getURL(client, filename)}
@@ -114,11 +126,14 @@ export function ClientIdentitySheet({ open, onOpenChange, client }: any) {
                           ) : (
                             <FileImage className="w-8 h-8 text-muted-foreground/50 group-hover:text-primary/50 transition-colors" />
                           )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Eye className="w-5 h-5 text-white" />
+                          </div>
                         </div>
                         <span className="text-xs truncate w-full text-center px-1" title={filename}>
                           {filename}
                         </span>
-                      </a>
+                      </div>
                     )
                   })}
                 </div>
@@ -138,19 +153,35 @@ export function ClientIdentitySheet({ open, onOpenChange, client }: any) {
             {contracts.length > 0 ? (
               <div className="space-y-2">
                 {contracts.map((filename: string, idx: number) => (
-                  <a
+                  <div
                     key={idx}
-                    href={pb.files.getURL(client, filename)}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 hover:border-primary/30 transition-colors group"
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
                       <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-                      <span className="text-sm font-medium truncate">{filename}</span>
+                      <span className="text-sm font-medium truncate" title={filename}>
+                        {filename}
+                      </span>
                     </div>
-                    <Download className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors ml-2" />
-                  </a>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => openPreview(pb.files.getURL(client, filename), filename)}
+                        className="text-muted-foreground hover:text-primary transition-colors p-1"
+                        title="Visualizar"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <a
+                        href={pb.files.getURL(client, filename)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary transition-colors p-1"
+                        title="Baixar"
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -161,6 +192,12 @@ export function ClientIdentitySheet({ open, onOpenChange, client }: any) {
           </TabsContent>
         </Tabs>
       </SheetContent>
+      <DocumentPreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        url={previewUrl}
+        filename={previewFilename}
+      />
     </Sheet>
   )
 }

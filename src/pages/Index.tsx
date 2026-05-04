@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 
 import { OverdueAlert } from '@/components/dashboard/OverdueAlert'
+import { ExpiringContractsAlert } from '@/components/dashboard/ExpiringContractsAlert'
 import { DailyBriefingModal } from '@/components/dashboard/DailyBriefingModal'
 import { ProgressWidget } from '@/components/dashboard/ProgressWidget'
 import { UpcomingWidget } from '@/components/dashboard/UpcomingWidget'
@@ -271,6 +272,8 @@ export default function Index() {
         </div>
 
         <OverdueAlert cards={cardsData.cards} />
+
+        {user?.role === 'admin' && <ExpiringContractsAlert />}
 
         {user?.role === 'admin' &&
           isAfter10AM &&
