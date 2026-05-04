@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T14:54:40.108Z",
+  "generatedAt": "2026-05-04T14:59:48.705Z",
   "collections": [
     {
       "name": "users",
@@ -611,7 +611,7 @@
         {
           "name": "card_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "cards"
         },
@@ -639,7 +639,8 @@
             "attachment_add",
             "comment_add",
             "date_change",
-            "completion"
+            "completion",
+            "briefing_read"
           ]
         },
         {

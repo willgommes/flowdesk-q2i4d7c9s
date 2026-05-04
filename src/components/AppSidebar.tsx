@@ -1,5 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Calendar, Users, LayoutList, Moon, Sun, Briefcase } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Calendar,
+  Users,
+  LayoutList,
+  Moon,
+  Sun,
+  Briefcase,
+  TrendingUp,
+} from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import {
@@ -39,6 +48,7 @@ export function AppSidebar() {
 
   if (user.role === 'admin') {
     navigation.push({ name: 'Usuários', href: '/usuarios', icon: Users })
+    navigation.push({ name: 'Pontualidade', href: '/pontualidade', icon: TrendingUp })
   }
 
   const avatarUrl = user.avatar ? pb.files.getURL(user as any, user.avatar) : ''

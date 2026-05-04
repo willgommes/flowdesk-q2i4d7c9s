@@ -18,6 +18,7 @@ import Users from './pages/Users'
 import NotFound from './pages/NotFound'
 import CalendarPage from './pages/Calendar'
 import ClientsPage from './pages/clients/ClientsPage'
+import PunctualityPage from './pages/reports/PunctualityPage'
 
 const ProtectedRoute = ({
   children,
@@ -114,6 +115,14 @@ const App = () => (
                 element={
                   <ProtectedRoute adminOnly>
                     <Users />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pontualidade"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <PunctualityPage />
                   </ProtectedRoute>
                 }
               />
