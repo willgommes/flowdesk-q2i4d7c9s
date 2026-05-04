@@ -153,8 +153,40 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
 
   const handleDelete = async () => {
     if (!confirm('Excluir este cartão permanentemente?')) return
-    await pb.collection('cards').delete(card.id)
-    onClose()
+
+    try {
+      const collectionsToClean = [
+        'card_labels',
+        'card_members',
+        'attachments',
+        'checklist_items',
+        'comments',
+        'activity_logs',
+      ]
+
+      for (const coll of collectionsToClean) {
+        try {
+          const records = await pb.collection(coll).getFullList({
+            filter: `card_id='${card.id}'`,
+          })
+          for (const record of records) {
+            await pb.collection(coll).delete(record.id).catch(console.error)
+          }
+        } catch (e) {
+          console.error(`Erro ao limpar ${coll}:`, e)
+        }
+      }
+
+      await pb.collection('cards').delete(card.id)
+      onClose()
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o cartão e suas dependências.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleDuplicate = async () => {
