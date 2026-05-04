@@ -83,6 +83,63 @@ export default function BoardPage() {
   const isDraggingRef = useRef(false)
 
   const [dateFilter, setDateFilter] = useState<string>('all')
+
+  const handleQuickMove = async (cardId: string, action: 'in_progress' | 'done') => {
+    try {
+      const targetColName = action === 'in_progress' ? 'Em Andamento' : 'Concluído'
+      const targetCol = columns.find((c) => c.name.toLowerCase() === targetColName.toLowerCase())
+      const completed = action === 'done'
+
+      const card = cards.find((c) => c.id === cardId)
+      if (!card) return
+
+      if (!targetCol) {
+        // If column doesn't exist, still update the completed status
+        if (card.completed !== completed) {
+          setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, completed } : c)))
+          await pb.collection('cards').update(cardId, { completed })
+        }
+        toast({
+          title: `Coluna "${targetColName}" não encontrada. Status atualizado.`,
+          variant: 'destructive',
+        })
+        return
+      }
+
+      if (card.column_id === targetCol.id && card.completed === completed) {
+        return
+      }
+
+      let newSortOrder = card.sort_order
+      if (card.column_id !== targetCol.id) {
+        const colCards = cards
+          .filter((c) => c.column_id === targetCol.id && c.id !== cardId)
+          .sort((a, b) => a.sort_order - b.sort_order)
+        newSortOrder = colCards.length > 0 ? colCards[colCards.length - 1].sort_order + 1 : 0
+      }
+
+      setCards((prev) =>
+        prev.map((c) => {
+          if (c.id === cardId) {
+            return { ...c, column_id: targetCol.id, completed, sort_order: newSortOrder }
+          }
+          return c
+        }),
+      )
+
+      await pb.collection('cards').update(cardId, {
+        column_id: targetCol.id,
+        completed,
+        sort_order: newSortOrder,
+      })
+
+      toast({ title: `Cartão movido para ${targetColName}` })
+    } catch (err) {
+      console.error(err)
+      toast({ title: 'Erro ao mover cartão. Tente novamente.', variant: 'destructive' })
+      loadData()
+    }
+  }
   const [searchQuery, setSearchQuery] = useState('')
   const [view, setView] = useState<'kanban' | 'list'>('kanban')
 
@@ -603,6 +660,7 @@ export default function BoardPage() {
                     })
                   }
                 }}
+                onQuickMove={handleQuickMove}
                 onCardDrop={async (cardId: string, colId: string, targetCardId?: string) => {
                   try {
                     const card = cards.find((c) => c.id === cardId)
@@ -850,6 +908,7 @@ function Column({
   onDelete,
   onUpdate,
   onCardDrop,
+  onQuickMove,
 }: any) {
   const { toast } = useToast()
   const [editing, setEditing] = useState(false)
@@ -989,6 +1048,7 @@ function Column({
                   onCardDrop(cardId, column.id, targetCard.id)
                 }
               }}
+              onQuickMove={(action: any) => onQuickMove?.(card.id, action)}
             />
           ))}
 

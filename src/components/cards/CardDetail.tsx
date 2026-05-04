@@ -12,6 +12,7 @@ import {
   ArrowRightLeft,
   Copy,
   Archive,
+  Play,
 } from 'lucide-react'
 import {
   Select,
@@ -28,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
 import { Checklist } from './Checklist'
 import { Comments } from './Comments'
@@ -48,6 +50,7 @@ const LABEL_COLORS = [
 
 export function CardDetail({ card, board, columns = [], onChange, onClose }: any) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
 
@@ -76,12 +79,58 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
     })
   }
 
+  const handleQuickMove = async (action: 'in_progress' | 'done') => {
+    const targetColName = action === 'in_progress' ? 'Em Andamento' : 'Concluído'
+    const targetCol = columns.find((c: any) => c.name.toLowerCase() === targetColName.toLowerCase())
+
+    const completed = action === 'done'
+    const updates: any = { completed }
+
+    if (targetCol) {
+      updates.column_id = targetCol.id
+    }
+
+    await pb.collection('cards').update(card.id, updates)
+
+    if (action === 'done') {
+      await logAct('completion', 'Marcou o cartão como concluído')
+    } else {
+      await logAct('move', 'Moveu o cartão para Em Andamento')
+    }
+
+    if (targetCol) {
+      toast({ title: `Cartão movido para ${targetColName}` })
+    } else {
+      toast({
+        title: `Coluna "${targetColName}" não encontrada. Status atualizado.`,
+        variant: 'destructive',
+      })
+    }
+    onChange()
+  }
+
   const toggleComplete = async () => {
-    await pb.collection('cards').update(card.id, { completed: !card.completed })
+    const willBeCompleted = !card.completed
+
+    const targetColName = willBeCompleted ? 'Concluído' : 'Em Andamento'
+    const targetCol = columns.find((c: any) => c.name.toLowerCase() === targetColName.toLowerCase())
+
+    const updates: any = { completed: willBeCompleted }
+    if (targetCol) updates.column_id = targetCol.id
+
+    await pb.collection('cards').update(card.id, updates)
     await logAct(
       'completion',
-      `Marcou o cartão como ${!card.completed ? 'concluído' : 'não concluído'}`,
+      `Marcou o cartão como ${willBeCompleted ? 'concluído' : 'não concluído'}`,
     )
+
+    if (targetCol) {
+      toast({ title: `Cartão movido para ${targetColName}` })
+    } else if (willBeCompleted) {
+      toast({ title: 'Cartão marcado como concluído' })
+    } else {
+      toast({ title: 'Cartão reaberto' })
+    }
     onChange()
   }
 
@@ -281,14 +330,27 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
       </div>
 
       <div className="w-full md:w-[280px] shrink-0 bg-muted/20 p-6 space-y-6 border-l border-border overflow-y-auto">
-        <Button
-          variant={card.completed ? 'outline' : 'default'}
-          className="w-full justify-start font-semibold shadow-sm"
-          onClick={toggleComplete}
-        >
-          <CheckSquare className="w-4 h-4 mr-2" />
-          {card.completed ? 'Reabrir Cartão' : 'Marcar como Concluído'}
-        </Button>
+        <div className="space-y-2">
+          <Button
+            variant={card.completed ? 'outline' : 'default'}
+            className="w-full justify-start font-semibold shadow-sm"
+            onClick={toggleComplete}
+          >
+            <CheckSquare className="w-4 h-4 mr-2" />
+            {card.completed ? 'Reabrir Cartão' : 'Marcar como Concluído'}
+          </Button>
+
+          {!card.completed && (
+            <Button
+              variant="outline"
+              className="w-full justify-start font-semibold shadow-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              onClick={() => handleQuickMove('in_progress')}
+            >
+              <Play className="w-4 h-4 mr-2 fill-current" />
+              Em Andamento
+            </Button>
+          )}
+        </div>
 
         <div className="space-y-2">
           <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">

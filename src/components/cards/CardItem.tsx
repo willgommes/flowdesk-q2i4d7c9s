@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Calendar, CheckSquare, MessageSquare, Paperclip } from 'lucide-react'
+import { Calendar, CheckSquare, MessageSquare, Paperclip, Play } from 'lucide-react'
 import { format, isToday, addDays, startOfDay, isBefore } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
-export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
+export function CardItem({ card, boardId, onDragStart, onDropCard, onQuickMove }: any) {
   const isCompleted = card.completed
   const labels = card.expand?.card_labels_via_card_id?.map((cl: any) => cl.expand?.label_id) || []
   const members = card.expand?.card_members_via_card_id?.map((cm: any) => cm.expand?.user_id) || []
@@ -41,7 +41,7 @@ export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
   return (
     <Link
       to={`/boards/${boardId}/cards/${card.id}`}
-      className={`block w-full overflow-hidden bg-background p-3 rounded-lg border border-border shadow-sm hover:border-primary/50 transition-colors ${isCompleted ? 'opacity-60' : ''}`}
+      className={`group block w-full overflow-hidden bg-background p-3 rounded-lg border border-border shadow-sm hover:border-primary/50 transition-colors relative ${isCompleted ? 'opacity-60' : ''}`}
       draggable
       onDragStart={(e) => onDragStart(e, card)}
       onDragOver={(e) => e.preventDefault()}
@@ -79,12 +79,44 @@ export function CardItem({ card, boardId, onDragStart, onDropCard }: any) {
         />
         <h4
           className={cn(
-            'text-sm font-medium break-words whitespace-normal leading-snug flex-1 min-w-0',
+            'text-sm font-medium break-words whitespace-normal leading-snug flex-1 min-w-0 pr-12',
             isCompleted ? 'line-through text-muted-foreground' : '',
           )}
         >
           {card.title}
         </h4>
+      </div>
+
+      <div
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10"
+        onClick={(e) => e.preventDefault()}
+      >
+        {!isCompleted && (
+          <div
+            role="button"
+            className="flex items-center justify-center h-6 w-6 rounded bg-background border border-border shadow-sm hover:bg-muted cursor-pointer transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onQuickMove?.('in_progress')
+            }}
+            title="Mover para Em Andamento"
+          >
+            <Play className="w-3 h-3 text-blue-500 fill-current" />
+          </div>
+        )}
+        <div
+          role="button"
+          className="flex items-center justify-center h-6 w-6 rounded bg-background border border-border shadow-sm hover:bg-muted cursor-pointer transition-colors"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onQuickMove?.('done')
+          }}
+          title={isCompleted ? 'Mover novamente para Concluído' : 'Mover para Concluído'}
+        >
+          <CheckSquare className="w-3 h-3 text-green-500" />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground mt-3 w-full">
