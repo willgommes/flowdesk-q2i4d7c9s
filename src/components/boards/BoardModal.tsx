@@ -59,7 +59,7 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
         toast({ title: 'Quadro atualizado com sucesso' })
       } else {
         await createBoard(data)
-        toast({ title: 'Quadro criado com sucesso' })
+        toast({ title: 'Quadro criado com sucesso e colunas padrão configuradas' })
       }
       onSuccess()
       onOpenChange(false)

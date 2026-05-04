@@ -86,8 +86,8 @@ export default function BoardPage() {
 
   const handleQuickMove = async (cardId: string, action: 'in_progress' | 'done') => {
     try {
-      const targetColName = action === 'in_progress' ? 'Em Andamento' : 'Concluído'
-      const targetCol = columns.find((c) => c.name.toLowerCase() === targetColName.toLowerCase())
+      const targetColName = action === 'in_progress' ? 'EM ANDAMENTO' : 'CONCLUÍDO'
+      const targetCol = columns.find((c) => c.name.toUpperCase() === targetColName)
       const completed = action === 'done'
 
       const card = cards.find((c) => c.id === cardId)
@@ -1039,6 +1039,7 @@ function Column({
               key={card.id}
               card={card}
               boardId={column.board_id}
+              columnName={column.name}
               onDragStart={(e: any) => {
                 e.dataTransfer.setData('cardId', card.id)
               }}

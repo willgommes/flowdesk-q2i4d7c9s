@@ -4,8 +4,10 @@ import { format, isToday, addDays, startOfDay, isBefore } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
-export function CardItem({ card, boardId, onDragStart, onDropCard, onQuickMove }: any) {
+export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, onQuickMove }: any) {
   const isCompleted = card.completed
+  const isColumnDone = columnName?.toUpperCase() === 'CONCLUÍDO'
+  const isColumnInProgress = columnName?.toUpperCase() === 'EM ANDAMENTO'
   const labels = card.expand?.card_labels_via_card_id?.map((cl: any) => cl.expand?.label_id) || []
   const members = card.expand?.card_members_via_card_id?.map((cm: any) => cm.expand?.user_id) || []
 
@@ -43,7 +45,10 @@ export function CardItem({ card, boardId, onDragStart, onDropCard, onQuickMove }
       to={`/boards/${boardId}/cards/${card.id}`}
       className={`group block w-full overflow-hidden bg-background p-3 rounded-lg border border-border shadow-sm hover:border-primary/50 transition-colors relative ${isCompleted ? 'opacity-60' : ''}`}
       draggable
-      onDragStart={(e) => onDragStart(e, card)}
+      onDragStart={(e) => {
+        e.stopPropagation()
+        onDragStart(e, card)
+      }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         if (onDropCard) {
@@ -91,7 +96,7 @@ export function CardItem({ card, boardId, onDragStart, onDropCard, onQuickMove }
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10"
         onClick={(e) => e.preventDefault()}
       >
-        {!isCompleted && (
+        {!isCompleted && !isColumnDone && !isColumnInProgress && (
           <div
             role="button"
             className="flex items-center justify-center h-6 w-6 rounded bg-background border border-border shadow-sm hover:bg-muted cursor-pointer transition-colors"
@@ -105,18 +110,20 @@ export function CardItem({ card, boardId, onDragStart, onDropCard, onQuickMove }
             <Play className="w-3 h-3 text-blue-500 fill-current" />
           </div>
         )}
-        <div
-          role="button"
-          className="flex items-center justify-center h-6 w-6 rounded bg-background border border-border shadow-sm hover:bg-muted cursor-pointer transition-colors"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onQuickMove?.('done')
-          }}
-          title={isCompleted ? 'Mover novamente para Concluído' : 'Mover para Concluído'}
-        >
-          <CheckSquare className="w-3 h-3 text-green-500" />
-        </div>
+        {!isCompleted && !isColumnDone && (
+          <div
+            role="button"
+            className="flex items-center justify-center h-6 w-6 rounded bg-background border border-border shadow-sm hover:bg-muted cursor-pointer transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onQuickMove?.('done')
+            }}
+            title="Mover para Concluído"
+          >
+            <CheckSquare className="w-3 h-3 text-green-500" />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground mt-3 w-full">
