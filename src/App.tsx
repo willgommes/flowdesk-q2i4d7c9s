@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 import Layout from './components/Layout'
+import { NotificationProvider } from './components/NotificationProvider'
 import Index from './pages/Index'
 import BoardsPage from './pages/boards/BoardsPage'
 import BoardPage from './pages/boards/BoardPage'
@@ -52,98 +53,100 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route element={<Layout />}>
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/boards"
-              element={
-                <ProtectedRoute>
-                  <BoardsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/boards/:id"
-              element={
-                <ProtectedRoute>
-                  <BoardPage />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="cards/:cardId" element={<CardModalRoute />} />
-            </Route>
-            <Route
-              path="/calendario"
-              element={
-                <ProtectedRoute>
-                  <CalendarPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clientes"
-              element={
-                <ProtectedRoute>
-                  <ClientsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/perfil"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/usuarios"
-              element={
-                <ProtectedRoute adminOnly>
-                  <Users />
-                </ProtectedRoute>
-              }
-            />
+      <NotificationProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route element={<Layout />}>
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/boards"
+                element={
+                  <ProtectedRoute>
+                    <BoardsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/boards/:id"
+                element={
+                  <ProtectedRoute>
+                    <BoardPage />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="cards/:cardId" element={<CardModalRoute />} />
+              </Route>
+              <Route
+                path="/calendario"
+                element={
+                  <ProtectedRoute>
+                    <CalendarPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clientes"
+                element={
+                  <ProtectedRoute>
+                    <ClientsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/perfil"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/usuarios"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <Users />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <PublicRoute>
-                  <Signup />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/recuperar-senha"
-              element={
-                <PublicRoute>
-                  <RecoverPassword />
-                </PublicRoute>
-              }
-            />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <PublicRoute>
+                    <Signup />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/recuperar-senha"
+                element={
+                  <PublicRoute>
+                    <RecoverPassword />
+                  </PublicRoute>
+                }
+              />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </NotificationProvider>
     </AuthProvider>
   </BrowserRouter>
 )

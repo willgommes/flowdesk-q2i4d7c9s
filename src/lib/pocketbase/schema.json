@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T14:42:19.160Z",
+  "generatedAt": "2026-05-04T14:54:40.108Z",
   "collections": [
     {
       "name": "users",
@@ -63,6 +63,12 @@
           "required": false,
           "system": false,
           "selectValues": ["light", "dark"]
+        },
+        {
+          "name": "last_briefing_at",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [

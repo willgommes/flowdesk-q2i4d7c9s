@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 
 import { OverdueAlert } from '@/components/dashboard/OverdueAlert'
+import { DailyBriefingModal } from '@/components/dashboard/DailyBriefingModal'
 import { ProgressWidget } from '@/components/dashboard/ProgressWidget'
 import { UpcomingWidget } from '@/components/dashboard/UpcomingWidget'
 import { PriorityWidget } from '@/components/dashboard/PriorityWidget'
@@ -217,6 +218,7 @@ export default function Index() {
 
   return (
     <>
+      <DailyBriefingModal />
       <AppHeader />
       <div className="p-8 max-w-6xl mx-auto w-full animate-fade-in pb-20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
