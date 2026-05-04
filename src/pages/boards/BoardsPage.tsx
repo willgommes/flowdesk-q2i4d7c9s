@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Search, LayoutTemplate, ListTodo } from 'lucide-react'
+import { Plus, Search, LayoutTemplate, ListTodo, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getBoards } from '@/services/boards'
+import { getClients } from '@/services/clients'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { AppHeader } from '@/components/AppHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,8 +32,17 @@ export default function BoardsPage() {
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [clients, setClients] = useState<any[]>([])
+  const [selectedClient, setSelectedClient] = useState<string>('all')
 
   const loadBoards = async () => {
+    try {
+      const clientsData = await getClients()
+      setClients(clientsData.filter((c) => c.status !== 'archived'))
+    } catch (err) {
+      console.error(err)
+    }
+
     try {
       const data = await getBoards(archived)
       setBoards(data)
@@ -64,11 +81,16 @@ export default function BoardsPage() {
     loadBoards()
   })
 
-  const filteredBoards = boards.filter(
-    (b) =>
+  const filteredBoards = boards.filter((b) => {
+    const matchSearch =
       b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.client_name?.toLowerCase().includes(search.toLowerCase()),
-  )
+      b.client_name?.toLowerCase().includes(search.toLowerCase()) ||
+      b.expand?.client_id?.name?.toLowerCase().includes(search.toLowerCase())
+
+    const matchClient = selectedClient === 'all' || b.client_id === selectedClient
+
+    return matchSearch && matchClient
+  })
 
   const isAdmin = user?.role === 'admin'
 
@@ -100,14 +122,33 @@ export default function BoardsPage() {
           </div>
         </div>
 
-        <div className="relative mb-8 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou cliente..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou cliente..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <Select value={selectedClient} onValueChange={setSelectedClient}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-muted-foreground" />
+                <SelectValue placeholder="Filtrar por cliente" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os clientes</SelectItem>
+              {clients.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {loading ? (
@@ -144,9 +185,21 @@ export default function BoardsPage() {
                             {board.name}
                           </span>
                         </CardTitle>
-                        {board.client_name && (
-                          <CardDescription className="mt-2 font-medium text-foreground/70 break-words whitespace-normal">
-                            {board.client_name}
+                        {(board.client_name || board.expand?.client_id) && (
+                          <CardDescription className="mt-2 font-medium text-foreground/70 break-words whitespace-normal flex items-center gap-1.5">
+                            {board.expand?.client_id?.logo && (
+                              <img
+                                src={pb.files.getURL(
+                                  board.expand.client_id,
+                                  board.expand.client_id.logo,
+                                )}
+                                alt=""
+                                className="w-4 h-4 object-contain rounded-sm"
+                              />
+                            )}
+                            <span className="truncate">
+                              {board.expand?.client_id?.name || board.client_name}
+                            </span>
                           </CardDescription>
                         )}
                       </div>

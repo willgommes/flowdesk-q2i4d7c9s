@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T13:12:47.400Z",
+  "generatedAt": "2026-05-04T13:51:17.925Z",
   "collections": [
     {
       "name": "users",
@@ -144,6 +144,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "client_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "clients"
         }
       ],
       "indexes": ["CREATE INDEX `idx_boards_archived` ON `boards` (archived)"]
@@ -634,6 +641,65 @@
           "type": "text",
           "required": false,
           "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "clients",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "logo",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "contract",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "palette",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["active", "inactive", "archived"]
         },
         {
           "name": "created",

@@ -16,6 +16,7 @@ import {
   List as ListIcon,
   Search,
   X,
+  Briefcase,
 } from 'lucide-react'
 import { startOfDay, isBefore, isToday, addDays } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
@@ -35,6 +36,7 @@ import { useToast } from '@/hooks/use-toast'
 import { BoardModal } from '@/components/boards/BoardModal'
 import { ArchivedCardsSheet } from '@/components/boards/ArchivedCardsSheet'
 import { CardItem } from '@/components/cards/CardItem'
+import { ClientIdentitySheet } from '@/components/clients/ClientIdentitySheet'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,6 +77,7 @@ export default function BoardPage() {
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [archivedSheetOpen, setArchivedSheetOpen] = useState(false)
+  const [identitySheetOpen, setIdentitySheetOpen] = useState(false)
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [boardName, setBoardName] = useState('')
@@ -455,13 +458,34 @@ export default function BoardPage() {
               </h1>
             )}
 
-            {board.client_name && (
-              <p className="text-sm text-muted-foreground">{board.client_name}</p>
+            {(board.client_name || board.expand?.client_id) && (
+              <div className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                {board.expand?.client_id?.logo && (
+                  <img
+                    src={pb.files.getURL(board.expand.client_id, board.expand.client_id.logo)}
+                    alt=""
+                    className="w-4 h-4 object-contain rounded-sm"
+                  />
+                )}
+                <span>{board.expand?.client_id?.name || board.client_name}</span>
+              </div>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          {board.expand?.client_id && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIdentitySheetOpen(true)}
+              className="h-8 text-xs bg-background/50 shrink-0 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+            >
+              <Briefcase className="w-3.5 h-3.5 sm:mr-2" />
+              <span className="hidden sm:inline">Identidade do Cliente</span>
+            </Button>
+          )}
+
           <div className="relative shrink-0">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -902,6 +926,11 @@ export default function BoardPage() {
         open={archivedSheetOpen}
         onOpenChange={setArchivedSheetOpen}
         boardId={id!}
+      />
+      <ClientIdentitySheet
+        open={identitySheetOpen}
+        onOpenChange={setIdentitySheetOpen}
+        client={board.expand?.client_id}
       />
       <Outlet context={{ cards, board, columns, loadData }} />
     </div>

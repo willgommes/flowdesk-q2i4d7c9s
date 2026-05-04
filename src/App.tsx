@@ -16,6 +16,7 @@ import Profile from './pages/Profile'
 import Users from './pages/Users'
 import NotFound from './pages/NotFound'
 import CalendarPage from './pages/Calendar'
+import ClientsPage from './pages/clients/ClientsPage'
 
 const ProtectedRoute = ({
   children,
@@ -87,6 +88,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CalendarPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clientes"
+              element={
+                <ProtectedRoute>
+                  <ClientsPage />
                 </ProtectedRoute>
               }
             />

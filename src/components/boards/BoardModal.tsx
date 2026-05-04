@@ -5,7 +5,15 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { getUsers } from '@/services/users'
+import { getClients } from '@/services/clients'
 import { createBoard, updateBoard } from '@/services/boards'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -19,10 +27,11 @@ interface BoardModalProps {
 export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [clientName, setClientName] = useState('')
+  const [clientId, setClientId] = useState<string>('none')
   const [color, setColor] = useState('#FFC300')
   const [members, setMembers] = useState<string[]>([])
   const [users, setUsers] = useState<any[]>([])
+  const [clients, setClients] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const { user } = useAuth()
@@ -31,16 +40,17 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
   useEffect(() => {
     if (open) {
       getUsers().then(setUsers)
+      getClients('active').then(setClients)
       if (board) {
         setName(board.name || '')
         setDescription(board.description || '')
-        setClientName(board.client_name || '')
+        setClientId(board.client_id || 'none')
         setColor(board.color || '#FFC300')
         setMembers(board.members || [])
       } else {
         setName('')
         setDescription('')
-        setClientName('')
+        setClientId('none')
         setColor('#FFC300')
         setMembers([])
       }
@@ -53,7 +63,13 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
 
     setLoading(true)
     try {
-      const data = { name, description, client_name: clientName, color, members }
+      const data: any = { name, description, color, members }
+      if (clientId && clientId !== 'none') {
+        data.client_id = clientId
+        data.client_name = ''
+      } else {
+        data.client_id = null
+      }
       if (board) {
         await updateBoard(board.id, data)
         toast({ title: 'Quadro atualizado com sucesso' })
@@ -88,8 +104,20 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="client">Cliente</Label>
-            <Input id="client" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+            <Label>Cliente</Label>
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="desc">Descrição</Label>

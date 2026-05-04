@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Calendar, Users, LayoutList, Moon, Sun } from 'lucide-react'
+import { LayoutDashboard, Calendar, Users, LayoutList, Moon, Sun, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import {
@@ -34,6 +34,8 @@ export function AppSidebar() {
     { name: 'Quadros', href: '/boards', icon: LayoutList },
     { name: 'Calendário', href: '/calendario', icon: Calendar },
   ]
+
+  navigation.push({ name: 'Clientes', href: '/clientes', icon: Briefcase })
 
   if (user.role === 'admin') {
     navigation.push({ name: 'Usuários', href: '/usuarios', icon: Users })

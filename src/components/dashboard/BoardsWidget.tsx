@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FolderKanbanIcon, GripVertical } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
 
 export function BoardsWidget({ boards, loading }: { boards: any[]; loading: boolean }) {
   return (
@@ -32,10 +33,22 @@ export function BoardsWidget({ boards, loading }: { boards: any[]; loading: bool
                     <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                       {board.name}
                     </h4>
-                    {board.client_name && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {board.client_name}
-                      </p>
+                    {(board.client_name || board.expand?.client_id) && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {board.expand?.client_id?.logo && (
+                          <img
+                            src={pb.files.getURL(
+                              board.expand.client_id,
+                              board.expand.client_id.logo,
+                            )}
+                            alt=""
+                            className="w-3 h-3 object-contain rounded-sm"
+                          />
+                        )}
+                        <p className="text-xs text-muted-foreground truncate">
+                          {board.expand?.client_id?.name || board.client_name}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>

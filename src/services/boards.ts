@@ -4,13 +4,13 @@ export const getBoards = (archived = false) => {
   return pb.collection('boards').getFullList({
     filter: `archived = ${archived}`,
     sort: '-updated',
-    expand: 'members',
+    expand: 'members,client_id',
   })
 }
 
 export const getBoard = (id: string) => {
   return pb.collection('boards').getOne(id, {
-    expand: 'members',
+    expand: 'members,client_id',
   })
 }
 
