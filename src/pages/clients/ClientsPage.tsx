@@ -8,12 +8,14 @@ import {
   Search,
   FileText,
   Download,
+  FileImage,
 } from 'lucide-react'
 import { AppHeader } from '@/components/AppHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { getClients, deleteClient } from '@/services/clients'
 import { ClientModal } from '@/components/clients/ClientModal'
+import { ClientIdentitySheet } from '@/components/clients/ClientIdentitySheet'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import pb from '@/lib/pocketbase/client'
@@ -49,7 +51,11 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<any>(null)
-  const [contractSearch, setContractSearch] = useState('')
+
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [sheetClient, setSheetClient] = useState<any>(null)
+
+  const [fileSearch, setFileSearch] = useState('')
 
   const isAdmin = user?.role === 'admin'
 
@@ -106,7 +112,22 @@ export default function ClientsPage() {
   const contractsList = useMemo(() => {
     return clients.flatMap((client) => {
       if (!client.contract) return []
-      return client.contract.map((filename: string) => ({
+      const arr = Array.isArray(client.contract) ? client.contract : [client.contract]
+      return arr.map((filename: string) => ({
+        clientId: client.id,
+        clientName: client.name,
+        filename,
+        updated: client.updated,
+        client,
+      }))
+    })
+  }, [clients])
+
+  const brandAssetsList = useMemo(() => {
+    return clients.flatMap((client) => {
+      if (!client.brand_assets) return []
+      const arr = Array.isArray(client.brand_assets) ? client.brand_assets : [client.brand_assets]
+      return arr.map((filename: string) => ({
         clientId: client.id,
         clientName: client.name,
         filename,
@@ -117,10 +138,20 @@ export default function ClientsPage() {
   }, [clients])
 
   const filteredContracts = useMemo(() => {
-    return contractsList.filter((c) =>
-      c.clientName.toLowerCase().includes(contractSearch.toLowerCase()),
+    return contractsList.filter(
+      (c) =>
+        c.clientName.toLowerCase().includes(fileSearch.toLowerCase()) ||
+        c.filename.toLowerCase().includes(fileSearch.toLowerCase()),
     )
-  }, [contractsList, contractSearch])
+  }, [contractsList, fileSearch])
+
+  const filteredBrandAssets = useMemo(() => {
+    return brandAssetsList.filter(
+      (c) =>
+        c.clientName.toLowerCase().includes(fileSearch.toLowerCase()) ||
+        c.filename.toLowerCase().includes(fileSearch.toLowerCase()),
+    )
+  }, [brandAssetsList, fileSearch])
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja realmente excluir este cliente?')) return
@@ -143,6 +174,11 @@ export default function ClientsPage() {
     setModalOpen(true)
   }
 
+  const openSheet = (client: any) => {
+    setSheetClient(client)
+    setSheetOpen(true)
+  }
+
   return (
     <div className="flex flex-col h-full min-h-screen bg-muted/10">
       <AppHeader />
@@ -161,8 +197,9 @@ export default function ClientsPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
-              <TabsList className="grid w-full sm:w-auto grid-cols-2">
+              <TabsList className="grid w-full sm:w-auto grid-cols-3">
                 <TabsTrigger value="clientes">Clientes</TabsTrigger>
+                <TabsTrigger value="brand_assets">Ativos da Marca</TabsTrigger>
                 <TabsTrigger value="contratos">Contratos</TabsTrigger>
               </TabsList>
               {isAdmin && (
@@ -195,9 +232,10 @@ export default function ClientsPage() {
                 {clients.map((client) => (
                   <Card
                     key={client.id}
-                    className="overflow-hidden border-border/60 hover-scale shadow-subtle transition-all"
+                    className="overflow-hidden border-border/60 hover-scale shadow-subtle transition-all cursor-pointer group"
+                    onClick={() => openSheet(client)}
                   >
-                    <CardHeader className="pb-4 relative bg-muted/5">
+                    <CardHeader className="pb-4 relative bg-muted/5 group-hover:bg-muted/10 transition-colors">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center border shadow-sm shrink-0 overflow-hidden">
@@ -245,18 +283,27 @@ export default function ClientsPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="absolute right-3 top-3 h-8 w-8 text-muted-foreground"
+                                className="absolute right-3 top-3 h-8 w-8 text-muted-foreground z-10"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEdit(client)}>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openEdit(client)
+                                }}
+                              >
                                 <Pencil className="w-4 h-4 mr-2" /> Editar
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                onClick={() => handleDelete(client.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDelete(client.id)
+                                }}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" /> Excluir
@@ -293,13 +340,28 @@ export default function ClientsPage() {
 
                         <div className="flex flex-col gap-2 pt-4 border-t border-border/40">
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span className="font-medium">
-                              {client.contract?.length || 0} contratos salvos
+                            <span className="font-medium flex items-center gap-1.5">
+                              <FileText className="w-3 h-3" />
+                              {Array.isArray(client.contract)
+                                ? client.contract.length
+                                : client.contract
+                                  ? 1
+                                  : 0}{' '}
+                              Contratos
+                            </span>
+                            <span className="font-medium flex items-center gap-1.5">
+                              <FileImage className="w-3 h-3" />
+                              {Array.isArray(client.brand_assets)
+                                ? client.brand_assets.length
+                                : client.brand_assets
+                                  ? 1
+                                  : 0}{' '}
+                              Ativos
                             </span>
                           </div>
 
                           {clientStats[client.id] && (
-                            <div className="flex flex-col gap-2 mt-1">
+                            <div className="flex flex-col gap-2 mt-2">
                               <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span className="font-medium">Quadros Ativos</span>
                                 <Badge
@@ -338,6 +400,65 @@ export default function ClientsPage() {
             )}
           </TabsContent>
 
+          <TabsContent value="brand_assets" className="mt-0 animate-fade-in-up">
+            <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/20">
+                <h3 className="font-medium">Repositório de Ativos da Marca</h3>
+                <div className="relative max-w-md w-full sm:w-auto">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar arquivo ou cliente..."
+                    value={fileSearch}
+                    onChange={(e) => setFileSearch(e.target.value)}
+                    className="pl-9 bg-background"
+                  />
+                </div>
+              </div>
+              <div className="p-6">
+                {filteredBrandAssets.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    Nenhum ativo de marca encontrado.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {filteredBrandAssets.map((asset, i) => {
+                      const isImg = asset.filename.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i)
+                      return (
+                        <a
+                          key={i}
+                          href={pb.files.getURL(asset.client, asset.filename)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group border rounded-lg overflow-hidden bg-muted/10 hover:border-primary/50 transition-all flex flex-col shadow-sm"
+                        >
+                          <div className="aspect-square bg-background flex items-center justify-center p-4 border-b group-hover:bg-muted/30 transition-colors">
+                            {isImg ? (
+                              <img
+                                src={pb.files.getURL(asset.client, asset.filename)}
+                                alt={asset.filename}
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            ) : (
+                              <FileImage className="w-12 h-12 text-muted-foreground/50" />
+                            )}
+                          </div>
+                          <div className="p-3 bg-card">
+                            <p className="text-xs font-medium truncate" title={asset.filename}>
+                              {asset.filename}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                              {asset.clientName}
+                            </p>
+                          </div>
+                        </a>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="contratos" className="mt-0 animate-fade-in-up">
             <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
               <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/20">
@@ -345,9 +466,9 @@ export default function ClientsPage() {
                 <div className="relative max-w-md w-full sm:w-auto">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar contrato por cliente..."
-                    value={contractSearch}
-                    onChange={(e) => setContractSearch(e.target.value)}
+                    placeholder="Buscar contrato ou cliente..."
+                    value={fileSearch}
+                    onChange={(e) => setFileSearch(e.target.value)}
                     className="pl-9 bg-background"
                   />
                 </div>
@@ -414,6 +535,8 @@ export default function ClientsPage() {
             onSuccess={loadData}
           />
         )}
+
+        <ClientIdentitySheet open={sheetOpen} onOpenChange={setSheetOpen} client={sheetClient} />
       </div>
     </div>
   )

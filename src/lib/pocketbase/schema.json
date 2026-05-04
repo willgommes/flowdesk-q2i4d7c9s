@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T15:19:59.963Z",
+  "generatedAt": "2026-05-04T15:41:27.217Z",
   "collections": [
     {
       "name": "users",
@@ -722,6 +722,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "brand_assets",
+          "type": "file",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

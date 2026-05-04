@@ -26,9 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
-import { X, Upload, FileText } from 'lucide-react'
+import { X, Upload, FileText, FileImage } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
@@ -40,6 +41,7 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
 
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [contractFiles, setContractFiles] = useState<File[]>([])
+  const [brandAssetsFiles, setBrandAssetsFiles] = useState<File[]>([])
 
   const [newColorHex, setNewColorHex] = useState('#000000')
   const [newColorName, setNewColorName] = useState('')
@@ -49,6 +51,7 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
 
   const logoInputRef = useRef<HTMLInputElement>(null)
   const contractInputRef = useRef<HTMLInputElement>(null)
+  const brandAssetsInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open) {
@@ -63,6 +66,7 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
       }
       setLogoFile(null)
       setContractFiles([])
+      setBrandAssetsFiles([])
       setNewColorHex('#000000')
       setNewColorName('')
       setShowArchiveConfirm(false)
@@ -111,6 +115,10 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
     setContractFiles(contractFiles.filter((_, i) => i !== idx))
   }
 
+  const handleRemoveBrandAssetFile = (idx: number) => {
+    setBrandAssetsFiles(brandAssetsFiles.filter((_, i) => i !== idx))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
@@ -126,6 +134,10 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
 
     contractFiles.forEach((file) => {
       formData.append('contract+', file)
+    })
+
+    brandAssetsFiles.forEach((file) => {
+      formData.append('brand_assets+', file)
     })
 
     if (client && client.status === 'active' && (status === 'inactive' || status === 'archived')) {
@@ -151,7 +163,6 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
             await pb.collection('boards').update(b.id, { archived: true })
           }
         }
-
         toast({ title: 'Cliente atualizado com sucesso' })
       } else {
         await pb.collection('clients').create(formData)
@@ -169,250 +180,366 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
     }
   }
 
+  const getContractsArray = () => {
+    if (!client?.contract) return []
+    return Array.isArray(client.contract) ? client.contract : [client.contract]
+  }
+
+  const getBrandAssetsArray = () => {
+    if (!client?.brand_assets) return []
+    return Array.isArray(client.brand_assets) ? client.brand_assets : [client.brand_assets]
+  }
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="p-6 pb-2 shrink-0 border-b bg-muted/10">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-4 shrink-0 border-b bg-muted/10">
             <DialogTitle>{client ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-6">
-            <form id="client-form" onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 col-span-2 sm:col-span-1">
-                  <Label>Nome do Cliente *</Label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2 col-span-2 sm:col-span-1">
-                  <Label>Status</Label>
-                  <Select value={status} onValueChange={setStatus} disabled={loading}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Ativo</SelectItem>
-                      <SelectItem value="inactive">Inativo</SelectItem>
-                      <SelectItem value="archived">Arquivado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+          <div className="flex-1 overflow-y-auto p-6 pt-2">
+            <form id="client-form" onSubmit={handleSubmit}>
+              <Tabs defaultValue="brand" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsTrigger value="general">Geral</TabsTrigger>
+                  <TabsTrigger value="brand">Arquivos da Marca</TabsTrigger>
+                  <TabsTrigger value="contracts">Contratos</TabsTrigger>
+                </TabsList>
 
-              <div className="space-y-2">
-                <Label>Logo do Cliente</Label>
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
-                    {logoFile ? (
-                      <img
-                        src={URL.createObjectURL(logoFile)}
-                        alt="Preview"
-                        className="w-full h-full object-contain p-1"
+                {/* ABA GERAL */}
+                <TabsContent value="general" className="space-y-6 mt-0 animate-fade-in">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                      <Label>Nome do Cliente *</Label>
+                      <Input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        disabled={loading}
                       />
-                    ) : client?.logo ? (
-                      <img
-                        src={pb.files.getURL(client, client.logo)}
-                        alt="Logo"
-                        className="w-full h-full object-contain p-1"
-                      />
-                    ) : (
-                      <Upload className="w-6 h-6 text-muted-foreground/30" />
+                    </div>
+                    <div className="space-y-2 col-span-2 sm:col-span-1">
+                      <Label>Status</Label>
+                      <Select value={status} onValueChange={setStatus} disabled={loading}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Ativo</SelectItem>
+                          <SelectItem value="inactive">Inativo</SelectItem>
+                          <SelectItem value="archived">Arquivado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* ABA ARQUIVOS DA MARCA */}
+                <TabsContent value="brand" className="space-y-6 mt-0 animate-fade-in">
+                  <div className="space-y-2">
+                    <Label>Logo Principal</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-lg border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
+                        {logoFile ? (
+                          <img
+                            src={URL.createObjectURL(logoFile)}
+                            alt="Preview"
+                            className="w-full h-full object-contain p-1"
+                          />
+                        ) : client?.logo ? (
+                          <img
+                            src={pb.files.getURL(client, client.logo)}
+                            alt="Logo"
+                            className="w-full h-full object-contain p-1"
+                          />
+                        ) : (
+                          <Upload className="w-6 h-6 text-muted-foreground/30" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          ref={logoInputRef}
+                          className="hidden"
+                          disabled={loading}
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) setLogoFile(e.target.files[0])
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={loading}
+                          onClick={() => logoInputRef.current?.click()}
+                        >
+                          Selecionar Imagem
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-1">Imagens (Máx. 5MB)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>Paleta de Cores</Label>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex gap-2 items-end">
+                        <div className="space-y-1 shrink-0 relative">
+                          <Input
+                            type="color"
+                            value={
+                              newColorHex.startsWith('#') && newColorHex.length === 7
+                                ? newColorHex
+                                : '#000000'
+                            }
+                            onChange={(e) => setNewColorHex(e.target.value)}
+                            disabled={loading}
+                            className="w-12 h-10 p-1 cursor-pointer absolute opacity-0 inset-0"
+                          />
+                          <div
+                            className="w-12 h-10 rounded-md border shadow-sm flex items-center justify-center pointer-events-none"
+                            style={{
+                              backgroundColor:
+                                newColorHex.startsWith('#') || newColorHex.startsWith('rgb')
+                                  ? newColorHex
+                                  : '#000000',
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1 flex-1">
+                          <Input
+                            placeholder="HEX ou RGB"
+                            value={newColorHex}
+                            onChange={(e) => setNewColorHex(e.target.value)}
+                            disabled={loading}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && newColorName.trim()) {
+                                e.preventDefault()
+                                handleAddColor()
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1 flex-1">
+                          <Input
+                            placeholder="Nome da cor"
+                            value={newColorName}
+                            onChange={(e) => setNewColorName(e.target.value)}
+                            disabled={loading}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                handleAddColor()
+                              }
+                            }}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={handleAddColor}
+                          variant="secondary"
+                          disabled={loading}
+                        >
+                          Adicionar
+                        </Button>
+                      </div>
+                    </div>
+
+                    {palette.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {palette.map((color, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/10 shadow-sm"
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <div
+                                className="w-4 h-4 rounded-full border shadow-sm shrink-0"
+                                style={{ backgroundColor: color.hex }}
+                              />
+                              <span className="truncate font-medium">{color.name}</span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={loading}
+                              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleRemoveColor(idx)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      ref={logoInputRef}
-                      className="hidden"
-                      disabled={loading}
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setLogoFile(e.target.files[0])
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={loading}
-                      onClick={() => logoInputRef.current?.click()}
-                    >
-                      Selecionar Imagem
-                    </Button>
-                    <p className="text-xs text-muted-foreground mt-1">Imagens (Máx. 5MB)</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-3">
-                <Label>Paleta de Cores</Label>
-                <div className="flex flex-col gap-3">
-                  <div className="flex gap-2 items-end">
-                    <div className="space-y-1 shrink-0 relative">
+                  <div className="space-y-2 pt-2 border-t border-border/40">
+                    <Label>Ativos da Marca (Secundários, Ícones, Diretrizes)</Label>
+                    <div>
                       <Input
-                        type="color"
-                        value={
-                          newColorHex.startsWith('#') && newColorHex.length === 7
-                            ? newColorHex
-                            : '#000000'
-                        }
-                        onChange={(e) => setNewColorHex(e.target.value)}
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf,.svg"
+                        ref={brandAssetsInputRef}
+                        className="hidden"
                         disabled={loading}
-                        className="w-12 h-10 p-1 cursor-pointer absolute opacity-0 inset-0"
-                      />
-                      <div
-                        className="w-12 h-10 rounded-md border shadow-sm flex items-center justify-center pointer-events-none"
-                        style={{
-                          backgroundColor:
-                            newColorHex.startsWith('#') || newColorHex.startsWith('rgb')
-                              ? newColorHex
-                              : '#000000',
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-1 flex-1">
-                      <Input
-                        placeholder="HEX ou RGB (ex: #FF0000 ou rgb(255,0,0))"
-                        value={newColorHex}
-                        onChange={(e) => setNewColorHex(e.target.value)}
-                        disabled={loading}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && newColorName.trim()) {
-                            e.preventDefault()
-                            handleAddColor()
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            setBrandAssetsFiles([
+                              ...brandAssetsFiles,
+                              ...Array.from(e.target.files),
+                            ])
                           }
                         }}
                       />
-                    </div>
-                    <div className="space-y-1 flex-1">
-                      <Input
-                        placeholder="Nome da cor"
-                        value={newColorName}
-                        onChange={(e) => setNewColorName(e.target.value)}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
                         disabled={loading}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            handleAddColor()
-                          }
-                        }}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={handleAddColor}
-                      variant="secondary"
-                      disabled={loading}
-                    >
-                      Adicionar
-                    </Button>
-                  </div>
-                </div>
-
-                {palette.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {palette.map((color, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/10 shadow-sm"
+                        onClick={() => brandAssetsInputRef.current?.click()}
                       >
-                        <div className="flex items-center gap-2 truncate">
+                        <Upload className="w-4 h-4 mr-2" /> Adicionar Ativos
+                      </Button>
+                    </div>
+
+                    {getBrandAssetsArray().length > 0 && brandAssetsFiles.length === 0 && (
+                      <div className="text-xs text-muted-foreground mt-2 border border-border/60 p-3 rounded-md bg-muted/10">
+                        <p className="mb-2 font-medium text-foreground">
+                          Ativos salvos ({getBrandAssetsArray().length}):
+                        </p>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {getBrandAssetsArray().map((c: string, i: number) => (
+                            <div
+                              key={i}
+                              className="w-12 h-12 border rounded bg-background shrink-0 flex items-center justify-center overflow-hidden"
+                              title={c}
+                            >
+                              {c.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i) ? (
+                                <img
+                                  src={pb.files.getURL(client, c)}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <FileImage className="w-5 h-5 text-muted-foreground" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-primary mt-1">
+                          Novos uploads serão adicionados aos arquivos existentes.
+                        </p>
+                      </div>
+                    )}
+
+                    {brandAssetsFiles.length > 0 && (
+                      <div className="space-y-2 mt-3">
+                        <p className="text-xs font-medium">Novos ativos selecionados:</p>
+                        {brandAssetsFiles.map((file, idx) => (
                           <div
-                            className="w-4 h-4 rounded-full border shadow-sm shrink-0"
-                            style={{ backgroundColor: color.hex }}
-                          />
-                          <span className="truncate font-medium">{color.name}</span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={loading}
-                          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleRemoveColor(idx)}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
+                            key={idx}
+                            className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/5"
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <FileImage className="w-4 h-4 text-muted-foreground shrink-0" />
+                              <span className="truncate">{file.name}</span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={loading}
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => handleRemoveBrandAssetFile(idx)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                )}
-              </div>
+                </TabsContent>
 
-              <div className="space-y-2">
-                <Label>Contratos e Documentos</Label>
-                <div>
-                  <Input
-                    type="file"
-                    multiple
-                    ref={contractInputRef}
-                    className="hidden"
-                    disabled={loading}
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        setContractFiles([...contractFiles, ...Array.from(e.target.files)])
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={loading}
-                    onClick={() => contractInputRef.current?.click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" /> Adicionar Arquivos
-                  </Button>
-                </div>
-
-                {client?.contract && client.contract.length > 0 && contractFiles.length === 0 && (
-                  <div className="text-xs text-muted-foreground mt-2 border border-border/60 p-3 rounded-md bg-muted/10">
-                    <p className="mb-1 font-medium text-foreground">Arquivos atuais:</p>
-                    <ul className="space-y-1 list-disc list-inside pl-1">
-                      {client.contract.map((c: string, i: number) => (
-                        <li key={i} className="truncate">
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="mt-2 text-primary">
-                      Nota: Novos uploads serão adicionados aos arquivos existentes.
-                    </p>
-                  </div>
-                )}
-
-                {contractFiles.length > 0 && (
-                  <div className="space-y-2 mt-3">
-                    <p className="text-xs font-medium">Novos arquivos selecionados:</p>
-                    {contractFiles.map((file, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/5"
+                {/* ABA CONTRATOS */}
+                <TabsContent value="contracts" className="space-y-6 mt-0 animate-fade-in">
+                  <div className="space-y-2">
+                    <Label>Contratos e Documentos Legais</Label>
+                    <div>
+                      <Input
+                        type="file"
+                        multiple
+                        ref={contractInputRef}
+                        className="hidden"
+                        disabled={loading}
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            setContractFiles([...contractFiles, ...Array.from(e.target.files)])
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={loading}
+                        onClick={() => contractInputRef.current?.click()}
                       >
-                        <div className="flex items-center gap-2 truncate">
-                          <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                          <span className="truncate">{file.name}</span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={loading}
-                          className="h-6 w-6 shrink-0"
-                          onClick={() => handleRemoveContractFile(idx)}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
+                        <Upload className="w-4 h-4 mr-2" /> Adicionar Contratos
+                      </Button>
+                    </div>
+
+                    {getContractsArray().length > 0 && contractFiles.length === 0 && (
+                      <div className="text-xs text-muted-foreground mt-2 border border-border/60 p-3 rounded-md bg-muted/10">
+                        <p className="mb-1 font-medium text-foreground">
+                          Contratos salvos ({getContractsArray().length}):
+                        </p>
+                        <ul className="space-y-1 list-disc list-inside pl-1">
+                          {getContractsArray().map((c: string, i: number) => (
+                            <li key={i} className="truncate">
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-primary">
+                          Novos uploads serão adicionados aos contratos existentes.
+                        </p>
                       </div>
-                    ))}
+                    )}
+
+                    {contractFiles.length > 0 && (
+                      <div className="space-y-2 mt-3">
+                        <p className="text-xs font-medium">Novos contratos selecionados:</p>
+                        {contractFiles.map((file, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/5"
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                              <span className="truncate">{file.name}</span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={loading}
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => handleRemoveContractFile(idx)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </TabsContent>
+              </Tabs>
             </form>
           </div>
 
