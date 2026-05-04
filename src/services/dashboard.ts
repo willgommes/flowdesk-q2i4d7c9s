@@ -17,7 +17,6 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
 
   const chunkSize = 30
   let cards: any[] = []
-  const labels: any[] = []
 
   for (let i = 0; i < boardIds.length; i += chunkSize) {
     const chunk = boardIds.slice(i, i + chunkSize)
@@ -28,11 +27,6 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
       expand: 'board_id',
     })
     cards.push(...chunkCards)
-
-    const chunkLabels = await pb.collection('labels').getFullList({
-      filter: `(name='Urgente' || name='Alta Prioridade') && (${boardsFilter})`,
-    })
-    labels.push(...chunkLabels)
   }
 
   if (memberId) {
@@ -40,21 +34,16 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
   }
 
   let priorityCards: any[] = []
-  if (labels.length > 0) {
-    const labelChunks = []
-    for (let i = 0; i < labels.length; i += chunkSize) {
-      labelChunks.push(labels.slice(i, i + chunkSize))
-    }
+  const priorityLabels = await pb.collection('labels').getFullList({
+    filter: `is_system=true && (name='Urgente' || name='Alta Prioridade')`,
+  })
 
-    const cardLabels: any[] = []
-    for (const chunk of labelChunks) {
-      const labelsIds = chunk.map((l) => `label_id='${l.id}'`).join('||')
-      const chunkCL = await pb.collection('card_labels').getFullList({
-        filter: labelsIds,
-        expand: 'card_id,card_id.board_id,label_id',
-      })
-      cardLabels.push(...chunkCL)
-    }
+  if (priorityLabels.length > 0) {
+    const labelsIds = priorityLabels.map((l) => `label_id='${l.id}'`).join('||')
+    const cardLabels = await pb.collection('card_labels').getFullList({
+      filter: labelsIds,
+      expand: 'card_id,card_id.board_id,label_id',
+    })
 
     const pCardsRaw = cardLabels
       .map((cl) => {

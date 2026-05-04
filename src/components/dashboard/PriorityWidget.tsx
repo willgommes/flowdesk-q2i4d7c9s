@@ -1,16 +1,55 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AlertCircleIcon, CheckCircle2, GripVertical } from 'lucide-react'
+import { AlertCircleIcon, CheckCircle2, GripVertical, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useRealtime } from '@/hooks/use-realtime'
+import { getDashboardData } from '@/services/dashboard'
+import pb from '@/lib/pocketbase/client'
 
 export function PriorityWidget({
-  priorityCards,
-  loading,
+  priorityCards: initialCards,
+  loading: initialLoading,
 }: {
   priorityCards: any[]
   loading: boolean
 }) {
+  const [priorityCards, setPriorityCards] = useState(initialCards)
+  const [loading, setLoading] = useState(initialLoading)
+
+  useEffect(() => {
+    setPriorityCards(initialCards)
+    setLoading(initialLoading)
+  }, [initialCards, initialLoading])
+
+  // Reload data on label changes or card changes
+  const reloadData = async () => {
+    try {
+      const user = pb.authStore.record
+      if (!user) return
+
+      let boardIds: string[] = []
+      if (user.role === 'admin') {
+        const boards = await pb.collection('boards').getFullList({ filter: 'archived = false' })
+        boardIds = boards.map((b) => b.id)
+      } else {
+        const boards = await pb
+          .collection('boards')
+          .getFullList({ filter: `archived = false && members ~ '${user.id}'` })
+        boardIds = boards.map((b) => b.id)
+      }
+
+      const data = await getDashboardData(boardIds, user.id)
+      setPriorityCards(data.priorityCards)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  useRealtime('card_labels', reloadData)
+  useRealtime('cards', reloadData)
+
   const priorityTasks = priorityCards.filter((c) => !c.completed).slice(0, 5)
 
   return (
@@ -66,8 +105,14 @@ export function PriorityWidget({
                         {task.label?.name || 'Prioridade'}
                       </span>
                     </div>
-                    <div className="flex items-center text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="truncate">{task.expand?.board_id?.name || 'Quadro'}</span>
+                      {task.due_date && (
+                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                          <Clock className="w-3 h-3" />
+                          <span>{new Date(task.due_date).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>

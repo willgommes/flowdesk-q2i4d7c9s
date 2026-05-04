@@ -13,6 +13,7 @@ import {
   Copy,
   Archive,
   Play,
+  Pencil,
 } from 'lucide-react'
 import {
   Select,
@@ -187,11 +188,23 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   const comments = card.expand?.comments_via_card_id || []
   const attachments = card.expand?.attachments_via_card_id || []
 
-  const [boardLabels, setBoardLabels] = useState([])
+  const [boardLabels, setBoardLabels] = useState<any[]>([])
+  const [editingLabel, setEditingLabel] = useState<any>(null)
+
+  const fetchLabels = async () => {
+    const res = await pb.collection('labels').getFullList({
+      filter: `board_id='${board.id}' || board_id=''`,
+    })
+    const sorted = res.sort((a: any, b: any) => {
+      if (a.is_system && !b.is_system) return -1
+      if (!a.is_system && b.is_system) return 1
+      return a.name.localeCompare(b.name)
+    })
+    setBoardLabels(sorted)
+  }
+
   useEffect(() => {
-    pb.collection('labels')
-      .getFullList({ filter: `board_id='${board.id}'` })
-      .then(setBoardLabels as any)
+    fetchLabels()
   }, [board.id])
 
   const toggleLabel = async (label: any) => {
@@ -207,11 +220,24 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   }
 
   const createLabel = async (name: string, color: string) => {
-    const l = await pb.collection('labels').create({ board_id: board.id, name, color })
-    await pb.collection('card_labels').create({ card_id: card.id, label_id: l.id })
-    const nb = await pb.collection('labels').getFullList({ filter: `board_id='${board.id}'` })
-    setBoardLabels(nb as any)
-    await logAct('label_add', `Criou e adicionou a etiqueta "${name}"`)
+    if (editingLabel) {
+      await pb.collection('labels').update(editingLabel.id, { name, color })
+      setEditingLabel(null)
+      await fetchLabels()
+      onChange()
+    } else {
+      const l = await pb.collection('labels').create({ board_id: board.id, name, color })
+      await pb.collection('card_labels').create({ card_id: card.id, label_id: l.id })
+      await fetchLabels()
+      await logAct('label_add', `Criou e adicionou a etiqueta "${name}"`)
+      onChange()
+    }
+  }
+
+  const deleteLabel = async (labelId: string) => {
+    if (!confirm('Excluir esta etiqueta permanentemente?')) return
+    await pb.collection('labels').delete(labelId)
+    await fetchLabels()
     onChange()
   }
 
@@ -419,21 +445,52 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     return (
                       <div
                         key={l.id}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1.5 rounded-md transition-colors"
-                        onClick={() => toggleLabel(l)}
+                        className="flex items-center justify-between group p-1.5 rounded-md hover:bg-muted transition-colors"
                       >
-                        <Checkbox checked={isActive} readOnly />
                         <div
-                          className="flex-1 px-2 py-1 rounded-md text-xs font-medium text-white shadow-sm"
-                          style={{ backgroundColor: l.color }}
+                          className="flex items-center gap-2 cursor-pointer flex-1"
+                          onClick={() => toggleLabel(l)}
                         >
-                          {l.name}
+                          <Checkbox checked={isActive} readOnly />
+                          <div
+                            className="flex-1 px-2 py-1 rounded-md text-xs font-medium text-white shadow-sm"
+                            style={{ backgroundColor: l.color }}
+                          >
+                            {l.name}
+                          </div>
                         </div>
+                        {!l.is_system && (
+                          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-2 gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-primary"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditingLabel(l)
+                              }}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                deleteLabel(l.id)
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
                 </div>
                 <form
+                  key={editingLabel ? editingLabel.id : 'new'}
                   onSubmit={(e) => {
                     e.preventDefault()
                     const data = new FormData(e.currentTarget)
@@ -442,10 +499,27 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   }}
                   className="space-y-3 border-t pt-3 mt-2"
                 >
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-xs text-muted-foreground">
+                      {editingLabel ? 'Editar Etiqueta' : 'Nova Etiqueta'}
+                    </h4>
+                    {editingLabel && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 text-[10px] px-2"
+                        onClick={() => setEditingLabel(null)}
+                      >
+                        Cancelar
+                      </Button>
+                    )}
+                  </div>
                   <Input
                     name="name"
-                    placeholder="Nova etiqueta..."
+                    placeholder="Nome da etiqueta..."
                     required
+                    defaultValue={editingLabel?.name}
                     className="h-8 text-sm"
                   />
                   <div className="flex flex-wrap gap-1.5 justify-between">
@@ -455,6 +529,9 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           type="radio"
                           name="color"
                           value={c}
+                          defaultChecked={
+                            editingLabel ? editingLabel.color === c : c === LABEL_COLORS[0]
+                          }
                           required
                           className="sr-only peer"
                         />
@@ -466,7 +543,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     ))}
                   </div>
                   <Button type="submit" size="sm" className="w-full h-8">
-                    Criar Etiqueta
+                    {editingLabel ? 'Salvar Alterações' : 'Criar Etiqueta'}
                   </Button>
                 </form>
               </PopoverContent>
