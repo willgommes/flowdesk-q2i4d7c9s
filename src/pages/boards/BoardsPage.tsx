@@ -27,7 +27,9 @@ import { ptBR } from 'date-fns/locale'
 export default function BoardsPage() {
   const { user } = useAuth()
   const [boards, setBoards] = useState<any[]>([])
-  const [cardCounts, setCardCounts] = useState<Record<string, number>>({})
+  const [cardCounts, setCardCounts] = useState<
+    Record<string, { total: number; completed: number }>
+  >({})
   const [archived, setArchived] = useState(false)
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
@@ -47,17 +49,23 @@ export default function BoardsPage() {
       const data = await getBoards(archived)
       setBoards(data)
 
-      const counts: Record<string, number> = {}
+      const counts: Record<string, { total: number; completed: number }> = {}
       await Promise.all(
         data.map(async (board) => {
           try {
-            const res = await pb.collection('cards').getList(1, 1, {
-              filter: `board_id = '${board.id}'`,
-              fields: 'id',
-            })
-            counts[board.id] = res.totalItems
+            const [resTotal, resCompleted] = await Promise.all([
+              pb.collection('cards').getList(1, 1, {
+                filter: `board_id = '${board.id}' && archived != true`,
+                fields: 'id',
+              }),
+              pb.collection('cards').getList(1, 1, {
+                filter: `board_id = '${board.id}' && completed = true && archived != true`,
+                fields: 'id',
+              }),
+            ])
+            counts[board.id] = { total: resTotal.totalItems, completed: resCompleted.totalItems }
           } catch {
-            counts[board.id] = 0
+            counts[board.id] = { total: 0, completed: 0 }
           }
         }),
       )
@@ -209,15 +217,35 @@ export default function BoardsPage() {
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-4 break-words whitespace-normal">
                       {board.description || 'Sem descrição'}
                     </p>
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full font-medium border border-border/50">
-                        <ListTodo className="w-3.5 h-3.5" />
-                        <span>
-                          {cardCounts[board.id] === undefined
-                            ? '...'
-                            : `${cardCounts[board.id]} ${cardCounts[board.id] === 1 ? 'tarefa' : 'tarefas'}`}
-                        </span>
+                    <div className="flex flex-col gap-2 mb-4">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5 font-medium">
+                          <ListTodo className="w-3.5 h-3.5" />
+                          <span>
+                            {cardCounts[board.id] === undefined
+                              ? '...'
+                              : `${cardCounts[board.id].completed}/${cardCounts[board.id].total} tarefas concluídas`}
+                          </span>
+                        </div>
+                        {cardCounts[board.id] !== undefined && cardCounts[board.id].total > 0 && (
+                          <span>
+                            {Math.round(
+                              (cardCounts[board.id].completed / cardCounts[board.id].total) * 100,
+                            )}
+                            %
+                          </span>
+                        )}
                       </div>
+                      {cardCounts[board.id] !== undefined && cardCounts[board.id].total > 0 && (
+                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-primary h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${(cardCounts[board.id].completed / cardCounts[board.id].total) * 100}%`,
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center justify-between mt-auto">
                       <div className="flex -space-x-2">

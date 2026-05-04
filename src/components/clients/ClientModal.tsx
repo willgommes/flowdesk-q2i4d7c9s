@@ -55,20 +55,37 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
     }
   }, [open, client])
 
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-    return result
-      ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
-      : ''
+  const parseColor = (input: string) => {
+    let hex = input.trim()
+    let rgb = ''
+
+    if (hex.startsWith('rgb')) {
+      const match = hex.match(/\d+/g)
+      if (match && match.length >= 3) {
+        rgb = `${match[0]}, ${match[1]}, ${match[2]}`
+        hex =
+          '#' +
+          match
+            .slice(0, 3)
+            .map((x) => parseInt(x).toString(16).padStart(2, '0'))
+            .join('')
+      }
+    } else {
+      if (!hex.startsWith('#')) hex = '#' + hex
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+      if (result) {
+        rgb = `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+      }
+    }
+    return { hex, rgb }
   }
 
   const handleAddColor = () => {
     if (!newColorHex || !newColorName.trim()) return
-    setPalette([
-      ...palette,
-      { hex: newColorHex, rgb: hexToRgb(newColorHex), name: newColorName.trim() },
-    ])
+    const { hex, rgb } = parseColor(newColorHex)
+    setPalette([...palette, { hex, rgb, name: newColorName.trim() }])
     setNewColorName('')
+    setNewColorHex('#000000')
   }
 
   const handleRemoveColor = (idx: number) => {
@@ -189,31 +206,59 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
 
             <div className="space-y-3">
               <Label>Paleta de Cores</Label>
-              <div className="flex gap-2 items-end">
-                <div className="space-y-1 shrink-0">
-                  <Input
-                    type="color"
-                    value={newColorHex}
-                    onChange={(e) => setNewColorHex(e.target.value)}
-                    className="w-12 h-10 p-1 cursor-pointer"
-                  />
-                </div>
-                <div className="space-y-1 flex-1">
-                  <Input
-                    placeholder="Nome da cor (ex: Primária)"
-                    value={newColorName}
-                    onChange={(e) => setNewColorName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleAddColor()
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-2 items-end">
+                  <div className="space-y-1 shrink-0 relative">
+                    <Input
+                      type="color"
+                      value={
+                        newColorHex.startsWith('#') && newColorHex.length === 7
+                          ? newColorHex
+                          : '#000000'
                       }
-                    }}
-                  />
+                      onChange={(e) => setNewColorHex(e.target.value)}
+                      className="w-12 h-10 p-1 cursor-pointer absolute opacity-0 inset-0"
+                    />
+                    <div
+                      className="w-12 h-10 rounded-md border shadow-sm flex items-center justify-center pointer-events-none"
+                      style={{
+                        backgroundColor:
+                          newColorHex.startsWith('#') || newColorHex.startsWith('rgb')
+                            ? newColorHex
+                            : '#000000',
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <Input
+                      placeholder="HEX ou RGB (ex: #FF0000 ou rgb(255,0,0))"
+                      value={newColorHex}
+                      onChange={(e) => setNewColorHex(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newColorName.trim()) {
+                          e.preventDefault()
+                          handleAddColor()
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <Input
+                      placeholder="Nome da cor (ex: Primária)"
+                      value={newColorName}
+                      onChange={(e) => setNewColorName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleAddColor()
+                        }
+                      }}
+                    />
+                  </div>
+                  <Button type="button" onClick={handleAddColor} variant="secondary">
+                    Adicionar
+                  </Button>
                 </div>
-                <Button type="button" onClick={handleAddColor} variant="secondary">
-                  Adicionar
-                </Button>
               </div>
 
               {palette.length > 0 && (

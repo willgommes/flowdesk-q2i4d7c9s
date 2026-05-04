@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { getClients, deleteClient } from '@/services/clients'
 import { ClientModal } from '@/components/clients/ClientModal'
 import { useAuth } from '@/hooks/use-auth'
+import { useRealtime } from '@/hooks/use-realtime'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +23,9 @@ export default function ClientsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [clients, setClients] = useState<any[]>([])
+  const [clientStats, setClientStats] = useState<
+    Record<string, { total: number; completed: number }>
+  >({})
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<any>(null)
@@ -32,6 +36,33 @@ export default function ClientsPage() {
     try {
       const data = await getClients()
       setClients(data)
+
+      const boards = await pb
+        .collection('boards')
+        .getFullList({ fields: 'id,client_id', filter: 'archived != true' })
+      const cards = await pb
+        .collection('cards')
+        .getFullList({ fields: 'id,board_id,completed', filter: 'archived != true' })
+
+      const stats: Record<string, { total: number; completed: number }> = {}
+      data.forEach((c) => {
+        stats[c.id] = { total: 0, completed: 0 }
+      })
+
+      const boardToClient: Record<string, string> = {}
+      boards.forEach((b) => {
+        if (b.client_id) boardToClient[b.id] = b.client_id
+      })
+
+      cards.forEach((card) => {
+        const clientId = boardToClient[card.board_id]
+        if (clientId && stats[clientId]) {
+          stats[clientId].total += 1
+          if (card.completed) stats[clientId].completed += 1
+        }
+      })
+
+      setClientStats(stats)
     } catch (err) {
       console.error(err)
     } finally {
@@ -42,6 +73,9 @@ export default function ClientsPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  useRealtime('boards', () => loadData())
+  useRealtime('cards', () => loadData())
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja realmente excluir este cliente?')) return
@@ -200,10 +234,35 @@ export default function ClientsPage() {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border/40">
-                      <span className="font-medium">
-                        {client.contract?.length || 0} contratos salvos
-                      </span>
+                    <div className="flex flex-col gap-2 pt-4 border-t border-border/40">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="font-medium">
+                          {client.contract?.length || 0} contratos salvos
+                        </span>
+                      </div>
+
+                      {clientStats[client.id] && (
+                        <div className="flex flex-col gap-1.5 mt-1">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="font-medium">Progresso dos Projetos</span>
+                            <span>
+                              {clientStats[client.id].total > 0
+                                ? `${clientStats[client.id].completed}/${clientStats[client.id].total} tarefas`
+                                : '0 tarefas'}
+                            </span>
+                          </div>
+                          {clientStats[client.id].total > 0 && (
+                            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-primary h-full rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${(clientStats[client.id].completed / clientStats[client.id].total) * 100}%`,
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
