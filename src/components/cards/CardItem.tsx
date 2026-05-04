@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom'
-import { Calendar, CheckSquare, MessageSquare, Paperclip, Play } from 'lucide-react'
+import { Calendar, CheckSquare, MessageSquare, Paperclip, Play, CheckCircle2 } from 'lucide-react'
 import { format, isToday, addDays, startOfDay, isBefore } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { Progress } from '@/components/ui/progress'
 
 export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, onQuickMove }: any) {
   const isCompleted = card.completed
   const isColumnDone = columnName?.toUpperCase() === 'CONCLUÍDO'
   const isColumnInProgress = columnName?.toUpperCase() === 'EM ANDAMENTO'
+  const isEffectivelyCompleted = isCompleted || isColumnDone
   const labels = card.expand?.card_labels_via_card_id?.map((cl: any) => cl.expand?.label_id) || []
   const members = card.expand?.card_members_via_card_id?.map((cm: any) => cm.expand?.user_id) || []
 
@@ -39,11 +41,18 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
   const checklistCount = card.expand?.checklist_items_via_card_id?.length || 0
   const checklistCompleted =
     card.expand?.checklist_items_via_card_id?.filter((i: any) => i.completed)?.length || 0
+  const progressPercentage =
+    checklistCount > 0 ? Math.round((checklistCompleted / checklistCount) * 100) : 0
 
   return (
     <Link
       to={`/boards/${boardId}/cards/${card.id}`}
-      className={`group block w-full overflow-hidden bg-background p-3 rounded-lg border border-border shadow-sm hover:border-primary/50 transition-colors relative ${isCompleted ? 'opacity-60' : ''}`}
+      className={cn(
+        'group block w-full overflow-hidden p-3 rounded-lg border shadow-sm hover:border-primary/50 transition-all duration-300 relative',
+        isEffectivelyCompleted
+          ? 'bg-secondary/50 opacity-70 border-transparent'
+          : 'bg-background border-border',
+      )}
       draggable
       onDragStart={(e) => {
         e.stopPropagation()
@@ -75,17 +84,15 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
         </div>
       )}
       <div className="flex items-start gap-2 mb-2 w-full">
-        <div
-          className={cn(
-            'w-2 h-2 rounded-full shrink-0 mt-1.5',
-            isCompleted ? 'bg-green-500' : 'bg-yellow-500',
-          )}
-          aria-hidden="true"
-        />
+        {isEffectivelyCompleted ? (
+          <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+        ) : (
+          <div className="w-2 h-2 rounded-full bg-yellow-500 shrink-0 mt-1.5" aria-hidden="true" />
+        )}
         <h4
           className={cn(
-            'text-sm font-medium break-words whitespace-normal leading-snug flex-1 min-w-0 pr-12',
-            isCompleted ? 'line-through text-muted-foreground' : '',
+            'text-sm font-medium break-words whitespace-normal leading-snug flex-1 min-w-0 pr-12 transition-all duration-300',
+            isEffectivelyCompleted ? 'line-through text-muted-foreground' : '',
           )}
         >
           {card.title}
@@ -96,7 +103,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10"
         onClick={(e) => e.preventDefault()}
       >
-        {!isCompleted && !isColumnDone && !isColumnInProgress && (
+        {!isEffectivelyCompleted && !isColumnInProgress && (
           <div
             role="button"
             className="flex items-center justify-center h-6 w-6 rounded bg-background border border-border shadow-sm hover:bg-muted cursor-pointer transition-colors"
@@ -110,7 +117,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
             <Play className="w-3 h-3 text-blue-500 fill-current" />
           </div>
         )}
-        {!isCompleted && !isColumnDone && (
+        {!isEffectivelyCompleted && (
           <div
             role="button"
             className="flex items-center justify-center h-6 w-6 rounded bg-background border border-border shadow-sm hover:bg-muted cursor-pointer transition-colors"
@@ -137,14 +144,6 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
             <Calendar className="w-3 h-3" />
             <span>{dateText}</span>
           </div>
-          {checklistCount > 0 && (
-            <div className="flex items-center gap-1">
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>
-                {checklistCompleted}/{checklistCount}
-              </span>
-            </div>
-          )}
           {card.expand?.comments_via_card_id && (
             <div className="flex items-center gap-1">
               <MessageSquare className="w-3.5 h-3.5" />
@@ -173,6 +172,19 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
           )}
         </div>
       </div>
+
+      {checklistCount > 0 && (
+        <div className="mt-3 space-y-1.5 w-full">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium">
+            <span className="flex items-center gap-1">
+              <CheckSquare className="w-3 h-3" />
+              {checklistCompleted}/{checklistCount}
+            </span>
+            <span>{progressPercentage}%</span>
+          </div>
+          <Progress value={progressPercentage} className="h-1.5" />
+        </div>
+      )}
     </Link>
   )
 }

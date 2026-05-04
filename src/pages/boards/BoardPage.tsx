@@ -785,19 +785,28 @@ export default function BoardPage() {
                             <TableRow
                               key={card.id}
                               className={cn(
-                                'cursor-pointer hover:bg-muted/50 transition-colors',
-                                card.completed && 'opacity-60 bg-muted/20',
+                                'cursor-pointer hover:bg-muted/50 transition-all duration-300',
+                                (card.completed || col.name.toUpperCase() === 'CONCLUÍDO') &&
+                                  'opacity-70 bg-secondary/50',
                               )}
                               onClick={() => navigate(`/boards/${id}/cards/${card.id}`)}
                             >
                               <TableCell className="font-medium py-3">
-                                <span
-                                  className={
-                                    card.completed ? 'line-through text-muted-foreground' : ''
-                                  }
-                                >
-                                  {card.title}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  {(card.completed || col.name.toUpperCase() === 'CONCLUÍDO') && (
+                                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                                  )}
+                                  <span
+                                    className={cn(
+                                      'transition-all duration-300',
+                                      card.completed || col.name.toUpperCase() === 'CONCLUÍDO'
+                                        ? 'line-through text-muted-foreground'
+                                        : '',
+                                    )}
+                                  >
+                                    {card.title}
+                                  </span>
+                                </div>
                               </TableCell>
                               <TableCell className="py-3">
                                 <div className="flex flex-wrap gap-1.5">
