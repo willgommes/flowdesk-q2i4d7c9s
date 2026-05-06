@@ -655,7 +655,11 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   <Clock className="w-4 h-4 mr-2" />
                   {card.due_date && dueDateObj
                     ? hasSpecificTime
-                      ? format(dueDateObj, "d 'de' MMM, HH:mm", { locale: ptBR })
+                      ? format(
+                          dueDateObj,
+                          `d 'de' MMM, ${user?.time_format === '12h' ? 'hh:mm a' : 'HH:mm'}`,
+                          { locale: ptBR },
+                        )
                       : format(dueDateObj, "d 'de' MMM", { locale: ptBR })
                     : 'Data de Entrega'}
                 </Button>
@@ -664,6 +668,11 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 <Calendar
                   mode="single"
                   selected={card.due_date ? new Date(card.due_date) : undefined}
+                  disabled={(date) => {
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0)
+                    return date < today
+                  }}
                   onSelect={async (date) => {
                     if (!date) {
                       await pb.collection('cards').update(card.id, { due_date: null })
@@ -678,6 +687,16 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     } else {
                       newDate.setHours(23, 59, 59, 999)
                     }
+
+                    if (newDate.getTime() < new Date().getTime()) {
+                      toast({
+                        title: 'Data inválida',
+                        description: 'A data de vencimento não pode ser no passado.',
+                        variant: 'destructive',
+                      })
+                      return
+                    }
+
                     await pb
                       .collection('cards')
                       .update(card.id, { due_date: newDate.toISOString() })
@@ -702,6 +721,19 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                         } else {
                           d.setHours(23, 59, 59, 999)
                         }
+
+                        if (d.getTime() < new Date().getTime()) {
+                          toast({
+                            title: 'Data inválida',
+                            description: 'A data de vencimento não pode ser no passado.',
+                            variant: 'destructive',
+                          })
+                          setTimeStr(
+                            hasSpecificTime && dueDateObj ? format(dueDateObj, 'HH:mm') : '',
+                          )
+                          return
+                        }
+
                         if (d.getTime() !== new Date(card.due_date).getTime()) {
                           await pb
                             .collection('cards')

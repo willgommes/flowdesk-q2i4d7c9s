@@ -8,6 +8,7 @@ export interface User {
   role: 'admin' | 'membro' | 'cliente'
   avatar?: string
   theme?: 'light' | 'dark'
+  time_format?: '12h' | '24h'
   last_briefing_at?: string
   created: string
   updated: string

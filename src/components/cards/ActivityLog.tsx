@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 import { useRealtime } from '@/hooks/use-realtime'
+import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
 
 export function ActivityLog({ cardId }: { cardId: string }) {
+  const { user } = useAuth()
   const [logs, setLogs] = useState<any[]>([])
   const [open, setOpen] = useState(false)
+
+  const timeFormatStr = user?.time_format === '12h' ? 'hh:mm a' : 'HH:mm'
 
   const load = () => {
     pb.collection('activity_logs')
@@ -50,7 +55,7 @@ export function ActivityLog({ cardId }: { cardId: string }) {
                 <span className="text-muted-foreground">{log.description}</span>
               </div>
               <span className="text-xs text-muted-foreground mt-0.5">
-                {new Date(log.created).toLocaleString()}
+                {format(new Date(log.created), `dd/MM/yyyy ${timeFormatStr}`)}
               </span>
             </div>
           </div>

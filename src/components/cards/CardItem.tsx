@@ -17,9 +17,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import pb from '@/lib/pocketbase/client'
+import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
 
 export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, onQuickMove }: any) {
   const [isTimePopoverOpen, setTimePopoverOpen] = useState(false)
+  const { user } = useAuth()
+  const { toast } = useToast()
   const isCompleted = card.completed
   const isColumnDone = columnName?.toUpperCase() === 'CONCLUÍDO'
   const isColumnInProgress = columnName?.toUpperCase() === 'EM ANDAMENTO'
@@ -31,6 +35,8 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
   let dateText = 'Sem data'
   let hasTime = false
 
+  const timeFormatStr = user?.time_format === '12h' ? 'hh:mm a' : 'HH:mm'
+
   if (card.due_date) {
     const date = new Date(card.due_date)
     const now = new Date()
@@ -38,7 +44,9 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
     const cardDate = startOfDay(date)
     hasTime = !(date.getHours() === 23 && date.getMinutes() === 59 && date.getSeconds() === 59)
 
-    dateText = format(date, hasTime ? "d 'de' MMM, HH:mm" : "d 'de' MMM", { locale: ptBR })
+    dateText = format(date, hasTime ? `d 'de' MMM, ${timeFormatStr}` : "d 'de' MMM", {
+      locale: ptBR,
+    })
 
     const isOverdue = date < now
 
@@ -71,6 +79,16 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
     } else {
       d.setHours(23, 59, 59, 999)
     }
+
+    if (d.getTime() < new Date().getTime()) {
+      toast({
+        title: 'Data inválida',
+        description: 'A data de vencimento não pode ser no passado.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     try {
       await pb.collection('cards').update(card.id, { due_date: d.toISOString() })
     } catch (err) {

@@ -21,10 +21,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { AppHeader } from '@/components/AppHeader'
 import { Separator } from '@/components/ui/separator'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ImageCropper } from '@/components/ImageCropper'
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
+  time_format: z.enum(['12h', '24h']).optional(),
 })
 
 const passwordSchema = z
@@ -66,7 +74,10 @@ export default function Profile() {
 
   const profileForm = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { name: user?.name || '' },
+    defaultValues: {
+      name: user?.name || '',
+      time_format: user?.time_format || '24h',
+    },
   })
 
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
@@ -132,6 +143,7 @@ export default function Profile() {
     try {
       const formData = new FormData()
       formData.append('name', values.name)
+      formData.append('time_format', values.time_format || '24h')
       if (avatarFile) {
         formData.append('avatar', avatarFile)
       }
@@ -243,6 +255,27 @@ export default function Profile() {
                         <FormControl>
                           <Input {...field} className="max-w-md" />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="time_format"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Formato de Hora</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="max-w-md">
+                              <SelectValue placeholder="Selecione o formato de hora" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="24h">24 horas (ex: 14:30)</SelectItem>
+                            <SelectItem value="12h">12 horas (ex: 02:30 PM)</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
