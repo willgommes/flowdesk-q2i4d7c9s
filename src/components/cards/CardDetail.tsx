@@ -79,6 +79,11 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   }, [card.due_date])
 
   const handleTitleBlur = async () => {
+    if (!title.trim()) {
+      toast({ title: 'O título não pode estar vazio', variant: 'destructive' })
+      setTitle(card.title)
+      return
+    }
     if (title !== card.title) {
       await pb.collection('cards').update(card.id, { title })
       await logAct('edit_title', `Alterou o título para "${title}"`)
@@ -311,6 +316,12 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                e.currentTarget.blur()
+              }
+            }}
             className={`text-2xl font-bold border-none shadow-none px-0 focus-visible:ring-0 h-auto ${card.completed ? 'line-through text-muted-foreground' : ''}`}
           />
         </div>
@@ -376,6 +387,12 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onBlur={handleDescBlur}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault()
+                e.currentTarget.blur()
+              }
+            }}
             className="min-h-[120px] resize-none"
             placeholder="Adicione uma descrição mais detalhada usando texto ou markdown..."
           />
@@ -712,6 +729,12 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                       type="time"
                       value={timeStr}
                       onChange={(e) => setTimeStr(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          e.currentTarget.blur()
+                        }
+                      }}
                       onBlur={async () => {
                         if (!card.due_date) return
                         const d = new Date(card.due_date)

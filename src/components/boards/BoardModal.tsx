@@ -125,6 +125,13 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
               id="desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                  e.preventDefault()
+                  const form = e.currentTarget.closest('form')
+                  if (form) form.requestSubmit()
+                }
+              }}
             />
           </div>
           <div className="space-y-2">

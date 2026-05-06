@@ -342,8 +342,14 @@ export default function BoardPage() {
   }
 
   const handleBoardNameUpdate = async () => {
+    if (!boardName.trim()) {
+      toast({ title: 'O nome do quadro não pode estar vazio', variant: 'destructive' })
+      setBoardName(board.name)
+      setIsEditingName(false)
+      return
+    }
     setIsEditingName(false)
-    if (boardName !== board.name && boardName.trim()) {
+    if (boardName !== board.name) {
       try {
         await updateBoard(id!, { name: boardName })
         setBoard((prev: any) => ({ ...prev, name: boardName }))
@@ -352,8 +358,6 @@ export default function BoardPage() {
         toast({ title: 'Erro ao atualizar nome', variant: 'destructive' })
         setBoardName(board.name)
       }
-    } else {
-      setBoardName(board.name)
     }
   }
 
@@ -431,8 +435,12 @@ export default function BoardPage() {
                 onChange={(e) => setBoardName(e.target.value)}
                 onBlur={handleBoardNameUpdate}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleBoardNameUpdate()
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleBoardNameUpdate()
+                  }
                   if (e.key === 'Escape') {
+                    e.preventDefault()
                     setIsEditingName(false)
                     setBoardName(board.name)
                   }
@@ -962,11 +970,15 @@ function Column({
   }, [editing])
 
   const handleSave = () => {
-    setEditing(false)
-    if (name !== column.name && name.trim()) {
-      onUpdate({ name })
-    } else {
+    if (!name.trim()) {
+      toast({ title: 'O nome da coluna não pode estar vazio', variant: 'destructive' })
       setName(column.name)
+      setEditing(false)
+      return
+    }
+    setEditing(false)
+    if (name !== column.name) {
+      onUpdate({ name })
     }
   }
 
@@ -995,8 +1007,12 @@ function Column({
             onChange={(e) => setName(e.target.value)}
             onBlur={handleSave}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSave()
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleSave()
+              }
               if (e.key === 'Escape') {
+                e.preventDefault()
                 setEditing(false)
                 setName(column.name)
               }
@@ -1100,7 +1116,15 @@ function Column({
               placeholder="Título do cartão..."
               className="h-8 mb-2 text-sm shadow-none focus-visible:ring-1"
               onKeyDown={async (e) => {
-                if (e.key === 'Enter' && newCardTitle.trim()) {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  if (!newCardTitle.trim()) {
+                    toast({
+                      title: 'O título do cartão não pode estar vazio',
+                      variant: 'destructive',
+                    })
+                    return
+                  }
                   const title = newCardTitle.trim()
                   setNewCardTitle('')
                   setIsAdding(false)

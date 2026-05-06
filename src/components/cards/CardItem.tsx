@@ -316,7 +316,13 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                 align="start"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  e.stopPropagation()
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSave()
+                  }
+                }}
               >
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col space-y-1">
