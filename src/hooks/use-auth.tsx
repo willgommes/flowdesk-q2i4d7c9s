@@ -9,6 +9,7 @@ export interface User {
   avatar?: string
   theme?: 'light' | 'dark'
   time_format?: '12h' | '24h'
+  sound_enabled?: boolean
   last_briefing_at?: string
   created: string
   updated: string
@@ -87,9 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' })
       if (authData.record) {
-        await pb
-          .collection('users')
-          .update(authData.record.id, { lastActive: new Date().toISOString() })
+        const updates: any = { lastActive: new Date().toISOString() }
+        if (authData.meta?.isNew) {
+          updates.sound_enabled = true
+        }
+        await pb.collection('users').update(authData.record.id, updates)
       }
       return { success: true }
     } catch (error) {
@@ -105,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password: password || '',
         passwordConfirm: password || '',
         role: 'membro',
+        sound_enabled: true,
       })
       const authData = await pb.collection('users').authWithPassword(email, password || '')
       if (authData.record) {

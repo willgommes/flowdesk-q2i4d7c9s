@@ -28,11 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { ImageCropper } from '@/components/ImageCropper'
+import { playPing } from '@/hooks/use-sound-alerts'
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
   time_format: z.enum(['12h', '24h']).optional(),
+  sound_enabled: z.boolean().optional(),
 })
 
 const passwordSchema = z
@@ -77,6 +80,7 @@ export default function Profile() {
     defaultValues: {
       name: user?.name || '',
       time_format: user?.time_format || '24h',
+      sound_enabled: user?.sound_enabled ?? true,
     },
   })
 
@@ -144,6 +148,9 @@ export default function Profile() {
       const formData = new FormData()
       formData.append('name', values.name)
       formData.append('time_format', values.time_format || '24h')
+      if (values.sound_enabled !== undefined) {
+        formData.append('sound_enabled', String(values.sound_enabled))
+      }
       if (avatarFile) {
         formData.append('avatar', avatarFile)
       }
@@ -277,6 +284,47 @@ export default function Profile() {
                           </SelectContent>
                         </Select>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="sound_enabled"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 max-w-md">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Alertas Sonoros</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            Receber alertas em áudio para atualizações nos seus cards
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={async (checked) => {
+                              field.onChange(checked)
+                              if (user) {
+                                try {
+                                  await pb
+                                    .collection('users')
+                                    .update(user.id, { sound_enabled: checked })
+                                  if (checked) playPing()
+                                  toast({
+                                    title: 'Preferência salva',
+                                    description: 'Alertas sonoros atualizados.',
+                                  })
+                                } catch (err) {
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Erro',
+                                    description: 'Não foi possível salvar.',
+                                  })
+                                  field.onChange(!checked)
+                                }
+                              }
+                            }}
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />

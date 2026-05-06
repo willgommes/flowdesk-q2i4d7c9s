@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-06T13:40:12.946Z",
+  "generatedAt": "2026-05-06T13:57:46.382Z",
   "collections": [
     {
       "name": "users",
@@ -76,6 +76,12 @@
           "required": false,
           "system": false,
           "selectValues": ["12h", "24h"]
+        },
+        {
+          "name": "sound_enabled",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
