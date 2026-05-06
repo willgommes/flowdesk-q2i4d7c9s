@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Calendar,
   CheckSquare,
@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react'
-import { format, isToday, addDays, startOfDay, isBefore, isPast } from 'date-fns'
+import { format, isToday, addDays, startOfDay, isBefore } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -27,8 +27,10 @@ import {
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
+import { useRealtime } from '@/hooks/use-realtime'
 
 export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, onQuickMove }: any) {
+  const [localCard, setLocalCard] = useState(card)
   const [isDatePopoverOpen, setDatePopoverOpen] = useState(false)
   const [tempDate, setTempDate] = useState<Date | undefined>()
   const [tempHour, setTempHour] = useState<string>('12')
@@ -36,12 +38,25 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
   const [tempAmPm, setTempAmPm] = useState<string>('AM')
   const { user } = useAuth()
   const { toast } = useToast()
-  const isCompleted = card.completed
+
+  useEffect(() => {
+    setLocalCard(card)
+  }, [card])
+
+  useRealtime('cards', (e) => {
+    if (e.action === 'update' && e.record.id === localCard.id) {
+      setLocalCard((prev: any) => ({ ...prev, ...e.record, expand: prev.expand }))
+    }
+  })
+
+  const isCompleted = localCard.completed
   const isColumnDone = columnName?.toUpperCase() === 'CONCLUÍDO'
   const isColumnInProgress = columnName?.toUpperCase() === 'EM ANDAMENTO'
   const isEffectivelyCompleted = isCompleted || isColumnDone
-  const labels = card.expand?.card_labels_via_card_id?.map((cl: any) => cl.expand?.label_id) || []
-  const members = card.expand?.card_members_via_card_id?.map((cm: any) => cm.expand?.user_id) || []
+  const labels =
+    localCard.expand?.card_labels_via_card_id?.map((cl: any) => cl.expand?.label_id) || []
+  const members =
+    localCard.expand?.card_members_via_card_id?.map((cm: any) => cm.expand?.user_id) || []
 
   let dateBadgeClass = 'bg-muted text-muted-foreground'
   let dateText = 'Sem data'
@@ -49,8 +64,8 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
 
   const timeFormatStr = user?.time_format === '12h' ? 'hh:mm a' : 'HH:mm'
 
-  if (card.due_date) {
-    const date = new Date(card.due_date)
+  if (localCard.due_date) {
+    const date = new Date(localCard.due_date)
     const now = new Date()
     const today = startOfDay(now)
     const cardDate = startOfDay(date)
@@ -81,8 +96,8 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
   const handleOpenChange = (open: boolean) => {
     setDatePopoverOpen(open)
     if (open) {
-      if (card.due_date) {
-        const d = new Date(card.due_date)
+      if (localCard.due_date) {
+        const d = new Date(localCard.due_date)
         setTempDate(d)
         let h = d.getHours()
         setTempMinute(d.getMinutes().toString().padStart(2, '0'))
@@ -129,31 +144,64 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
     }
 
     try {
-      await pb.collection('cards').update(card.id, { due_date: selectedDateTime.toISOString() })
+      const isoDate = selectedDateTime.toISOString()
+
+      // Optimistic update
+      setLocalCard((prev: any) => ({ ...prev, due_date: isoDate }))
       setDatePopoverOpen(false)
+
+      await pb.collection('cards').update(localCard.id, { due_date: isoDate })
+
+      await pb.collection('activity_logs').create({
+        card_id: localCard.id,
+        user_id: user?.id,
+        action_type: 'date_change',
+        description: `alterou o prazo para ${format(selectedDateTime, 'dd/MM/yyyy HH:mm', { locale: ptBR })}`,
+      })
     } catch (err) {
       console.error('Failed to update time', err)
+      setLocalCard(card)
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a data.',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleRemoveDate = async () => {
     try {
-      await pb.collection('cards').update(card.id, { due_date: null })
+      setLocalCard((prev: any) => ({ ...prev, due_date: null }))
       setDatePopoverOpen(false)
+
+      await pb.collection('cards').update(localCard.id, { due_date: null })
+
+      await pb.collection('activity_logs').create({
+        card_id: localCard.id,
+        user_id: user?.id,
+        action_type: 'date_change',
+        description: 'removeu o prazo',
+      })
     } catch (err) {
       console.error('Failed to remove date', err)
+      setLocalCard(card)
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível remover a data.',
+        variant: 'destructive',
+      })
     }
   }
 
-  const checklistCount = card.expand?.checklist_items_via_card_id?.length || 0
+  const checklistCount = localCard.expand?.checklist_items_via_card_id?.length || 0
   const checklistCompleted =
-    card.expand?.checklist_items_via_card_id?.filter((i: any) => i.completed)?.length || 0
+    localCard.expand?.checklist_items_via_card_id?.filter((i: any) => i.completed)?.length || 0
   const progressPercentage =
     checklistCount > 0 ? Math.round((checklistCompleted / checklistCount) * 100) : 0
 
   return (
     <Link
-      to={`/boards/${boardId}/cards/${card.id}`}
+      to={`/boards/${boardId}/cards/${localCard.id}`}
       className={cn(
         'group block w-full overflow-hidden p-3 rounded-lg border shadow-sm hover:border-primary/50 transition-all duration-300 relative',
         isEffectivelyCompleted
@@ -163,13 +211,13 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
       draggable
       onDragStart={(e) => {
         e.stopPropagation()
-        onDragStart(e, card)
+        onDragStart(e, localCard)
       }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         if (onDropCard) {
           e.stopPropagation()
-          onDropCard(e, card)
+          onDropCard(e, localCard)
         }
       }}
     >
@@ -202,7 +250,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
             isEffectivelyCompleted ? 'line-through text-muted-foreground' : '',
           )}
         >
-          {card.title}
+          {localCard.title}
         </h4>
       </div>
 
@@ -245,31 +293,30 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
           {!isEffectivelyCompleted ? (
             <Popover open={isDatePopoverOpen} onOpenChange={handleOpenChange}>
               <PopoverTrigger asChild>
-                <div
-                  role="button"
-                  tabIndex={0}
+                <button
+                  type="button"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   className={cn(
                     'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer',
                     dateBadgeClass,
-                    !card.due_date && 'hover:bg-muted/80',
+                    !localCard.due_date && 'hover:bg-muted/80',
                   )}
                 >
                   <Calendar className="w-3 h-3" />
                   <span>{dateText}</span>
-                  {card.due_date && hasTime && <Clock className="w-3 h-3 opacity-50 ml-0.5" />}
-                </div>
+                  {localCard.due_date && hasTime && <Clock className="w-3 h-3 opacity-50 ml-0.5" />}
+                </button>
               </PopoverTrigger>
               <PopoverContent
                 className="w-auto p-4 z-50"
                 align="start"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col space-y-1">
@@ -321,7 +368,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                     </span>
                   )}
                   <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
-                    {card.due_date ? (
+                    {localCard.due_date ? (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -354,19 +401,19 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
             >
               <Calendar className="w-3 h-3" />
               <span>{dateText}</span>
-              {card.due_date && hasTime && <Clock className="w-3 h-3 opacity-50 ml-0.5" />}
+              {localCard.due_date && hasTime && <Clock className="w-3 h-3 opacity-50 ml-0.5" />}
             </div>
           )}
-          {card.expand?.comments_via_card_id && (
+          {localCard.expand?.comments_via_card_id && (
             <div className="flex items-center gap-1">
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>{card.expand.comments_via_card_id.length}</span>
+              <span>{localCard.expand.comments_via_card_id.length}</span>
             </div>
           )}
-          {card.expand?.attachments_via_card_id && (
+          {localCard.expand?.attachments_via_card_id && (
             <div className="flex items-center gap-1">
               <Paperclip className="w-3.5 h-3.5" />
-              <span>{card.expand.attachments_via_card_id.length}</span>
+              <span>{localCard.expand.attachments_via_card_id.length}</span>
             </div>
           )}
         </div>
