@@ -145,7 +145,15 @@ export function DailyBriefingModal() {
                 <div className="text-sm opacity-80 mt-1 flex justify-between items-center">
                   <span className="truncate">{card.expand?.board_id?.name}</span>
                   <span className="shrink-0 ml-2">
-                    {format(parseISO(card.due_date), 'dd/MM/yyyy HH:mm')}
+                    {(() => {
+                      const d = parseISO(card.due_date)
+                      const hasTime = !(
+                        d.getHours() === 23 &&
+                        d.getMinutes() === 59 &&
+                        d.getSeconds() === 59
+                      )
+                      return format(d, hasTime ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy')
+                    })()}
                   </span>
                 </div>
               </Link>

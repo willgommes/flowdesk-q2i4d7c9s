@@ -18,14 +18,22 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
 
   if (card.due_date) {
     const date = new Date(card.due_date)
-    const today = startOfDay(new Date())
+    const now = new Date()
+    const today = startOfDay(now)
     const cardDate = startOfDay(date)
+    const hasTime = !(
+      date.getHours() === 23 &&
+      date.getMinutes() === 59 &&
+      date.getSeconds() === 59
+    )
 
-    dateText = format(date, "d 'de' MMM", { locale: ptBR })
+    dateText = format(date, hasTime ? "d 'de' MMM, HH:mm" : "d 'de' MMM", { locale: ptBR })
+
+    const isOverdue = date < now
 
     if (isCompleted) {
       dateBadgeClass = 'bg-green-500/10 text-green-600 dark:text-green-400'
-    } else if (isBefore(cardDate, today)) {
+    } else if (isOverdue) {
       dateBadgeClass = 'bg-destructive/10 text-destructive'
     } else if (isToday(cardDate)) {
       dateBadgeClass = 'bg-orange-500/10 text-orange-600 dark:text-orange-400'

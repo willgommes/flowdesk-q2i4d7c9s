@@ -42,7 +42,12 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
           <div className="space-y-2.5 mt-4">
             {upcomingTasks.map((task) => {
               const due = new Date(task.due_date)
-              const isOverdue = isPast(due) && !isToday(due)
+              const hasTime = !(
+                due.getHours() === 23 &&
+                due.getMinutes() === 59 &&
+                due.getSeconds() === 59
+              )
+              const isOverdue = isPast(due)
               return (
                 <Link key={task.id} to={`/boards/${task.board_id}/cards/${task.id}`}>
                   <div className="flex flex-col p-2.5 rounded-md border border-border/40 bg-card hover:bg-accent/50 transition-colors group">
@@ -60,7 +65,11 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
                               : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
                         )}
                       >
-                        {isToday(due) ? 'Hoje' : format(due, 'dd/MM', { locale: ptBR })}
+                        {hasTime && isToday(due)
+                          ? format(due, "'Hoje', HH:mm", { locale: ptBR })
+                          : isToday(due)
+                            ? 'Hoje'
+                            : format(due, hasTime ? 'dd/MM, HH:mm' : 'dd/MM', { locale: ptBR })}
                       </span>
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground">

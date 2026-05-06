@@ -30,6 +30,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
@@ -55,6 +57,26 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   const { toast } = useToast()
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
+
+  const dueDateObj = card.due_date ? new Date(card.due_date) : undefined
+  const hasSpecificTime = dueDateObj
+    ? !(
+        dueDateObj.getHours() === 23 &&
+        dueDateObj.getMinutes() === 59 &&
+        dueDateObj.getSeconds() === 59
+      )
+    : false
+  const [timeStr, setTimeStr] = useState(
+    hasSpecificTime && dueDateObj ? format(dueDateObj, 'HH:mm') : '',
+  )
+
+  useEffect(() => {
+    const d = card.due_date ? new Date(card.due_date) : undefined
+    const specific = d
+      ? !(d.getHours() === 23 && d.getMinutes() === 59 && d.getSeconds() === 59)
+      : false
+    setTimeStr(specific && d ? format(d, 'HH:mm') : '')
+  }, [card.due_date])
 
   const handleTitleBlur = async () => {
     if (title !== card.title) {
@@ -630,7 +652,12 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   variant="secondary"
                   className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
                 >
-                  <Clock className="w-4 h-4 mr-2" /> Data de Entrega
+                  <Clock className="w-4 h-4 mr-2" />
+                  {card.due_date && dueDateObj
+                    ? hasSpecificTime
+                      ? format(dueDateObj, "d 'de' MMM, HH:mm", { locale: ptBR })
+                      : format(dueDateObj, "d 'de' MMM", { locale: ptBR })
+                    : 'Data de Entrega'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
@@ -638,29 +665,69 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   mode="single"
                   selected={card.due_date ? new Date(card.due_date) : undefined}
                   onSelect={async (date) => {
-                    const newDate = date ? date.toISOString() : null
-                    await pb.collection('cards').update(card.id, { due_date: newDate })
+                    if (!date) {
+                      await pb.collection('cards').update(card.id, { due_date: null })
+                      await logAct('date_change', 'Removeu a data de entrega')
+                      onChange()
+                      return
+                    }
+                    const newDate = new Date(date)
+                    if (timeStr) {
+                      const [h, m] = timeStr.split(':').map(Number)
+                      newDate.setHours(h, m, 0, 0)
+                    } else {
+                      newDate.setHours(23, 59, 59, 999)
+                    }
+                    await pb
+                      .collection('cards')
+                      .update(card.id, { due_date: newDate.toISOString() })
                     await logAct('date_change', 'Alterou a data de entrega')
                     onChange()
                   }}
                   initialFocus
                 />
-                {card.due_date && (
-                  <div className="p-3 border-t border-border">
+                <div className="p-3 border-t border-border flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="time"
+                      value={timeStr}
+                      onChange={(e) => setTimeStr(e.target.value)}
+                      onBlur={async () => {
+                        if (!card.due_date) return
+                        const d = new Date(card.due_date)
+                        if (timeStr) {
+                          const [h, m] = timeStr.split(':').map(Number)
+                          d.setHours(h, m, 0, 0)
+                        } else {
+                          d.setHours(23, 59, 59, 999)
+                        }
+                        if (d.getTime() !== new Date(card.due_date).getTime()) {
+                          await pb
+                            .collection('cards')
+                            .update(card.id, { due_date: d.toISOString() })
+                          await logAct('date_change', 'Alterou o horário de entrega')
+                          onChange()
+                        }
+                      }}
+                      className="w-[100px] h-8 text-sm"
+                    />
+                  </div>
+                  {card.due_date && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive h-8 px-2"
                       onClick={async () => {
                         await pb.collection('cards').update(card.id, { due_date: null })
                         await logAct('date_change', 'Removeu a data de entrega')
                         onChange()
                       }}
                     >
-                      Remover data
+                      Remover
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </PopoverContent>
             </Popover>
           </div>

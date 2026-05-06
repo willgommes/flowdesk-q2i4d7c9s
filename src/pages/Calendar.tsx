@@ -137,13 +137,13 @@ export default function CalendarPage() {
                     const originalCard = cards.find((c) => c.id === cardId)
                     if (originalCard && originalCard.due_date) {
                       const origDate = new Date(originalCard.due_date)
-                      targetDate.setUTCHours(
-                        origDate.getUTCHours(),
-                        origDate.getUTCMinutes(),
-                        origDate.getUTCSeconds(),
+                      targetDate.setHours(
+                        origDate.getHours(),
+                        origDate.getMinutes(),
+                        origDate.getSeconds(),
                       )
                     } else {
-                      targetDate.setUTCHours(12, 0, 0)
+                      targetDate.setHours(23, 59, 59, 999)
                     }
 
                     try {
