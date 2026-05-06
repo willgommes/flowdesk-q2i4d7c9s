@@ -466,7 +466,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
       </div>
 
-      <div className="w-full md:w-[280px] shrink-0 bg-muted/20 p-4 md:p-6 space-y-6 border-t md:border-t-0 md:border-l border-border md:overflow-y-auto">
+      <div className="w-full md:w-[280px] shrink-0 bg-muted/20 p-4 pt-12 md:p-6 md:pt-14 space-y-6 border-t md:border-t-0 md:border-l border-border md:overflow-y-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-2">
           <Button
             variant={card.completed ? 'outline' : 'default'}
