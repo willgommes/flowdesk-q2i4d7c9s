@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-06T14:33:52.416Z",
+  "generatedAt": "2026-05-06T17:59:49.121Z",
   "collections": [
     {
       "name": "users",
@@ -237,8 +237,8 @@
       "name": "cards",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
+        "list": "@request.auth.role = 'admin' || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
+        "view": "@request.auth.role = 'admin' || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
         "create": "@request.auth.id != ''",
         "update": "@request.auth.id != ''",
         "delete": "@request.auth.id != ''"

@@ -1145,11 +1145,19 @@ function Column({
                       description: 'Criou este cartão',
                     })
                   } catch (err: any) {
-                    toast({
-                      title: 'Erro ao criar cartão',
-                      description: getErrorMessage(err),
-                      variant: 'destructive',
-                    })
+                    if (err.status === 403 || err.status === 404) {
+                      toast({
+                        title: 'Cartão criado',
+                        description:
+                          'O cartão foi criado, mas você não possui permissão para visualizá-lo. Solicite atribuição a um administrador.',
+                      })
+                    } else {
+                      toast({
+                        title: 'Erro ao criar cartão',
+                        description: getErrorMessage(err),
+                        variant: 'destructive',
+                      })
+                    }
                   }
                 }
                 if (e.key === 'Escape') setIsAdding(false)
