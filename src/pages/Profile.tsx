@@ -36,6 +36,7 @@ const profileSchema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
   time_format: z.enum(['12h', '24h']).optional(),
   sound_enabled: z.boolean().optional(),
+  notifications_enabled: z.boolean().optional(),
 })
 
 const passwordSchema = z
@@ -81,6 +82,7 @@ export default function Profile() {
       name: user?.name || '',
       time_format: user?.time_format || '24h',
       sound_enabled: user?.sound_enabled ?? true,
+      notifications_enabled: user?.notifications_enabled ?? false,
     },
   })
 
@@ -150,6 +152,9 @@ export default function Profile() {
       formData.append('time_format', values.time_format || '24h')
       if (values.sound_enabled !== undefined) {
         formData.append('sound_enabled', String(values.sound_enabled))
+      }
+      if (values.notifications_enabled !== undefined) {
+        formData.append('notifications_enabled', String(values.notifications_enabled))
       }
       if (avatarFile) {
         formData.append('avatar', avatarFile)
@@ -312,6 +317,69 @@ export default function Profile() {
                                   toast({
                                     title: 'Preferência salva',
                                     description: 'Alertas sonoros atualizados.',
+                                  })
+                                } catch (err) {
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Erro',
+                                    description: 'Não foi possível salvar.',
+                                  })
+                                  field.onChange(!checked)
+                                }
+                              }
+                            }}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="notifications_enabled"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 max-w-md">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Notificações de Navegador</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            Receber notificações do sistema para atualizações nos seus cards
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={async (checked) => {
+                              if (checked && 'Notification' in window) {
+                                if (Notification.permission === 'default') {
+                                  const permission = await Notification.requestPermission()
+                                  if (permission !== 'granted') {
+                                    toast({
+                                      variant: 'destructive',
+                                      title: 'Permissão negada',
+                                      description:
+                                        'Conceda a permissão nas configurações do navegador para receber notificações.',
+                                    })
+                                    return
+                                  }
+                                } else if (Notification.permission === 'denied') {
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Permissão negada',
+                                    description:
+                                      'Você bloqueou as notificações. Altere nas configurações do navegador.',
+                                  })
+                                  return
+                                }
+                              }
+
+                              field.onChange(checked)
+                              if (user) {
+                                try {
+                                  await pb
+                                    .collection('users')
+                                    .update(user.id, { notifications_enabled: checked })
+                                  toast({
+                                    title: 'Preferência salva',
+                                    description: 'Notificações de navegador atualizadas.',
                                   })
                                 } catch (err) {
                                   toast({
