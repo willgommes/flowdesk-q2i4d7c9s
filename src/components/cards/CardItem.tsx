@@ -1,11 +1,25 @@
 import { Link } from 'react-router-dom'
-import { Calendar, CheckSquare, MessageSquare, Paperclip, Play, CheckCircle2 } from 'lucide-react'
-import { format, isToday, addDays, startOfDay, isBefore } from 'date-fns'
+import { useState } from 'react'
+import {
+  Calendar,
+  CheckSquare,
+  MessageSquare,
+  Paperclip,
+  Play,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react'
+import { format, isToday, addDays, startOfDay, isBefore, isPast } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import pb from '@/lib/pocketbase/client'
 
 export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, onQuickMove }: any) {
+  const [isTimePopoverOpen, setTimePopoverOpen] = useState(false)
   const isCompleted = card.completed
   const isColumnDone = columnName?.toUpperCase() === 'CONCLUÍDO'
   const isColumnInProgress = columnName?.toUpperCase() === 'EM ANDAMENTO'
@@ -15,35 +29,54 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
 
   let dateBadgeClass = 'bg-muted text-muted-foreground'
   let dateText = 'Sem data'
+  let hasTime = false
 
   if (card.due_date) {
     const date = new Date(card.due_date)
     const now = new Date()
     const today = startOfDay(now)
     const cardDate = startOfDay(date)
-    const hasTime = !(
-      date.getHours() === 23 &&
-      date.getMinutes() === 59 &&
-      date.getSeconds() === 59
-    )
+    hasTime = !(date.getHours() === 23 && date.getMinutes() === 59 && date.getSeconds() === 59)
 
     dateText = format(date, hasTime ? "d 'de' MMM, HH:mm" : "d 'de' MMM", { locale: ptBR })
 
     const isOverdue = date < now
 
     if (isCompleted) {
-      dateBadgeClass = 'bg-green-500/10 text-green-600 dark:text-green-400'
+      dateBadgeClass = 'bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20'
     } else if (isOverdue) {
-      dateBadgeClass = 'bg-destructive/10 text-destructive'
+      dateBadgeClass = 'bg-destructive/10 text-destructive hover:bg-destructive/20'
     } else if (isToday(cardDate)) {
-      dateBadgeClass = 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
+      dateBadgeClass =
+        'bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20'
     } else if (cardDate <= addDays(today, 7)) {
-      dateBadgeClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+      dateBadgeClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20'
     } else {
-      dateBadgeClass = 'bg-secondary text-secondary-foreground'
+      dateBadgeClass = 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
     }
   } else {
     dateBadgeClass = 'bg-muted/50 text-muted-foreground border border-dashed border-border'
+  }
+
+  const [tempTime, setTempTime] = useState(
+    card.due_date && hasTime ? format(new Date(card.due_date), 'HH:mm') : '',
+  )
+
+  const handleTimeSave = async () => {
+    if (!card.due_date) return
+    const d = new Date(card.due_date)
+    if (tempTime) {
+      const [h, m] = tempTime.split(':').map(Number)
+      d.setHours(h, m, 0, 0)
+    } else {
+      d.setHours(23, 59, 59, 999)
+    }
+    try {
+      await pb.collection('cards').update(card.id, { due_date: d.toISOString() })
+    } catch (err) {
+      console.error('Failed to update time', err)
+    }
+    setTimePopoverOpen(false)
   }
 
   const checklistCount = card.expand?.checklist_items_via_card_id?.length || 0
@@ -143,15 +176,81 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground mt-3 w-full">
         <div className="flex flex-wrap items-center gap-3">
-          <div
-            className={cn(
-              'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
-              dateBadgeClass,
-            )}
-          >
-            <Calendar className="w-3 h-3" />
-            <span>{dateText}</span>
-          </div>
+          {card.due_date && !isEffectivelyCompleted ? (
+            <Popover open={isTimePopoverOpen} onOpenChange={setTimePopoverOpen}>
+              <PopoverTrigger asChild>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setTempTime(hasTime ? format(new Date(card.due_date), 'HH:mm') : '')
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer',
+                    dateBadgeClass,
+                  )}
+                >
+                  <Calendar className="w-3 h-3" />
+                  <span>{dateText}</span>
+                  <Clock className="w-3 h-3 opacity-50 ml-0.5" />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto p-3 z-50"
+                align="start"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+              >
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Horário de Entrega
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="time"
+                      value={tempTime}
+                      onChange={(e) => setTempTime(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <Button size="sm" className="h-8" onClick={handleTimeSave}>
+                      Salvar
+                    </Button>
+                  </div>
+                  {tempTime && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setTempTime('')
+                        const d = new Date(card.due_date)
+                        d.setHours(23, 59, 59, 999)
+                        pb.collection('cards')
+                          .update(card.id, { due_date: d.toISOString() })
+                          .then(() => setTimePopoverOpen(false))
+                      }}
+                    >
+                      Remover Horário
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <div
+              className={cn(
+                'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
+                dateBadgeClass,
+              )}
+            >
+              <Calendar className="w-3 h-3" />
+              <span>{dateText}</span>
+            </div>
+          )}
           {card.expand?.comments_via_card_id && (
             <div className="flex items-center gap-1">
               <MessageSquare className="w-3.5 h-3.5" />

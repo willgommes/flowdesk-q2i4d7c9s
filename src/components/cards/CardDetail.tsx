@@ -721,6 +721,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                       onClick={async () => {
                         await pb.collection('cards').update(card.id, { due_date: null })
                         await logAct('date_change', 'Removeu a data de entrega')
+                        setTimeStr('')
                         onChange()
                       }}
                     >

@@ -52,7 +52,8 @@ onRecordUpdate((e) => {
         const yStr = year.toString().padStart(4, '0')
         const mStr = month.toString().padStart(2, '0')
         const dStr = day.toString().padStart(2, '0')
-        e.record.set('due_date', `${yStr}-${mStr}-${dStr} 12:00:00.000Z`)
+        // Default to 23:59:59.000Z to prevent premature expiration
+        e.record.set('due_date', `${yStr}-${mStr}-${dStr} 23:59:59.000Z`)
       }
     }
   }
