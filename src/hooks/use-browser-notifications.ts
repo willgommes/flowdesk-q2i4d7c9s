@@ -9,6 +9,7 @@ type NotificationEvent = {
   boardName?: string
   cardId: string
   cardTitle: string
+  actionType: string
   actionDesc: string
   columnName?: string
   dueDate?: string
@@ -47,36 +48,24 @@ export function useBrowserNotifications() {
     bufferRef.current = []
     if (events.length === 0) return
 
-    if (events.length >= 3) {
-      const boardGroups = events.reduce(
-        (acc, ev) => {
-          const bName = ev.boardName || 'Desconhecido'
-          acc[bName] = (acc[bName] || 0) + 1
-          return acc
-        },
-        {} as Record<string, number>,
+    if (events.length > 3) {
+      showNotification(
+        'Múltiplas atualizações',
+        `Você tem ${events.length} novas atualizações em seus quadros.`,
+        events[events.length - 1].boardId,
+        events[events.length - 1].cardId,
       )
-
-      const boardNames = Object.keys(boardGroups)
-      if (boardNames.length === 1) {
-        showNotification(
-          'Múltiplas atualizações',
-          `Você tem ${events.length} novas atualizações no quadro '${boardNames[0]}'.`,
-          events[events.length - 1].boardId,
-          events[events.length - 1].cardId,
-        )
-      } else {
-        showNotification(
-          'Múltiplas atualizações',
-          `Você tem ${events.length} novas atualizações no FlowDesk.`,
-          events[events.length - 1].boardId,
-          events[events.length - 1].cardId,
-        )
-      }
     } else {
       events.forEach((ev) => {
-        let body = ev.actorName ? `${ev.actorName} ${ev.actionDesc}` : ev.actionDesc
-        if (ev.columnName) body += `. Movido para: ${ev.columnName}`
+        let title = 'Tarefa Atualizada'
+        if (ev.actionType === 'comment_add') title = 'Novo Comentário'
+        else if (ev.actionType === 'move') title = 'Tarefa Movida'
+        else if (ev.actionType === 'assignment_add' || ev.actionType === 'assigned_to_you')
+          title = 'Nova Atribuição'
+        else if (ev.actionType === 'creation') title = 'Nova Tarefa'
+
+        let body = ev.cardTitle
+        if (ev.columnName) body += `\nStatus: ${ev.columnName}`
         if (ev.dueDate) {
           try {
             const date = new Date(ev.dueDate)
@@ -88,12 +77,17 @@ export function useBrowserNotifications() {
               minute: '2-digit',
               hour12: user?.time_format === '12h',
             }).format(date)
-            body += `. Prazo: ${formattedDate}`
+            body += `\nPrazo: ${formattedDate}`
           } catch {
             /* intentionally ignored */
           }
         }
-        showNotification(`[${ev.cardTitle}]`, body, ev.boardId, ev.cardId)
+
+        if (ev.actorName && !body.includes(ev.actorName)) {
+          body = `${ev.actorName} ${ev.actionDesc}\n${body}`
+        }
+
+        showNotification(title, body, ev.boardId, ev.cardId)
       })
     }
   }
@@ -123,14 +117,18 @@ export function useBrowserNotifications() {
         if (!log.card_id) return
 
         try {
+          const card = await pb
+            .collection('cards')
+            .getOne(log.card_id, { expand: 'board_id,column_id' })
+
+          const isBoardMember = card.expand?.board_id?.members?.includes(user?.id)
+
           const memberList = await pb
             .collection('card_members')
             .getList(1, 1, { filter: `card_id="${log.card_id}" && user_id="${user?.id}"` })
+          const isCardMember = memberList.items.length > 0
 
-          if (memberList.items.length > 0) {
-            const card = await pb
-              .collection('cards')
-              .getOne(log.card_id, { expand: 'board_id,column_id' })
+          if (isBoardMember || isCardMember) {
             const actor = await pb.collection('users').getOne(log.user_id)
 
             let actionDesc = log.description || ''
@@ -179,8 +177,9 @@ export function useBrowserNotifications() {
               boardName: card.expand?.board_id?.name,
               cardId: card.id,
               cardTitle: card.title,
+              actionType: log.action_type,
               actionDesc,
-              columnName: log.action_type === 'move' ? card.expand?.column_id?.name : undefined,
+              columnName: card.expand?.column_id?.name,
               dueDate: card.due_date,
               actorName: actor.name,
             })
@@ -208,6 +207,7 @@ export function useBrowserNotifications() {
               boardName: card.expand?.board_id?.name,
               cardId: card.id,
               cardTitle: card.title,
+              actionType: 'assigned_to_you',
               actionDesc: 'Você foi adicionado a este card',
               columnName: card.expand?.column_id?.name,
               dueDate: card.due_date,
