@@ -16,12 +16,24 @@ import { Progress } from '@/components/ui/progress'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Calendar as CalendarComponent } from '@/components/ui/calendar'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 
 export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, onQuickMove }: any) {
-  const [isTimePopoverOpen, setTimePopoverOpen] = useState(false)
+  const [isDatePopoverOpen, setDatePopoverOpen] = useState(false)
+  const [tempDate, setTempDate] = useState<Date | undefined>()
+  const [tempHour, setTempHour] = useState<string>('12')
+  const [tempMinute, setTempMinute] = useState<string>('00')
+  const [tempAmPm, setTempAmPm] = useState<string>('AM')
   const { user } = useAuth()
   const { toast } = useToast()
   const isCompleted = card.completed
@@ -66,35 +78,71 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
     dateBadgeClass = 'bg-muted/50 text-muted-foreground border border-dashed border-border'
   }
 
-  const [tempTime, setTempTime] = useState(
-    card.due_date && hasTime ? format(new Date(card.due_date), 'HH:mm') : '',
-  )
-
-  const handleTimeSave = async () => {
-    if (!card.due_date) return
-    const d = new Date(card.due_date)
-    if (tempTime) {
-      const [h, m] = tempTime.split(':').map(Number)
-      d.setHours(h, m, 0, 0)
-    } else {
-      d.setHours(23, 59, 59, 999)
+  const handleOpenChange = (open: boolean) => {
+    setDatePopoverOpen(open)
+    if (open) {
+      if (card.due_date) {
+        const d = new Date(card.due_date)
+        setTempDate(d)
+        let h = d.getHours()
+        setTempMinute(d.getMinutes().toString().padStart(2, '0'))
+        if (user?.time_format === '12h') {
+          setTempAmPm(h >= 12 ? 'PM' : 'AM')
+          h = h % 12 || 12
+        }
+        setTempHour(h.toString().padStart(2, '0'))
+      } else {
+        setTempDate(new Date())
+        setTempHour(user?.time_format === '12h' ? '12' : '12')
+        setTempMinute('00')
+        setTempAmPm('PM')
+      }
     }
+  }
 
-    if (d.getTime() < new Date().getTime()) {
-      toast({
-        title: 'Data inválida',
-        description: 'A data de vencimento não pode ser no passado.',
-        variant: 'destructive',
-      })
+  const getSelectedDateTime = () => {
+    if (!tempDate) return null
+    const d = new Date(tempDate)
+    let h = parseInt(tempHour, 10) || 0
+    const m = parseInt(tempMinute, 10) || 0
+    if (user?.time_format === '12h') {
+      if (tempAmPm === 'PM' && h < 12) h += 12
+      if (tempAmPm === 'AM' && h === 12) h = 0
+    }
+    d.setHours(h, m, 0, 0)
+    return d
+  }
+
+  const selectedDateTime = getSelectedDateTime()
+  const isInvalidDate = selectedDateTime ? selectedDateTime < new Date() : false
+
+  const handleSave = async () => {
+    if (!selectedDateTime || isInvalidDate) {
+      if (isInvalidDate) {
+        toast({
+          title: 'Data inválida',
+          description: 'A data de vencimento não pode ser no passado.',
+          variant: 'destructive',
+        })
+      }
       return
     }
 
     try {
-      await pb.collection('cards').update(card.id, { due_date: d.toISOString() })
+      await pb.collection('cards').update(card.id, { due_date: selectedDateTime.toISOString() })
+      setDatePopoverOpen(false)
     } catch (err) {
       console.error('Failed to update time', err)
     }
-    setTimePopoverOpen(false)
+  }
+
+  const handleRemoveDate = async () => {
+    try {
+      await pb.collection('cards').update(card.id, { due_date: null })
+      setDatePopoverOpen(false)
+    } catch (err) {
+      console.error('Failed to remove date', err)
+    }
   }
 
   const checklistCount = card.expand?.checklist_items_via_card_id?.length || 0
@@ -194,8 +242,8 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground mt-3 w-full">
         <div className="flex flex-wrap items-center gap-3">
-          {card.due_date && !isEffectivelyCompleted ? (
-            <Popover open={isTimePopoverOpen} onOpenChange={setTimePopoverOpen}>
+          {!isEffectivelyCompleted ? (
+            <Popover open={isDatePopoverOpen} onOpenChange={handleOpenChange}>
               <PopoverTrigger asChild>
                 <div
                   role="button"
@@ -203,58 +251,97 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    setTempTime(hasTime ? format(new Date(card.due_date), 'HH:mm') : '')
                   }}
                   className={cn(
                     'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer',
                     dateBadgeClass,
+                    !card.due_date && 'hover:bg-muted/80',
                   )}
                 >
                   <Calendar className="w-3 h-3" />
                   <span>{dateText}</span>
-                  <Clock className="w-3 h-3 opacity-50 ml-0.5" />
+                  {card.due_date && hasTime && <Clock className="w-3 h-3 opacity-50 ml-0.5" />}
                 </div>
               </PopoverTrigger>
               <PopoverContent
-                className="w-auto p-3 z-50"
+                className="w-auto p-4 z-50"
                 align="start"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                 }}
               >
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Horário de Entrega
-                  </span>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium">Prazo de Entrega</span>
+                  </div>
+                  <CalendarComponent
+                    mode="single"
+                    selected={tempDate}
+                    onSelect={setTempDate}
+                    disabled={(date) => isBefore(startOfDay(date), startOfDay(new Date()))}
+                    initialFocus
+                    className="p-0 border rounded-md"
+                  />
                   <div className="flex items-center gap-2">
                     <Input
-                      type="time"
-                      value={tempTime}
-                      onChange={(e) => setTempTime(e.target.value)}
-                      className="h-8 text-sm"
+                      type="number"
+                      min={user?.time_format === '12h' ? 1 : 0}
+                      max={user?.time_format === '12h' ? 12 : 23}
+                      value={tempHour}
+                      onChange={(e) => setTempHour(e.target.value)}
+                      className="h-8 w-16 text-center"
+                      placeholder="HH"
                     />
-                    <Button size="sm" className="h-8" onClick={handleTimeSave}>
+                    <span className="text-muted-foreground font-bold">:</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={59}
+                      value={tempMinute}
+                      onChange={(e) => setTempMinute(e.target.value)}
+                      className="h-8 w-16 text-center"
+                      placeholder="MM"
+                    />
+                    {user?.time_format === '12h' && (
+                      <Select value={tempAmPm} onValueChange={setTempAmPm}>
+                        <SelectTrigger className="h-8 w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AM">AM</SelectItem>
+                          <SelectItem value="PM">PM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                  {isInvalidDate && (
+                    <span className="text-xs text-destructive font-medium">
+                      A data/hora não pode ser no passado.
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
+                    {card.due_date ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 px-2"
+                        onClick={handleRemoveDate}
+                      >
+                        Remover
+                      </Button>
+                    ) : (
+                      <div />
+                    )}
+                    <Button
+                      size="sm"
+                      className="h-8 px-4"
+                      disabled={!tempDate || isInvalidDate}
+                      onClick={handleSave}
+                    >
                       Salvar
                     </Button>
                   </div>
-                  {tempTime && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-destructive hover:text-destructive"
-                      onClick={() => {
-                        setTempTime('')
-                        const d = new Date(card.due_date)
-                        d.setHours(23, 59, 59, 999)
-                        pb.collection('cards')
-                          .update(card.id, { due_date: d.toISOString() })
-                          .then(() => setTimePopoverOpen(false))
-                      }}
-                    >
-                      Remover Horário
-                    </Button>
-                  )}
                 </div>
               </PopoverContent>
             </Popover>
@@ -267,6 +354,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
             >
               <Calendar className="w-3 h-3" />
               <span>{dateText}</span>
+              {card.due_date && hasTime && <Clock className="w-3 h-3 opacity-50 ml-0.5" />}
             </div>
           )}
           {card.expand?.comments_via_card_id && (
