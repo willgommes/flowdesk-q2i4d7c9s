@@ -6,6 +6,7 @@ export interface User {
   name: string
   email: string
   role: 'admin' | 'membro' | 'cliente'
+  can_manage_routines?: boolean
   avatar?: string
   theme?: 'light' | 'dark'
   time_format?: '12h' | '24h'

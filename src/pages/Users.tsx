@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Plus, MoreHorizontal, Trash2, Camera, Loader2, AlertCircle } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { isToday, parseISO } from 'date-fns'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useForm } from 'react-hook-form'
@@ -174,6 +175,20 @@ export default function Users() {
     }
   }
 
+  const handleToggleRoutineManagement = async (userId: string, checked: boolean) => {
+    try {
+      await pb.collection('users').update(userId, { can_manage_routines: checked })
+      toast({
+        title: 'Permissão atualizada',
+        description: checked
+          ? 'Usuário agora pode gerenciar rotinas.'
+          : 'Permissão de gerenciar rotinas removida.',
+      })
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Erro', description: getErrorMessage(err) })
+    }
+  }
+
   const handleDelete = async (userId: string) => {
     if (userId === user?.id) {
       toast({
@@ -299,6 +314,7 @@ export default function Users() {
                 <TableHead>Papel</TableHead>
                 <TableHead>Adicionado em</TableHead>
                 <TableHead>Último Acesso</TableHead>
+                <TableHead>Gerenciar Rotinas</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -349,6 +365,13 @@ export default function Users() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {u.lastActive ? formatDate(u.lastActive) : 'Nunca'}
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={u.role === 'admin' || !!u.can_manage_routines}
+                      disabled={u.role === 'admin'}
+                      onCheckedChange={(checked) => handleToggleRoutineManagement(u.id, checked)}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

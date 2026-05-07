@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-07T14:48:05.220Z",
+  "generatedAt": "2026-05-07T14:57:59.317Z",
   "collections": [
     {
       "name": "users",
@@ -85,6 +85,12 @@
         },
         {
           "name": "notifications_enabled",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "can_manage_routines",
           "type": "bool",
           "required": false,
           "system": false
@@ -239,9 +245,9 @@
       "apiRules": {
         "list": "@request.auth.role = 'admin' || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
         "view": "@request.auth.role = 'admin' || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "create": "@request.auth.id != '' && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)",
+        "update": "@request.auth.id != '' && (is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true) && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)",
+        "delete": "@request.auth.id != '' && (is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)"
       },
       "fields": [
         {

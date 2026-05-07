@@ -20,6 +20,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Edit2, Copy, Archive, Trash2, Repeat, History, Activity } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CardDetail } from '@/components/cards/CardDetail'
 import { CreateRoutineDialog } from './CreateRoutineDialog'
@@ -94,6 +95,9 @@ function ExecutionHistoryDialog({ card, open, onOpenChange }: any) {
 
 export default function RoutinesPage() {
   const { toast } = useToast()
+  const { user } = useAuth()
+
+  const canManage = user?.role === 'admin' || user?.can_manage_routines
 
   const [routines, setRoutines] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
@@ -244,15 +248,17 @@ export default function RoutinesPage() {
             Gerencie tarefas recorrentes centralizadas em um só lugar.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setCloneData(null)
-            setCreateOpen(true)
-          }}
-          className="shadow-md"
-        >
-          Nova Rotina
-        </Button>
+        {canManage && (
+          <Button
+            onClick={() => {
+              setCloneData(null)
+              setCreateOpen(true)
+            }}
+            className="shadow-md"
+          >
+            Nova Rotina
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
@@ -371,7 +377,11 @@ export default function RoutinesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Switch checked={!r.is_paused} onCheckedChange={() => togglePause(r)} />
+                      <Switch
+                        checked={!r.is_paused}
+                        disabled={!canManage}
+                        onCheckedChange={() => togglePause(r)}
+                      />
                       <span
                         className={`text-xs font-bold uppercase tracking-wider ${!r.is_paused ? 'text-primary' : 'text-muted-foreground'}`}
                       >
@@ -394,58 +404,62 @@ export default function RoutinesPage() {
                         </TooltipTrigger>
                         <TooltipContent>Histórico</TooltipContent>
                       </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleClone(r)}
-                            className="h-8 w-8 text-indigo-500 hover:bg-indigo-50"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Duplicar</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(r)}
-                            className="h-8 w-8 text-amber-500 hover:bg-amber-50"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Editar</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleArchive(r)}
-                            className="h-8 w-8 text-orange-500 hover:bg-orange-50"
-                          >
-                            <Archive className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Arquivar</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(r)}
-                            className="h-8 w-8 text-red-500 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Excluir</TooltipContent>
-                      </Tooltip>
+                      {canManage && (
+                        <>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleClone(r)}
+                                className="h-8 w-8 text-indigo-500 hover:bg-indigo-50"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Duplicar</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEdit(r)}
+                                className="h-8 w-8 text-amber-500 hover:bg-amber-50"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleArchive(r)}
+                                className="h-8 w-8 text-orange-500 hover:bg-orange-50"
+                              >
+                                <Archive className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Arquivar</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(r)}
+                                className="h-8 w-8 text-red-500 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Excluir</TooltipContent>
+                          </Tooltip>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
