@@ -12,7 +12,7 @@ export async function getBriefingCards(userId: string, role: string) {
   const boardFilter = boardIds.map((id) => `board_id = "${id}"`).join(' || ')
 
   const cards = await pb.collection('cards').getFullList({
-    filter: `(${boardFilter}) && completed = false && archived != true && due_date != ""`,
+    filter: `(${boardFilter}) && completed = false && archived != true && is_recurring != true && due_date != ""`,
     expand: 'board_id,board_id.client_id,column_id',
   })
 

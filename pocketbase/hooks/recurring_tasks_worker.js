@@ -40,14 +40,15 @@ cronAdd('recurring_tasks_worker', '1 0 * * *', () => {
         newCard.set('recurrence_time', tpl.getString('recurrence_time'))
 
         const timeStr = tpl.getString('recurrence_time') // HH:mm
-        const dueDate = new Date(today)
+        const yyyy = today.getFullYear()
+        const mm = String(today.getMonth() + 1).padStart(2, '0')
+        const dd = String(today.getDate()).padStart(2, '0')
+
         if (timeStr && timeStr.includes(':')) {
-          const parts = timeStr.split(':')
-          dueDate.setHours(parseInt(parts[0]) || 0, parseInt(parts[1]) || 0, 0, 0)
+          newCard.set('due_date', `${yyyy}-${mm}-${dd} ${timeStr}:00.000Z`)
         } else {
-          dueDate.setHours(23, 59, 59, 999)
+          newCard.set('due_date', `${yyyy}-${mm}-${dd} 23:59:59.999Z`)
         }
-        newCard.set('due_date', dueDate.toISOString())
 
         $app.save(newCard)
 

@@ -365,14 +365,9 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-2 font-medium">
             <LayoutTemplate className="w-4 h-4" />
             <span>{board.name}</span>
-            {card.is_recurring && (
+            {(card.is_recurring || (card.recurrence_days && card.recurrence_days.length > 0)) && (
               <span className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                <Repeat className="w-3 h-3" /> Modelo Recorrente
-              </span>
-            )}
-            {!card.is_recurring && card.recurrence_days && card.recurrence_days.length > 0 && (
-              <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                <Repeat className="w-3 h-3" /> Tarefa Recorrente
+                <Repeat className="w-3 h-3" /> Recorrente
               </span>
             )}
           </div>
