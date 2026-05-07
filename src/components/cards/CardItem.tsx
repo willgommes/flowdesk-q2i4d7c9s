@@ -8,6 +8,7 @@ import {
   Play,
   CheckCircle2,
   Clock,
+  Repeat,
 } from 'lucide-react'
 import { format, isToday, addDays, startOfDay, isBefore } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -221,8 +222,16 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
         }
       }}
     >
-      {labels.length > 0 && (
+      {(labels.length > 0 || localCard.is_recurring) && (
         <div className="flex flex-wrap gap-1 mb-2">
+          {localCard.is_recurring && (
+            <div
+              className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none shadow-sm flex items-center gap-1 bg-indigo-500"
+              title="Modelo Recorrente"
+            >
+              <Repeat className="w-2.5 h-2.5" /> Recorrente
+            </div>
+          )}
           {labels.map(
             (l: any) =>
               l && (

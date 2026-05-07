@@ -17,6 +17,7 @@ import {
   Search,
   X,
   Briefcase,
+  Repeat,
 } from 'lucide-react'
 import { startOfDay, isBefore, isToday, addDays } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
@@ -825,6 +826,14 @@ export default function BoardPage() {
                             >
                               <TableCell className="font-medium py-3">
                                 <div className="flex items-center gap-2">
+                                  {card.is_recurring && (
+                                    <div
+                                      className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none shadow-sm flex items-center gap-1 bg-indigo-500"
+                                      title="Modelo Recorrente"
+                                    >
+                                      <Repeat className="w-2.5 h-2.5" />
+                                    </div>
+                                  )}
                                   {(card.completed || col.name.toUpperCase() === 'CONCLUÍDO') && (
                                     <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
                                   )}

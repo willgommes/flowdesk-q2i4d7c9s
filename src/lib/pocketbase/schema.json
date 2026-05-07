@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-07T12:29:10.365Z",
+  "generatedAt": "2026-05-07T13:53:29.104Z",
   "collections": [
     {
       "name": "users",
@@ -314,9 +314,27 @@
           "type": "bool",
           "required": false,
           "system": false
+        },
+        {
+          "name": "is_recurring",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recurrence_days",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recurrence_time",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": []
+      "indexes": ["CREATE INDEX `idx_cards_is_recurring` ON `cards` (is_recurring)"]
     },
     {
       "name": "labels",

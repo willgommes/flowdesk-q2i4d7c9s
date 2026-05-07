@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 
 export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: boolean }) {
   const upcomingTasks = cards
-    .filter((c) => c.due_date && !c.completed)
+    .filter((c) => c.due_date && !c.completed && !c.is_recurring)
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .filter((c) => {
       const due = new Date(c.due_date)

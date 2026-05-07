@@ -14,6 +14,7 @@ import {
   Archive,
   Play,
   Pencil,
+  Repeat,
 } from 'lucide-react'
 import {
   Select,
@@ -30,11 +31,13 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Switch } from '@/components/ui/switch'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
+import { cn } from '@/lib/utils'
 import { Checklist } from './Checklist'
 import { Comments } from './Comments'
 import { ActivityLog } from './ActivityLog'
@@ -69,6 +72,57 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   const [timeStr, setTimeStr] = useState(
     hasSpecificTime && dueDateObj ? format(dueDateObj, 'HH:mm') : '',
   )
+
+  const [isRecurring, setIsRecurring] = useState(card.is_recurring || false)
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>(card.recurrence_days || [])
+  const [recurrenceTime, setRecurrenceTime] = useState(card.recurrence_time || '')
+
+  const DAYS = [
+    { label: 'D', value: 0 },
+    { label: 'S', value: 1 },
+    { label: 'T', value: 2 },
+    { label: 'Q', value: 3 },
+    { label: 'Q', value: 4 },
+    { label: 'S', value: 5 },
+    { label: 'S', value: 6 },
+  ]
+
+  const handleRecurrenceChange = async (newVal: boolean) => {
+    setIsRecurring(newVal)
+    if (!newVal) {
+      await pb.collection('cards').update(card.id, { is_recurring: false })
+      await logAct('date_change', 'Desativou a recorrência do cartão')
+      onChange()
+    } else {
+      const days = recurrenceDays.length > 0 ? recurrenceDays : [1, 2, 3, 4, 5]
+      const time = recurrenceTime || '12:00'
+      setRecurrenceDays(days)
+      setRecurrenceTime(time)
+      await pb.collection('cards').update(card.id, {
+        is_recurring: true,
+        recurrence_days: days,
+        recurrence_time: time,
+      })
+      await logAct('date_change', 'Ativou a recorrência do cartão')
+      onChange()
+    }
+  }
+
+  const updateRecurrenceConfig = async (days: number[], time: string) => {
+    setRecurrenceDays(days)
+    setRecurrenceTime(time)
+    if (isRecurring) {
+      await pb.collection('cards').update(card.id, { recurrence_days: days, recurrence_time: time })
+      onChange()
+    }
+  }
+
+  const toggleRecurrenceDay = (day: number) => {
+    const newDays = recurrenceDays.includes(day)
+      ? recurrenceDays.filter((d) => d !== day)
+      : [...recurrenceDays, day]
+    updateRecurrenceConfig(newDays, recurrenceTime)
+  }
 
   useEffect(() => {
     const d = card.due_date ? new Date(card.due_date) : undefined
@@ -660,6 +714,65 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     {editingLabel ? 'Salvar Alterações' : 'Criar Etiqueta'}
                   </Button>
                 </form>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className={cn(
+                    'w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border',
+                    isRecurring && 'text-indigo-600 dark:text-indigo-400',
+                  )}
+                >
+                  <Repeat className="w-4 h-4 mr-2" />
+                  {isRecurring ? 'Recorrente' : 'Recorrência'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-3" align="end">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Tarefa Recorrente</h4>
+                    <Switch checked={isRecurring} onCheckedChange={handleRecurrenceChange} />
+                  </div>
+                  {isRecurring && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          Repetir nos dias
+                        </label>
+                        <div className="flex justify-between gap-1">
+                          {DAYS.map((d) => (
+                            <button
+                              key={d.value}
+                              className={cn(
+                                'w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center transition-colors',
+                                recurrenceDays.includes(d.value)
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                              )}
+                              onClick={() => toggleRecurrenceDay(d.value)}
+                            >
+                              {d.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          Horário de Entrega
+                        </label>
+                        <Input
+                          type="time"
+                          value={recurrenceTime}
+                          onChange={(e) => updateRecurrenceConfig(recurrenceDays, e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </PopoverContent>
             </Popover>
 
