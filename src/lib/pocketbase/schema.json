@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-07T14:21:16.307Z",
+  "generatedAt": "2026-05-07T14:48:05.220Z",
   "collections": [
     {
       "name": "users",
@@ -330,6 +330,12 @@
         {
           "name": "recurrence_time",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_paused",
+          "type": "bool",
           "required": false,
           "system": false
         }

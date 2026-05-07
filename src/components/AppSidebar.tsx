@@ -8,6 +8,7 @@ import {
   Sun,
   Briefcase,
   TrendingUp,
+  Repeat,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
@@ -40,6 +41,7 @@ export function AppSidebar() {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Rotinas', href: '/rotinas', icon: Repeat },
     { name: 'Quadros', href: '/boards', icon: LayoutList },
     { name: 'Calendário', href: '/calendario', icon: Calendar },
   ]

@@ -8,6 +8,7 @@ import Layout from './components/Layout'
 import { NotificationProvider } from './components/NotificationProvider'
 import Index from './pages/Index'
 import BoardsPage from './pages/boards/BoardsPage'
+import RoutinesPage from './pages/routines/RoutinesPage'
 import BoardPage from './pages/boards/BoardPage'
 import { CardModalRoute } from './pages/boards/CardModalRoute'
 import Login from './pages/Login'
@@ -65,6 +66,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/rotinas"
+                element={
+                  <ProtectedRoute>
+                    <RoutinesPage />
                   </ProtectedRoute>
                 }
               />
