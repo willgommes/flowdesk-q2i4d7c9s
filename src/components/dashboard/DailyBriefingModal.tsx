@@ -143,7 +143,14 @@ export function DailyBriefingModal() {
               >
                 <div className="font-medium truncate">{card.title}</div>
                 <div className="text-sm opacity-80 mt-1 flex justify-between items-center">
-                  <span className="truncate">{card.expand?.board_id?.name}</span>
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="font-semibold text-[11px] uppercase tracking-wider bg-background/50 px-1.5 py-0.5 rounded text-muted-foreground border shrink-0">
+                      {card.expand?.board_id?.expand?.client_id?.name ||
+                        card.expand?.board_id?.client_name ||
+                        'Interno'}
+                    </span>
+                    <span className="truncate">{card.expand?.board_id?.name}</span>
+                  </div>
                   <span className="shrink-0 ml-2">
                     {(() => {
                       const d = parseISO(card.due_date)

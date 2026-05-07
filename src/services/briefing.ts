@@ -13,7 +13,7 @@ export async function getBriefingCards(userId: string, role: string) {
 
   const cards = await pb.collection('cards').getFullList({
     filter: `(${boardFilter}) && completed = false && archived != true && due_date != ""`,
-    expand: 'board_id,column_id',
+    expand: 'board_id,board_id.client_id,column_id',
   })
 
   const now = new Date()

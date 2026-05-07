@@ -23,7 +23,13 @@ export function OverdueAlert({ cards }: { cards: any[] }) {
           {overdueTasks.slice(0, 3).map((t) => (
             <li key={t.id}>
               <span className="font-medium">{t.title}</span>{' '}
-              <span className="opacity-80 text-xs">({t.expand?.board_id?.name})</span>
+              <span className="opacity-80 text-xs">
+                (
+                {t.expand?.board_id?.expand?.client_id?.name ||
+                  t.expand?.board_id?.client_name ||
+                  'Interno'}{' '}
+                - {t.expand?.board_id?.name})
+              </span>
             </li>
           ))}
           {overdueTasks.length > 3 && (

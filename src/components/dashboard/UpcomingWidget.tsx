@@ -72,7 +72,12 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
                             : format(due, hasTime ? 'dd/MM, HH:mm' : 'dd/MM', { locale: ptBR })}
                       </span>
                     </div>
-                    <div className="flex items-center text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
+                      <span className="font-semibold text-[10px] uppercase tracking-wider bg-muted/50 px-1.5 py-0.5 rounded border border-border/50 shrink-0 max-w-[100px] truncate">
+                        {task.expand?.board_id?.expand?.client_id?.name ||
+                          task.expand?.board_id?.client_name ||
+                          'Interno'}
+                      </span>
                       <span className="truncate">{task.expand?.board_id?.name || 'Quadro'}</span>
                     </div>
                   </div>
