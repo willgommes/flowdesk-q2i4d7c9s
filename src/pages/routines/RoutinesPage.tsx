@@ -27,6 +27,8 @@ import { CreateRoutineDialog } from './CreateRoutineDialog'
 import { format } from 'date-fns'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CheckCircle2, XCircle } from 'lucide-react'
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -107,6 +109,7 @@ export default function RoutinesPage() {
 
   const [clientFilter, setClientFilter] = useState('all')
   const [userFilter, setUserFilter] = useState('all')
+  const [viewMode, setViewMode] = useState<'my' | 'all'>('my')
 
   const [createOpen, setCreateOpen] = useState(false)
   const [cloneData, setCloneData] = useState<any>(null)
@@ -121,8 +124,8 @@ export default function RoutinesPage() {
     try {
       const [rRes, cRes, uRes, bRes, colRes] = await Promise.all([
         pb.collection('cards').getFullList({
-          filter: 'is_recurring = true && archived = false',
-          expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id',
+          filter: 'is_recurring = true && archived = false && approval_status != "rejected"',
+          expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id, created_by',
           sort: '-created',
         }),
         pb.collection('clients').getFullList({ sort: 'name' }),
@@ -144,7 +147,17 @@ export default function RoutinesPage() {
     fetchData()
   }, [])
 
-  const filteredRoutines = routines.filter((r) => {
+  const activeRoutines = routines.filter(
+    (r) => r.approval_status === 'active' || !r.approval_status,
+  )
+  const pendingRoutines = routines.filter((r) => r.approval_status === 'pending_approval')
+
+  const filteredRoutines = activeRoutines.filter((r) => {
+    if (viewMode === 'my') {
+      const memberIds = r.expand?.card_members_via_card_id?.map((m: any) => m.user_id) || []
+      if (!memberIds.includes(user?.id)) return false
+    }
+
     if (clientFilter !== 'all') {
       const cid = r.expand?.board_id?.client_id || 'internal'
       if (cid !== clientFilter) return false
@@ -198,6 +211,27 @@ export default function RoutinesPage() {
     }
   }
 
+  const handleApprove = async (card: any) => {
+    try {
+      await pb.collection('cards').update(card.id, { approval_status: 'active' })
+      toast({ title: 'Rotina aprovada e ativada com sucesso!' })
+      fetchData()
+    } catch (err) {
+      toast({ title: 'Erro ao aprovar', variant: 'destructive' })
+    }
+  }
+
+  const handleReject = async (card: any) => {
+    if (!confirm('Deseja rejeitar esta sugestão de rotina?')) return
+    try {
+      await pb.collection('cards').update(card.id, { approval_status: 'rejected' })
+      toast({ title: 'Sugestão rejeitada' })
+      fetchData()
+    } catch (err) {
+      toast({ title: 'Erro ao rejeitar', variant: 'destructive' })
+    }
+  }
+
   const handleClone = async (card: any) => {
     const fullCard = await pb.collection('cards').getOne(card.id, {
       expand: 'card_members_via_card_id, checklist_items_via_card_id',
@@ -248,18 +282,82 @@ export default function RoutinesPage() {
             Gerencie tarefas recorrentes centralizadas em um só lugar.
           </p>
         </div>
-        {canManage && (
-          <Button
-            onClick={() => {
-              setCloneData(null)
-              setCreateOpen(true)
-            }}
-            className="shadow-md"
-          >
-            Nova Rotina
-          </Button>
-        )}
+        <Button
+          onClick={() => {
+            setCloneData(null)
+            setCreateOpen(true)
+          }}
+          className="shadow-md"
+        >
+          {canManage ? 'Nova Rotina' : 'Sugerir Rotina'}
+        </Button>
       </div>
+
+      {canManage && pendingRoutines.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 shadow-sm">
+          <h3 className="text-amber-800 dark:text-amber-400 font-semibold mb-3 flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            Sugestões Pendentes de Aprovação ({pendingRoutines.length})
+          </h3>
+          <div className="space-y-3">
+            {pendingRoutines.map((r) => (
+              <div
+                key={r.id}
+                className="bg-background border rounded-lg p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+              >
+                <div>
+                  <div className="font-semibold text-sm flex items-center gap-2">
+                    {r.title}
+                    <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider font-bold">
+                      Sugerido por: {r.expand?.created_by?.name || 'Usuário'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                    {r.expand?.board_id?.name} •{' '}
+                    {r.description?.replace(/<[^>]*>?/gm, '') || 'Sem descrição'}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => openEdit(r)} className="h-8">
+                    Ver Detalhes
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleApprove(r)}
+                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1.5" /> Aprovar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleReject(r)}
+                    className="h-8"
+                  >
+                    <XCircle className="w-4 h-4 mr-1.5" /> Rejeitar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {canManage && (
+        <div className="flex items-center justify-between bg-card p-2 rounded-xl border shadow-sm">
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as 'my' | 'all')}
+            className="w-full sm:w-auto"
+          >
+            <TabsList>
+              <TabsTrigger value="my">Minhas Rotinas</TabsTrigger>
+              <TabsTrigger value="all">Todas as Rotinas</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
         <div className="space-y-1.5 flex-1">

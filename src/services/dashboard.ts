@@ -29,7 +29,14 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
     })
 
     cards.push(...chunkCards.filter((c) => !c.is_recurring))
-    recurringCards.push(...chunkCards.filter((c) => c.is_recurring))
+    recurringCards.push(
+      ...chunkCards.filter(
+        (c) =>
+          c.is_recurring &&
+          c.approval_status !== 'pending_approval' &&
+          c.approval_status !== 'rejected',
+      ),
+    )
   }
 
   if (memberId) {

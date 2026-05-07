@@ -48,6 +48,8 @@ export function CreateRoutineDialog({
   const { user } = useAuth()
   const { toast } = useToast()
 
+  const canManage = user?.role === 'admin' || user?.can_manage_routines
+
   const [title, setTitle] = useState('')
   const [clientId, setClientId] = useState('internal')
   const [boardId, setBoardId] = useState('')
@@ -143,6 +145,7 @@ export function CreateRoutineDialog({
         recurrence_time: time,
         is_paused: false,
         created_by: user.id,
+        approval_status: canManage ? 'active' : 'pending_approval',
       })
 
       await Promise.all(
@@ -168,7 +171,11 @@ export function CreateRoutineDialog({
         await pb.collection('attachments').create(fd)
       }
 
-      toast({ title: 'Rotina criada com sucesso!' })
+      toast({
+        title: canManage
+          ? 'Rotina criada com sucesso!'
+          : 'Rotina sugerida com sucesso! Aguardando aprovação.',
+      })
       onSuccess()
       onOpenChange(false)
     } catch (err: any) {
@@ -436,7 +443,7 @@ export function CreateRoutineDialog({
           </Button>
           <Button type="submit" form="routine-form" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {initialData ? 'Criar Cópia' : 'Criar Rotina'}
+            {initialData ? 'Criar Cópia' : canManage ? 'Criar Rotina' : 'Sugerir Rotina'}
           </Button>
         </DialogFooter>
       </DialogContent>

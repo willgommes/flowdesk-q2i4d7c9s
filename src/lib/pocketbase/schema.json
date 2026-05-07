@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-07T14:57:59.317Z",
+  "generatedAt": "2026-05-07T15:04:18.646Z",
   "collections": [
     {
       "name": "users",
@@ -243,10 +243,10 @@
       "name": "cards",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'admin' || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
-        "view": "@request.auth.role = 'admin' || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
-        "create": "@request.auth.id != '' && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)",
-        "update": "@request.auth.id != '' && (is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true) && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)",
+        "list": "@request.auth.role = 'admin' || (@request.auth.can_manage_routines = true && is_recurring = true) || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
+        "view": "@request.auth.role = 'admin' || (@request.auth.can_manage_routines = true && is_recurring = true) || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true || @request.body.approval_status = 'pending_approval')",
+        "update": "@request.auth.id != '' && (is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true || (@collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id)) && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)",
         "delete": "@request.auth.id != '' && (is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)"
       },
       "fields": [
@@ -344,6 +344,13 @@
           "type": "bool",
           "required": false,
           "system": false
+        },
+        {
+          "name": "approval_status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["active", "pending_approval", "rejected"]
         }
       ],
       "indexes": ["CREATE INDEX `idx_cards_is_recurring` ON `cards` (is_recurring)"]
