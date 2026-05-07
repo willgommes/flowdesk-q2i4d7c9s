@@ -36,14 +36,18 @@ cronAdd('recurring_tasks_worker', '1 0 * * *', () => {
         newCard.set('completed', false)
         newCard.set('archived', false)
         newCard.set('is_recurring', false)
+        newCard.set('recurrence_days', tpl.get('recurrence_days'))
+        newCard.set('recurrence_time', tpl.getString('recurrence_time'))
 
         const timeStr = tpl.getString('recurrence_time') // HH:mm
+        const dueDate = new Date(today)
         if (timeStr && timeStr.includes(':')) {
           const parts = timeStr.split(':')
-          const dueDate = new Date(today)
           dueDate.setHours(parseInt(parts[0]) || 0, parseInt(parts[1]) || 0, 0, 0)
-          newCard.set('due_date', dueDate.toISOString())
+        } else {
+          dueDate.setHours(23, 59, 59, 999)
         }
+        newCard.set('due_date', dueDate.toISOString())
 
         $app.save(newCard)
 

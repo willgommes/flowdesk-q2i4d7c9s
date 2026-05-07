@@ -222,16 +222,28 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
         }
       }}
     >
-      {(labels.length > 0 || localCard.is_recurring) && (
+      {(labels.length > 0 ||
+        localCard.is_recurring ||
+        (localCard.recurrence_days && localCard.recurrence_days.length > 0)) && (
         <div className="flex flex-wrap gap-1 mb-2">
           {localCard.is_recurring && (
             <div
               className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none shadow-sm flex items-center gap-1 bg-indigo-500"
               title="Modelo Recorrente"
             >
-              <Repeat className="w-2.5 h-2.5" /> Recorrente
+              <Repeat className="w-2.5 h-2.5" /> Modelo
             </div>
           )}
+          {!localCard.is_recurring &&
+            localCard.recurrence_days &&
+            localCard.recurrence_days.length > 0 && (
+              <div
+                className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none shadow-sm flex items-center gap-1 bg-blue-500"
+                title="Tarefa Recorrente"
+              >
+                <Repeat className="w-2.5 h-2.5" /> Recorrente
+              </div>
+            )}
           {labels.map(
             (l: any) =>
               l && (

@@ -23,7 +23,7 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
     const boardsFilter = chunk.map((id) => `board_id='${id}'`).join('||')
 
     const chunkCards = await pb.collection('cards').getFullList({
-      filter: `archived != true && (${boardsFilter})`,
+      filter: `archived != true && is_recurring != true && (${boardsFilter})`,
       expand: 'board_id,board_id.client_id',
     })
     cards.push(...chunkCards)
@@ -51,7 +51,9 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
         if (!card) return null
         return { ...card, label: cl.expand?.label_id }
       })
-      .filter((c) => c && c.archived !== true && boardIds.includes(c.board_id))
+      .filter(
+        (c) => c && c.archived !== true && c.is_recurring !== true && boardIds.includes(c.board_id),
+      )
 
     const uniqueCards = new Map()
     for (const c of pCardsRaw) {
