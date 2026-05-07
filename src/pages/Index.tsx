@@ -37,8 +37,10 @@ import { BoardsWidget } from '@/components/dashboard/BoardsWidget'
 import { ActivitiesWidget } from '@/components/dashboard/ActivitiesWidget'
 import { AnalyticsTrendsWidget } from '@/components/dashboard/AnalyticsTrendsWidget'
 import { AnalyticsDistributionWidget } from '@/components/dashboard/AnalyticsDistributionWidget'
+import { DailyRoutineWidget } from '@/components/dashboard/DailyRoutineWidget'
 
 const DEFAULT_LAYOUT = [
+  'daily_routine',
   'progress',
   'upcoming',
   'priority',
@@ -55,9 +57,14 @@ export default function Index() {
   const now = new Date()
   const isAfter10AM = getHours(now) >= 10
   const [activities, setActivities] = useState<any[]>([])
-  const [cardsData, setCardsData] = useState<{ cards: any[]; priorityCards: any[] }>({
+  const [cardsData, setCardsData] = useState<{
+    cards: any[]
+    priorityCards: any[]
+    recurringCards: any[]
+  }>({
     cards: [],
     priorityCards: [],
+    recurringCards: [],
   })
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<any[]>([])
@@ -199,6 +206,8 @@ export default function Index() {
 
   const renderWidget = (id: string) => {
     switch (id) {
+      case 'daily_routine':
+        return <DailyRoutineWidget recurringCards={cardsData.recurringCards} loading={loading} />
       case 'progress':
         return <ProgressWidget cards={cardsData.cards} loading={loading} />
       case 'upcoming':
@@ -321,10 +330,12 @@ export default function Index() {
           {layout.map((id, index) => {
             const isDragging = draggedIdx === index
             const isOver = dragOverIdx === index
-            const spanClass =
-              id === 'boards' || id === 'activities' || id.startsWith('analytics_')
-                ? 'md:col-span-6 lg:col-span-3'
-                : 'md:col-span-2 lg:col-span-2'
+            let spanClass = 'md:col-span-2 lg:col-span-2'
+            if (id === 'boards' || id === 'activities' || id.startsWith('analytics_')) {
+              spanClass = 'md:col-span-6 lg:col-span-3'
+            } else if (['daily_routine', 'progress', 'upcoming', 'priority'].includes(id)) {
+              spanClass = 'md:col-span-6 lg:col-span-3'
+            }
 
             return (
               <div

@@ -17,20 +17,24 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
 
   const chunkSize = 30
   let cards: any[] = []
+  let recurringCards: any[] = []
 
   for (let i = 0; i < boardIds.length; i += chunkSize) {
     const chunk = boardIds.slice(i, i + chunkSize)
     const boardsFilter = chunk.map((id) => `board_id='${id}'`).join('||')
 
     const chunkCards = await pb.collection('cards').getFullList({
-      filter: `archived != true && is_recurring != true && (${boardsFilter})`,
+      filter: `archived != true && (${boardsFilter})`,
       expand: 'board_id,board_id.client_id',
     })
-    cards.push(...chunkCards)
+
+    cards.push(...chunkCards.filter((c) => !c.is_recurring))
+    recurringCards.push(...chunkCards.filter((c) => c.is_recurring))
   }
 
   if (memberId) {
     cards = cards.filter((c) => assignedCardIds.has(c.id))
+    recurringCards = recurringCards.filter((c) => assignedCardIds.has(c.id))
   }
 
   let priorityCards: any[] = []
@@ -66,5 +70,5 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
     priorityCards = Array.from(uniqueCards.values())
   }
 
-  return { cards, priorityCards }
+  return { cards, priorityCards, recurringCards }
 }

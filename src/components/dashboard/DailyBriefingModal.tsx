@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { isToday, parseISO, format } from 'date-fns'
 import { Link } from 'react-router-dom'
-import { AlertCircle, Clock, Calendar, GripVertical } from 'lucide-react'
+import { AlertCircle, Clock, Calendar, GripVertical, Repeat } from 'lucide-react'
 
 export function DailyBriefingModal() {
   const { user } = useAuth()
@@ -31,6 +31,31 @@ export function DailyBriefingModal() {
       if (!lastBriefing || !isToday(lastBriefing)) {
         try {
           const cards = await getBriefingCards(user.id, user.role)
+
+          // Check for overdue recurring tasks
+          const todayDay = new Date().getDay()
+          const now = new Date()
+          const recurringCards = await pb.collection('cards').getFullList({
+            filter: `archived != true && is_recurring = true && completed = false`,
+            expand: 'board_id,board_id.client_id',
+          })
+
+          const overdueRecurring = recurringCards.filter((c) => {
+            if (
+              c.recurrence_days &&
+              c.recurrence_days.length > 0 &&
+              !c.recurrence_days.includes(todayDay)
+            )
+              return false
+            if (!c.recurrence_time) return false
+            const [hours, minutes] = c.recurrence_time.split(':').map(Number)
+            const taskTime = new Date()
+            taskTime.setHours(hours, minutes, 0, 0)
+            return now > taskTime
+          })
+
+          cards.overdue = [...cards.overdue, ...overdueRecurring]
+
           setData(cards)
           if (cards.overdue.length > 0 || cards.today.length > 0 || cards.next24hCards.length > 0) {
             setOpen(true)
@@ -141,7 +166,14 @@ export function DailyBriefingModal() {
                 onClick={() => setOpen(false)}
                 className="flex-1 min-w-0 block"
               >
-                <div className="font-medium truncate">{card.title}</div>
+                <div className="font-medium truncate flex items-center gap-2">
+                  {card.title}
+                  {card.is_recurring && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none bg-indigo-500 shadow-sm flex items-center gap-1">
+                      <Repeat className="w-2.5 h-2.5" />
+                    </span>
+                  )}
+                </div>
                 <div className="text-sm opacity-80 mt-1 flex justify-between items-center">
                   <div className="flex items-center gap-1.5 truncate">
                     <span className="font-semibold text-[11px] uppercase tracking-wider bg-background/50 px-1.5 py-0.5 rounded text-muted-foreground border shrink-0">
@@ -153,6 +185,10 @@ export function DailyBriefingModal() {
                   </div>
                   <span className="shrink-0 ml-2">
                     {(() => {
+                      if (card.is_recurring && card.recurrence_time) {
+                        return card.recurrence_time
+                      }
+                      if (!card.due_date) return ''
                       const d = parseISO(card.due_date)
                       const hasTime = !(
                         d.getHours() === 23 &&

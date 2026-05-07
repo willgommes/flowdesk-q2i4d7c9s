@@ -253,7 +253,7 @@ export default function BoardPage() {
       setColumns(cols)
 
       const c = await pb.collection('cards').getFullList({
-        filter: `board_id = '${id}' && archived != true`,
+        filter: `board_id = '${id}' && archived != true && is_recurring != true`,
         expand:
           'card_labels_via_card_id.label_id,card_members_via_card_id.user_id,comments_via_card_id,checklist_items_via_card_id,attachments_via_card_id',
         sort: 'sort_order',
@@ -829,7 +829,7 @@ export default function BoardPage() {
                                   {card.is_recurring && (
                                     <div
                                       className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none shadow-sm flex items-center gap-1 bg-indigo-500"
-                                      title="Modelo Recorrente"
+                                      title="Tarefa Recorrente"
                                     >
                                       <Repeat className="w-2.5 h-2.5" />
                                     </div>
