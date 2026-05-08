@@ -65,14 +65,25 @@ export function DailyBriefingModal() {
               .collection('users')
               .update(user.id, { last_briefing_at: new Date().toISOString() })
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to load briefing cards', error)
-          if (error instanceof ClientResponseError && error.status === 404) {
-            setData({ overdue: [], today: [], next24hCards: [] })
+
+          // Treat missing resources or errors as "no briefing available"
+          setData({ overdue: [], today: [], next24hCards: [] })
+
+          const is404 =
+            error?.status === 404 || (error instanceof ClientResponseError && error.status === 404)
+          if (is404) {
             try {
-              await pb
+              const userExists = await pb
                 .collection('users')
-                .update(user.id, { last_briefing_at: new Date().toISOString() })
+                .getOne(user.id)
+                .catch(() => null)
+              if (userExists) {
+                await pb
+                  .collection('users')
+                  .update(user.id, { last_briefing_at: new Date().toISOString() })
+              }
             } catch (updateError) {
               console.error('Failed to silence 404 briefing check', updateError)
             }
@@ -87,12 +98,27 @@ export function DailyBriefingModal() {
     setOpen(false)
     if (user) {
       try {
-        await pb.collection('users').update(user.id, { last_briefing_at: new Date().toISOString() })
-        await pb.collection('activity_logs').create({
-          user_id: user.id,
-          action_type: 'briefing_read',
-          description: 'Usuário confirmou leitura do briefing diário',
-        })
+        const userExists = await pb
+          .collection('users')
+          .getOne(user.id)
+          .catch(() => null)
+        if (userExists) {
+          await pb
+            .collection('users')
+            .update(user.id, { last_briefing_at: new Date().toISOString() })
+        }
+
+        try {
+          await pb.collection('activity_logs').create({
+            user_id: user.id,
+            action_type: 'briefing_read',
+            description: 'Usuário confirmou leitura do briefing diário',
+          })
+        } catch (logError: any) {
+          if (logError?.status !== 404) {
+            console.error('Failed to create activity log for briefing', logError)
+          }
+        }
       } catch (error) {
         console.error('Failed to log briefing acknowledgment', error)
       }
