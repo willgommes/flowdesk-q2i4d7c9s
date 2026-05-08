@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, MoreHorizontal, Trash2, Camera, Loader2, AlertCircle } from 'lucide-react'
+import { Plus, MoreHorizontal, Trash2, Camera, Loader2, AlertCircle, Shield } from 'lucide-react'
+import { UserPermissionsModal } from '@/components/UserPermissionsModal'
 import { Switch } from '@/components/ui/switch'
 import { isToday, parseISO } from 'date-fns'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -75,6 +76,7 @@ export default function Users() {
   const [uploadingUserId, setUploadingUserId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [permissionsUserId, setPermissionsUserId] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof inviteSchema>>({
     resolver: zodResolver(inviteSchema),
@@ -314,6 +316,15 @@ export default function Users() {
         }
       />
 
+      {permissionsUserId && (
+        <UserPermissionsModal
+          user={users.find((u) => u.id === permissionsUserId) || null}
+          open={!!permissionsUserId}
+          onOpenChange={(open) => !open && setPermissionsUserId(null)}
+          onSuccess={loadUsers}
+        />
+      )}
+
       <div className="p-8 max-w-6xl mx-auto w-full animate-fade-in">
         <div className="rounded-md border bg-card overflow-hidden shadow-subtle">
           <Table>
@@ -404,6 +415,15 @@ export default function Users() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => setPermissionsUserId(u.id)}
+                            className="cursor-pointer"
+                          >
+                            <Shield className="w-4 h-4 mr-2" /> Gerenciar Permissões
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+
                           <DropdownMenuItem
                             onClick={() => handleAvatarClick(u.id)}
                             className="cursor-pointer"
