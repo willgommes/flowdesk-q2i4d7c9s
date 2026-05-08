@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-08T15:11:54.381Z",
+  "generatedAt": "2026-05-08T17:39:57.261Z",
   "collections": [
     {
       "name": "users",
@@ -351,9 +351,18 @@
           "required": false,
           "system": false,
           "selectValues": ["active", "pending_approval", "rejected"]
+        },
+        {
+          "name": "google_event_id",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": ["CREATE INDEX `idx_cards_is_recurring` ON `cards` (is_recurring)"]
+      "indexes": [
+        "CREATE INDEX `idx_cards_is_recurring` ON `cards` (is_recurring)",
+        "CREATE INDEX `idx_cards_google_event_id` ON `cards` (google_event_id)"
+      ]
     },
     {
       "name": "labels",
@@ -803,6 +812,66 @@
           "type": "date",
           "required": false,
           "system": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "calendar_sync",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "calendar_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "board_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "boards"
+        },
+        {
+          "name": "target_column_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "columns"
+        },
+        {
+          "name": "is_active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "last_synced_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": []

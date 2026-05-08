@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { getUsers } from '@/services/users'
 import { getClients } from '@/services/clients'
 import { createBoard, updateBoard } from '@/services/boards'
+import { getBoardCalendarSync } from '@/services/calendar_sync'
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
   const { toast } = useToast()
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
+  const [syncData, setSyncData] = useState<any>(null)
 
   useEffect(() => {
     if (open) {
@@ -53,6 +55,11 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
         setClientId('none')
         setColor('#FFC300')
         setMembers([])
+        setSyncData(null)
+      }
+
+      if (board?.id) {
+        getBoardCalendarSync(board.id).then(setSyncData)
       }
     }
   }, [open, board])
@@ -165,6 +172,25 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
               </div>
             </div>
           )}
+
+          {board && syncData && (
+            <div className="space-y-2 pt-4 border-t">
+              <Label>Sincronização Google Calendar</Label>
+              <div className="text-sm text-muted-foreground flex flex-col gap-1">
+                <span>Status: {syncData.is_active ? '🟢 Ativa' : '🔴 Inativa'}</span>
+                <span>
+                  Última sinc:{' '}
+                  {syncData.last_synced_at
+                    ? new Date(syncData.last_synced_at).toLocaleString()
+                    : 'Nunca'}
+                </span>
+                <span className="truncate" title={syncData.calendar_id}>
+                  Calendário: {syncData.calendar_id}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={loading || !name.trim()}>
               {loading ? 'Salvando...' : 'Salvar'}
