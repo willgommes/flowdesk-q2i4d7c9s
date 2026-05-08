@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-07T15:04:18.646Z",
+  "generatedAt": "2026-05-08T12:31:35.514Z",
   "collections": [
     {
       "name": "users",
       "type": "auth",
       "apiRules": {
-        "list": "id = @request.auth.id || @request.auth.role = 'admin'",
-        "view": "id = @request.auth.id || @request.auth.role = 'admin'",
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
         "create": "",
         "update": "id = @request.auth.id || @request.auth.role = 'admin'",
         "delete": "id = @request.auth.id || @request.auth.role = 'admin'"
@@ -243,11 +243,11 @@
       "name": "cards",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'admin' || (@request.auth.can_manage_routines = true && is_recurring = true) || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
-        "view": "@request.auth.role = 'admin' || (@request.auth.can_manage_routines = true && is_recurring = true) || @collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id",
+        "list": "@request.auth.role = 'admin' || board_id.members ~ @request.auth.id || (@request.auth.can_manage_routines = true && is_recurring = true)",
+        "view": "@request.auth.role = 'admin' || board_id.members ~ @request.auth.id || (@request.auth.can_manage_routines = true && is_recurring = true)",
         "create": "@request.auth.id != '' && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true || @request.body.approval_status = 'pending_approval')",
-        "update": "@request.auth.id != '' && (is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true || (@collection.card_members.card_id ?= id && @collection.card_members.user_id ?= @request.auth.id)) && (@request.body.is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)",
-        "delete": "@request.auth.id != '' && (is_recurring != true || @request.auth.role = 'admin' || @request.auth.can_manage_routines = true)"
+        "update": "@request.auth.role = 'admin' || board_id.members ~ @request.auth.id || (@request.auth.can_manage_routines = true && is_recurring = true)",
+        "delete": "@request.auth.role = 'admin' || board_id.members ~ @request.auth.id || (@request.auth.can_manage_routines = true && is_recurring = true)"
       },
       "fields": [
         {

@@ -17,15 +17,15 @@ export function DailyRoutineWidget({
 }) {
   const { toast } = useToast()
 
-  const [recurringCards, setRecurringCards] = useState(initialCards)
+  const [recurringCards, setRecurringCards] = useState(initialCards || [])
 
   useEffect(() => {
-    setRecurringCards(initialCards)
+    setRecurringCards(initialCards || [])
   }, [initialCards])
 
   const todayDay = new Date().getDay()
 
-  const todaysTasks = recurringCards.filter((c) => {
+  const todaysTasks = (recurringCards || []).filter((c) => {
     if (c.is_paused) return false
     if (!c.recurrence_days || c.recurrence_days.length === 0) return true
     return c.recurrence_days.includes(todayDay)
