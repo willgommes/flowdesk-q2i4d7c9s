@@ -70,6 +70,7 @@ export default function BoardsPage() {
 
   const loadBoards = async () => {
     try {
+      setLoading(true)
       const clientsData = await getClients()
       setClients(clientsData.filter((c) => c.status !== 'archived'))
     } catch (err) {
@@ -86,11 +87,11 @@ export default function BoardsPage() {
           try {
             const [resTotal, resCompleted] = await Promise.all([
               pb.collection('cards').getList(1, 1, {
-                filter: `board_id = '${board.id}' && archived != true`,
+                filter: `board_id = '${board.id}' && archived = false`,
                 fields: 'id',
               }),
               pb.collection('cards').getList(1, 1, {
-                filter: `board_id = '${board.id}' && completed = true && archived != true`,
+                filter: `board_id = '${board.id}' && completed = true && archived = false`,
                 fields: 'id',
               }),
             ])

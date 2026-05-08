@@ -70,6 +70,7 @@ export default function Users() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [uploadingUserId, setUploadingUserId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -115,10 +116,18 @@ export default function Users() {
 
   const loadUsers = async () => {
     try {
+      setIsLoading(true)
       const records = await pb.collection('users').getFullList<User>({ sort: '-created' })
       setUsers(records)
     } catch (err) {
       console.error(err)
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível carregar os usuários.',
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -319,106 +328,119 @@ export default function Users() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 relative overflow-hidden">
-                        <AvatarImage src={u.avatar ? pb.files.getURL(u as any, u.avatar) : ''} />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {u.name?.substring(0, 2).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                        {uploadingUserId === u.id && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                          </div>
-                        )}
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm leading-tight flex items-center gap-2">
-                          {u.name} {u.id === user?.id && '(Você)'}
-                          {u.role === 'membro' &&
-                            (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))) &&
-                            new Date().getHours() >= 10 && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <AlertCircle className="w-4 h-4 text-destructive" />
-                                </TooltipTrigger>
-                                <TooltipContent>Briefing diário pendente (Atrasado)</TooltipContent>
-                              </Tooltip>
-                            )}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{u.email}</span>
-                      </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <span className="ml-2 text-muted-foreground">Carregando usuários...</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={u.role === 'admin' ? 'default' : 'secondary'}
-                      className="capitalize font-medium"
-                    >
-                      {u.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(u.created)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {u.lastActive ? formatDate(u.lastActive) : 'Nunca'}
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={u.role === 'admin' || !!u.can_manage_routines}
-                      disabled={u.role === 'admin'}
-                      onCheckedChange={(checked) => handleToggleRoutineManagement(u.id, checked)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Abrir menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => handleAvatarClick(u.id)}
-                          className="cursor-pointer"
-                        >
-                          <Camera className="w-4 h-4 mr-2" /> Alterar Foto
-                        </DropdownMenuItem>
-
-                        <DropdownMenuSeparator />
-
-                        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal mt-1">
-                          Alterar Papel
-                        </DropdownMenuLabel>
-                        <DropdownMenuRadioGroup
-                          value={u.role}
-                          onValueChange={(val) => handleRoleChange(u.id, val)}
-                        >
-                          <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
-                          <DropdownMenuRadioItem value="membro">Membro</DropdownMenuRadioItem>
-                          <DropdownMenuRadioItem value="cliente">Cliente</DropdownMenuRadioItem>
-                        </DropdownMenuRadioGroup>
-
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive cursor-pointer"
-                          onClick={() => handleDelete(u.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" /> Excluir Usuário
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
                 </TableRow>
-              ))}
-              {users.length === 0 && (
+              ) : (
+                users.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 relative overflow-hidden">
+                          <AvatarImage src={u.avatar ? pb.files.getURL(u as any, u.avatar) : ''} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {u.name?.substring(0, 2).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                          {uploadingUserId === u.id && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            </div>
+                          )}
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm leading-tight flex items-center gap-2">
+                            {u.name} {u.id === user?.id && '(Você)'}
+                            {u.role === 'membro' &&
+                              (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))) &&
+                              new Date().getHours() >= 10 && (
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <AlertCircle className="w-4 h-4 text-destructive" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    Briefing diário pendente (Atrasado)
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{u.email}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={u.role === 'admin' ? 'default' : 'secondary'}
+                        className="capitalize font-medium"
+                      >
+                        {u.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatDate(u.created)}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {u.lastActive ? formatDate(u.lastActive) : 'Nunca'}
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={u.role === 'admin' || !!u.can_manage_routines}
+                        disabled={u.role === 'admin'}
+                        onCheckedChange={(checked) => handleToggleRoutineManagement(u.id, checked)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => handleAvatarClick(u.id)}
+                            className="cursor-pointer"
+                          >
+                            <Camera className="w-4 h-4 mr-2" /> Alterar Foto
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal mt-1">
+                            Alterar Papel
+                          </DropdownMenuLabel>
+                          <DropdownMenuRadioGroup
+                            value={u.role}
+                            onValueChange={(val) => handleRoleChange(u.id, val)}
+                          >
+                            <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="membro">Membro</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="cliente">Cliente</DropdownMenuRadioItem>
+                          </DropdownMenuRadioGroup>
+
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive cursor-pointer"
+                            onClick={() => handleDelete(u.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Excluir Usuário
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+              {!isLoading && users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>

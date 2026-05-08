@@ -2,7 +2,7 @@ import pb from '@/lib/pocketbase/client'
 
 export const getBoards = (archived = false) => {
   return pb.collection('boards').getFullList({
-    filter: `archived = ${archived}`,
+    filter: `archived = ${archived ? 'true' : 'false'}`,
     sort: '-updated',
     expand: 'members,client_id',
   })

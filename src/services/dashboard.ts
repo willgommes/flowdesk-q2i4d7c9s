@@ -24,7 +24,7 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
     const boardsFilter = chunk.map((id) => `board_id='${id}'`).join('||')
 
     const chunkCards = await pb.collection('cards').getFullList({
-      filter: `archived != true && (${boardsFilter})`,
+      filter: `archived = false && (${boardsFilter})`,
       expand: 'board_id,board_id.client_id',
     })
 
@@ -52,7 +52,7 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
   if (priorityLabels.length > 0) {
     const labelsIds = priorityLabels.map((l) => `label_id='${l.id}'`).join('||')
     const cardLabels = await pb.collection('card_labels').getFullList({
-      filter: labelsIds,
+      filter: `(${labelsIds})`,
       expand: 'card_id,card_id.board_id,card_id.board_id.client_id,label_id',
     })
 

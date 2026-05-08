@@ -36,7 +36,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>((pb.authStore.record as unknown as User) || null)
+  const [user, setUser] = useState<User | null>(
+    pb.authStore.isValid ? (pb.authStore.record as unknown as User) : null,
+  )
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

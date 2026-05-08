@@ -169,8 +169,8 @@ export default function Index() {
       const allCards = await pb.collection('cards').getFullList({
         expand: 'board_id,column_id',
         filter: boardFilter
-          ? `(${boardFilter}) && archived != true && is_recurring != true`
-          : 'archived != true && is_recurring != true',
+          ? `(${boardFilter}) && archived = false && is_recurring = false`
+          : 'archived = false && is_recurring = false',
       })
 
       const escapeCSV = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`
