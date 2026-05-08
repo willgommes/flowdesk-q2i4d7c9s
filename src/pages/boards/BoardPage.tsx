@@ -18,11 +18,14 @@ import {
   X,
   Briefcase,
   Repeat,
+  RefreshCw,
 } from 'lucide-react'
 import { startOfDay, isBefore, isToday, addDays } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getBoard, updateBoard, deleteBoard } from '@/services/boards'
+import { getBoardCalendarSync } from '@/services/calendar_sync'
+import { syncGoogleCalendar } from '@/services/integrations'
 import {
   getBoardColumns,
   createColumn,
@@ -87,6 +90,8 @@ export default function BoardPage() {
   const isDraggingRef = useRef(false)
 
   const [dateFilter, setDateFilter] = useState<string>('all')
+  const [calendarSync, setCalendarSync] = useState<any>(null)
+  const [syncing, setSyncing] = useState(false)
 
   const handleQuickMove = async (cardId: string, action: 'in_progress' | 'done') => {
     try {
@@ -259,6 +264,9 @@ export default function BoardPage() {
         sort: 'sort_order',
       })
       setCards(c)
+
+      const sync = await getBoardCalendarSync(id)
+      setCalendarSync(sync)
     } catch (err) {
       toast({ title: 'Erro ao carregar quadro', variant: 'destructive' })
       navigate('/boards')
@@ -549,6 +557,34 @@ export default function BoardPage() {
             <ArrowDownUp className="w-3.5 h-3.5 mr-2" />
             Ordenar
           </Button>
+
+          {calendarSync && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  setSyncing(true)
+                  await syncGoogleCalendar(calendarSync.id)
+                  toast({ title: 'Calendário sincronizado com sucesso' })
+                  loadData()
+                } catch (err) {
+                  toast({
+                    title: 'Erro ao sincronizar',
+                    description: getErrorMessage(err),
+                    variant: 'destructive',
+                  })
+                } finally {
+                  setSyncing(false)
+                }
+              }}
+              disabled={syncing}
+              className="h-8 text-xs bg-background/50 shrink-0 border-primary/20"
+            >
+              <RefreshCw className={cn('w-3.5 h-3.5 sm:mr-2', syncing && 'animate-spin')} />
+              <span className="hidden sm:inline">Sincronizar Agenda</span>
+            </Button>
+          )}
 
           <div className="flex items-center gap-2 shrink-0">
             <Select value={dateFilter} onValueChange={setDateFilter}>

@@ -21,6 +21,8 @@ import CalendarPage from './pages/Calendar'
 import ClientsPage from './pages/clients/ClientsPage'
 import PunctualityPage from './pages/reports/PunctualityPage'
 import RoutinePerformancePage from './pages/reports/RoutinePerformancePage'
+import IntegrationsPage from './pages/IntegrationsPage'
+import GoogleCallback from './pages/GoogleCallback'
 
 const ProtectedRoute = ({
   children,
@@ -141,6 +143,22 @@ const App = () => (
                 element={
                   <ProtectedRoute adminOnly>
                     <RoutinePerformancePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/integracoes"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <IntegrationsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/integracoes/google/callback"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <GoogleCallback />
                   </ProtectedRoute>
                 }
               />

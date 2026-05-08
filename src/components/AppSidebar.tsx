@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Repeat,
   Activity,
+  Blocks,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
@@ -53,6 +54,7 @@ export function AppSidebar() {
     navigation.push({ name: 'Usuários', href: '/usuarios', icon: Users })
     navigation.push({ name: 'Pontualidade', href: '/pontualidade', icon: TrendingUp })
     navigation.push({ name: 'Performance de Rotinas', href: '/relatorios/rotinas', icon: Activity })
+    navigation.push({ name: 'Integrações', href: '/integracoes', icon: Blocks })
   }
 
   const avatarUrl = user.avatar ? pb.files.getURL(user as any, user.avatar) : ''
