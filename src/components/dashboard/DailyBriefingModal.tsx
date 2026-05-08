@@ -12,6 +12,7 @@ import { getBriefingCards } from '@/services/briefing'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { isToday, parseISO, format } from 'date-fns'
+import { ClientResponseError } from 'pocketbase'
 import { Link } from 'react-router-dom'
 import { AlertCircle, Clock, Calendar, GripVertical, Repeat } from 'lucide-react'
 
@@ -66,10 +67,19 @@ export function DailyBriefingModal() {
           }
         } catch (error) {
           console.error('Failed to load briefing cards', error)
+          if (error instanceof ClientResponseError && error.status === 404) {
+            setData({ overdue: [], today: [], next24hCards: [] })
+            try {
+              await pb
+                .collection('users')
+                .update(user.id, { last_briefing_at: new Date().toISOString() })
+            } catch (updateError) {
+              console.error('Failed to silence 404 briefing check', updateError)
+            }
+          }
         }
       }
     }
-
     checkBriefing()
   }, [user])
 
