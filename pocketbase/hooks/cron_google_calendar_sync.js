@@ -93,24 +93,50 @@ cronAdd('google_calendar_sync', '*/30 * * * *', () => {
           }
         } catch (_) {}
 
-        if (card) {
-          card.set('title', title)
-          card.set('description', description)
-          if (dueDate) card.set('due_date', dueDate)
-          $app.save(card)
-        } else {
-          const cardsCol = $app.findCollectionByNameOrId('cards')
-          card = new Record(cardsCol)
-          card.set('title', title)
-          card.set('description', description)
-          if (dueDate) card.set('due_date', dueDate)
-          card.set('google_event_id', googleEventId)
-          card.set('board_id', boardId)
-          card.set('column_id', columnId)
-          card.set('sort_order', 0)
-          $app.save(card)
+        const now = new Date()
+        now.setHours(0, 0, 0, 0)
+        let eventDate = now
+        if (dueDate) {
+          eventDate = new Date(dueDate)
+          eventDate.setHours(0, 0, 0, 0)
         }
-        importedCount++
+        const diffDays = Math.round((eventDate.getTime() - now.getTime()) / (1000 * 3600 * 24))
+
+        if (card) {
+          let changed = false
+          if (card.getString('title') !== title) {
+            card.set('title', title)
+            changed = true
+          }
+          if (card.getString('description') !== description) {
+            card.set('description', description)
+            changed = true
+          }
+          const currentDueDate = card.getString('due_date')
+          if (dueDate) {
+            const dStr = dueDate.length > 10 ? dueDate.substring(0, 19).replace('T', ' ') : dueDate
+            if (!currentDueDate || currentDueDate.substring(0, 10) !== dStr.substring(0, 10)) {
+              card.set('due_date', dueDate)
+              changed = true
+            }
+          }
+          if (changed) $app.save(card)
+        } else {
+          if (diffDays <= 7 && diffDays >= -1) {
+            const cardsCol = $app.findCollectionByNameOrId('cards')
+            card = new Record(cardsCol)
+            card.set('title', title)
+            card.set('description', description)
+            if (dueDate) card.set('due_date', dueDate)
+            card.set('google_event_id', googleEventId)
+            card.set('board_id', boardId)
+            card.set('column_id', columnId)
+            card.set('sort_order', 0)
+            card.set('is_recurring', false)
+            $app.save(card)
+            importedCount++
+          }
+        }
       }
 
       sync.set('last_synced_at', new Date().toISOString())

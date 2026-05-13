@@ -37,7 +37,7 @@ import { CreateRoutineDialog } from './CreateRoutineDialog'
 import { format } from 'date-fns'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Label } from '@/components/ui/label'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { CheckCircle2, XCircle } from 'lucide-react'
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -112,6 +112,7 @@ export default function RoutinesPage() {
   const canManage = user?.role === 'admin' || user?.can_manage_routines
 
   const [routines, setRoutines] = useState<any[]>([])
+  const [syncs, setSyncs] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [boards, setBoards] = useState<any[]>([])
@@ -133,7 +134,7 @@ export default function RoutinesPage() {
 
   const fetchData = async () => {
     try {
-      const [rRes, cRes, uRes, bRes, colRes] = await Promise.all([
+      const [rRes, cRes, uRes, bRes, colRes, sRes] = await Promise.all([
         pb.collection('cards').getFullList({
           filter: 'is_recurring = true && archived = false && approval_status != "rejected"',
           expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id, created_by',
@@ -143,12 +144,16 @@ export default function RoutinesPage() {
         pb.collection('users').getFullList({ sort: 'name' }),
         pb.collection('boards').getFullList({ expand: 'members' }),
         pb.collection('columns').getFullList({ sort: 'sort_order' }),
+        pb
+          .collection('calendar_sync')
+          .getFullList({ expand: 'board_id, target_column_id', sort: '-created' }),
       ])
       setRoutines(rRes)
       setClients(cRes)
       setUsers(uRes)
       setBoards(bRes)
       setColumns(colRes)
+      setSyncs(sRes)
     } catch (err) {
       console.error(err)
     }
@@ -280,6 +285,43 @@ export default function RoutinesPage() {
     fetchData()
   }
 
+  const handleUpdateSyncColumn = async (syncId: string, columnId: string) => {
+    try {
+      await pb.collection('calendar_sync').update(syncId, { target_column_id: columnId })
+      toast({ title: 'Coluna de destino atualizada' })
+      fetchData()
+    } catch (err) {
+      toast({ title: 'Erro ao atualizar coluna', variant: 'destructive' })
+    }
+  }
+
+  const handleToggleSyncActive = async (syncId: string, isActive: boolean) => {
+    try {
+      await pb.collection('calendar_sync').update(syncId, { is_active: isActive })
+      toast({ title: isActive ? 'Sincronização ativada' : 'Sincronização pausada' })
+      fetchData()
+    } catch (err) {
+      toast({ title: 'Erro ao alterar status', variant: 'destructive' })
+    }
+  }
+
+  const handleForceSync = async (syncId: string) => {
+    try {
+      toast({
+        title: 'Iniciando sincronização...',
+        description: 'Buscando eventos sazonais na janela de 7 dias.',
+      })
+      await pb.send('/backend/v1/google-calendar/sync', {
+        method: 'POST',
+        body: JSON.stringify({ sync_id: syncId }),
+      })
+      toast({ title: 'Sincronização concluída com sucesso!' })
+      fetchData()
+    } catch (err: any) {
+      toast({ title: 'Erro na sincronização', description: err.message, variant: 'destructive' })
+    }
+  }
+
   const renderDays = (days: number[]) => {
     if (!days || days.length === 0) return 'Nenhum'
     if (days.length === 7) return 'Todos os dias'
@@ -293,10 +335,10 @@ export default function RoutinesPage() {
         <div>
           <h1 className="text-3xl font-display font-bold tracking-tight flex items-center gap-3">
             <Repeat className="w-8 h-8 text-primary" />
-            Rotinas Diárias
+            Rotinas e Sazonais
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie tarefas recorrentes centralizadas em um só lugar.
+            Gerencie tarefas recorrentes e eventos anuais sazonais.
           </p>
         </div>
         <Button
@@ -310,279 +352,395 @@ export default function RoutinesPage() {
         </Button>
       </div>
 
-      {canManage && pendingRoutines.length > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 shadow-sm">
-          <h3 className="text-amber-800 dark:text-amber-400 font-semibold mb-3 flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Sugestões Pendentes de Aprovação ({pendingRoutines.length})
-          </h3>
-          <div className="space-y-3">
-            {pendingRoutines.map((r) => (
-              <div
-                key={r.id}
-                className="bg-background border rounded-lg p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
-              >
-                <div>
-                  <div className="font-semibold text-sm flex items-center gap-2">
-                    {r.title}
-                    <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider font-bold">
-                      Sugerido por: {r.expand?.created_by?.name || 'Usuário'}
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                    {r.expand?.board_id?.name} •{' '}
-                    {r.description?.replace(/<[^>]*>?/gm, '') || 'Sem descrição'}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(r)} className="h-8">
-                    Ver Detalhes
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => handleApprove(r)}
-                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+      <Tabs defaultValue="recorrentes" className="w-full space-y-6">
+        <TabsList className="bg-muted/50 border">
+          <TabsTrigger value="recorrentes">Recorrentes (Diárias/Semanais)</TabsTrigger>
+          <TabsTrigger value="sazonais">Sazonais (Eventos Google)</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="recorrentes" className="space-y-6 m-0">
+          {canManage && pendingRoutines.length > 0 && (
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 shadow-sm">
+              <h3 className="text-amber-800 dark:text-amber-400 font-semibold mb-3 flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Sugestões Pendentes de Aprovação ({pendingRoutines.length})
+              </h3>
+              <div className="space-y-3">
+                {pendingRoutines.map((r) => (
+                  <div
+                    key={r.id}
+                    className="bg-background border rounded-lg p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
                   >
-                    <CheckCircle2 className="w-4 h-4 mr-1.5" /> Aprovar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleReject(r)}
-                    className="h-8"
-                  >
-                    <XCircle className="w-4 h-4 mr-1.5" /> Rejeitar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {canManage && (
-        <div className="flex items-center justify-between bg-card p-2 rounded-xl border shadow-sm">
-          <Tabs
-            value={viewMode}
-            onValueChange={(v) => setViewMode(v as 'my' | 'all')}
-            className="w-full sm:w-auto"
-          >
-            <TabsList>
-              <TabsTrigger value="my">Minhas Rotinas</TabsTrigger>
-              <TabsTrigger value="all">Todas as Rotinas</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
-        <div className="space-y-1.5 flex-1">
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-            Filtrar por Cliente
-          </Label>
-          <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todos os clientes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os clientes</SelectItem>
-              <SelectItem value="internal">Interno (Sem Cliente)</SelectItem>
-              {clients.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5 flex-1">
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-            Filtrar por Membro
-          </Label>
-          <Select value={userFilter} onValueChange={setUserFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todos os membros" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os membros</SelectItem>
-              {users.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead className="w-[30%]">Rotina</TableHead>
-              <TableHead>Quadro / Cliente</TableHead>
-              <TableHead>Membros</TableHead>
-              <TableHead>Recorrência</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredRoutines.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                  Nenhuma rotina encontrada com os filtros atuais.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredRoutines.map((r) => (
-                <TableRow key={r.id} className="group hover:bg-muted/30 transition-colors">
-                  <TableCell>
-                    <div className="font-semibold text-foreground">{r.title}</div>
-                    {r.description && (
-                      <div className="text-xs text-muted-foreground truncate max-w-[200px] mt-0.5">
-                        {r.description.replace(/<[^>]*>?/gm, '')}
+                    <div>
+                      <div className="font-semibold text-sm flex items-center gap-2">
+                        {r.title}
+                        <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider font-bold">
+                          Sugerido por: {r.expand?.created_by?.name || 'Usuário'}
+                        </span>
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-sm">{r.expand?.board_id?.name}</span>
-                      <span className="text-xs text-muted-foreground opacity-80">
-                        {r.expand?.board_id?.expand?.client_id?.name ||
-                          r.expand?.board_id?.client_name ||
-                          'Interno'}
-                      </span>
+                      <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                        {r.expand?.board_id?.name} •{' '}
+                        {r.description?.replace(/<[^>]*>?/gm, '') || 'Sem descrição'}
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex -space-x-2">
-                      {r.expand?.card_members_via_card_id?.map((m: any) => (
-                        <Tooltip key={m.id}>
-                          <TooltipTrigger asChild>
-                            <Avatar className="w-8 h-8 border-2 border-background shadow-sm hover:z-10 transition-transform">
-                              <AvatarImage
-                                src={
-                                  m.expand?.user_id?.avatar
-                                    ? pb.files.getURL(m.expand.user_id, m.expand.user_id.avatar)
-                                    : ''
-                                }
-                              />
-                              <AvatarFallback className="text-[10px]">
-                                {m.expand?.user_id?.name?.[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                          </TooltipTrigger>
-                          <TooltipContent>{m.expand?.user_id?.name}</TooltipContent>
-                        </Tooltip>
-                      ))}
-                      {!r.expand?.card_members_via_card_id && (
-                        <span className="text-xs text-muted-foreground italic">Nenhum</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{renderDays(r.recurrence_days)}</span>
-                      <span className="text-xs text-muted-foreground">
-                        às {r.recurrence_time || '23:59'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={!r.is_paused}
-                        disabled={!canManage}
-                        onCheckedChange={() => togglePause(r)}
-                      />
-                      <span
-                        className={`text-xs font-bold uppercase tracking-wider ${!r.is_paused ? 'text-primary' : 'text-muted-foreground'}`}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEdit(r)}
+                        className="h-8"
                       >
-                        {!r.is_paused ? 'Ativo' : 'Pausado'}
-                      </span>
+                        Ver Detalhes
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleApprove(r)}
+                        className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-1.5" /> Aprovar
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleReject(r)}
+                        className="h-8"
+                      >
+                        <XCircle className="w-4 h-4 mr-1.5" /> Rejeitar
+                      </Button>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setHistoryCard(r)}
-                            className="h-8 w-8 text-blue-500 hover:bg-blue-50"
-                          >
-                            <History className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Histórico</TooltipContent>
-                      </Tooltip>
-                      {canManage && (
-                        <>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleClone(r)}
-                                className="h-8 w-8 text-indigo-500 hover:bg-indigo-50"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Duplicar</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEdit(r)}
-                                className="h-8 w-8 text-amber-500 hover:bg-amber-50"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Editar</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleArchive(r)}
-                                className="h-8 w-8 text-orange-500 hover:bg-orange-50"
-                              >
-                                <Archive className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Arquivar</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(r)}
-                                className="h-8 w-8 text-red-500 hover:bg-red-50"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Excluir</TooltipContent>
-                          </Tooltip>
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {canManage && (
+            <div className="flex items-center justify-between bg-card p-2 rounded-xl border shadow-sm">
+              <Tabs
+                value={viewMode}
+                onValueChange={(v) => setViewMode(v as 'my' | 'all')}
+                className="w-full sm:w-auto"
+              >
+                <TabsList>
+                  <TabsTrigger value="my">Minhas Rotinas</TabsTrigger>
+                  <TabsTrigger value="all">Todas as Rotinas</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
+            <div className="space-y-1.5 flex-1">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                Filtrar por Cliente
+              </Label>
+              <Select value={clientFilter} onValueChange={setClientFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os clientes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
+                  <SelectItem value="internal">Interno (Sem Cliente)</SelectItem>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 flex-1">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                Filtrar por Membro
+              </Label>
+              <Select value={userFilter} onValueChange={setUserFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os membros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os membros</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="w-[30%]">Rotina</TableHead>
+                  <TableHead>Quadro / Cliente</TableHead>
+                  <TableHead>Membros</TableHead>
+                  <TableHead>Recorrência</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {filteredRoutines.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                      Nenhuma rotina encontrada com os filtros atuais.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredRoutines.map((r) => (
+                    <TableRow key={r.id} className="group hover:bg-muted/30 transition-colors">
+                      <TableCell>
+                        <div className="font-semibold text-foreground">{r.title}</div>
+                        {r.description && (
+                          <div className="text-xs text-muted-foreground truncate max-w-[200px] mt-0.5">
+                            {r.description.replace(/<[^>]*>?/gm, '')}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{r.expand?.board_id?.name}</span>
+                          <span className="text-xs text-muted-foreground opacity-80">
+                            {r.expand?.board_id?.expand?.client_id?.name ||
+                              r.expand?.board_id?.client_name ||
+                              'Interno'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex -space-x-2">
+                          {r.expand?.card_members_via_card_id?.map((m: any) => (
+                            <Tooltip key={m.id}>
+                              <TooltipTrigger asChild>
+                                <Avatar className="w-8 h-8 border-2 border-background shadow-sm hover:z-10 transition-transform">
+                                  <AvatarImage
+                                    src={
+                                      m.expand?.user_id?.avatar
+                                        ? pb.files.getURL(m.expand.user_id, m.expand.user_id.avatar)
+                                        : ''
+                                    }
+                                  />
+                                  <AvatarFallback className="text-[10px]">
+                                    {m.expand?.user_id?.name?.[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </TooltipTrigger>
+                              <TooltipContent>{m.expand?.user_id?.name}</TooltipContent>
+                            </Tooltip>
+                          ))}
+                          {!r.expand?.card_members_via_card_id && (
+                            <span className="text-xs text-muted-foreground italic">Nenhum</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">
+                            {renderDays(r.recurrence_days)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            às {r.recurrence_time || '23:59'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={!r.is_paused}
+                            disabled={!canManage}
+                            onCheckedChange={() => togglePause(r)}
+                          />
+                          <span
+                            className={`text-xs font-bold uppercase tracking-wider ${!r.is_paused ? 'text-primary' : 'text-muted-foreground'}`}
+                          >
+                            {!r.is_paused ? 'Ativo' : 'Pausado'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setHistoryCard(r)}
+                                className="h-8 w-8 text-blue-500 hover:bg-blue-50"
+                              >
+                                <History className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Histórico</TooltipContent>
+                          </Tooltip>
+                          {canManage && (
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleClone(r)}
+                                    className="h-8 w-8 text-indigo-500 hover:bg-indigo-50"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Duplicar</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openEdit(r)}
+                                    className="h-8 w-8 text-amber-500 hover:bg-amber-50"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Editar</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleArchive(r)}
+                                    className="h-8 w-8 text-orange-500 hover:bg-orange-50"
+                                  >
+                                    <Archive className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Arquivar</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDelete(r)}
+                                    className="h-8 w-8 text-red-500 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Excluir</TooltipContent>
+                              </Tooltip>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sazonais" className="space-y-6 m-0">
+          <div className="bg-card rounded-xl border shadow-sm p-6">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                Eventos Anuais (Sazonais)
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Integrações ativas com o Google Calendar. Eventos são transformados em cartões
+                automaticamente <strong>7 dias antes</strong> da data marcada.
+              </p>
+            </div>
+
+            <div className="overflow-hidden border rounded-lg">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead>Calendário</TableHead>
+                    <TableHead>Quadro de Destino</TableHead>
+                    <TableHead>Coluna de Destino</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {syncs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                        Nenhuma sincronização de calendário configurada. Acesse um Quadro para
+                        adicionar.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    syncs.map((sync) => {
+                      const boardColumns = columns.filter((c) => c.board_id === sync.board_id)
+
+                      return (
+                        <TableRow key={sync.id}>
+                          <TableCell>
+                            <span className="font-medium">{sync.calendar_id}</span>
+                            {sync.last_synced_at && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Última sync:{' '}
+                                {format(new Date(sync.last_synced_at), 'dd/MM/yyyy HH:mm')}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>{sync.expand?.board_id?.name || 'Desconhecido'}</TableCell>
+                          <TableCell>
+                            <Select
+                              value={sync.target_column_id}
+                              onValueChange={(val) => handleUpdateSyncColumn(sync.id, val)}
+                              disabled={!canManage}
+                            >
+                              <SelectTrigger className="w-[180px] h-8 text-sm">
+                                <SelectValue placeholder="Selecione a coluna" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {boardColumns.map((col) => (
+                                  <SelectItem key={col.id} value={col.id}>
+                                    {col.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={sync.is_active}
+                                disabled={!canManage}
+                                onCheckedChange={(val) => handleToggleSyncActive(sync.id, val)}
+                              />
+                              <span
+                                className={`text-xs font-bold uppercase tracking-wider ${sync.is_active ? 'text-primary' : 'text-muted-foreground'}`}
+                              >
+                                {sync.is_active ? 'Ativo' : 'Pausado'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={!canManage || !sync.is_active}
+                              onClick={() => handleForceSync(sync.id)}
+                            >
+                              <Repeat className="w-3.5 h-3.5 mr-2" />
+                              Sincronizar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <CreateRoutineDialog
         open={createOpen}

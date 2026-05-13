@@ -108,6 +108,15 @@ routerAdd(
           }
         } catch (_) {}
 
+        const now = new Date()
+        now.setHours(0, 0, 0, 0)
+        let eventDate = now
+        if (dueDate) {
+          eventDate = new Date(dueDate)
+          eventDate.setHours(0, 0, 0, 0)
+        }
+        const diffDays = Math.round((eventDate.getTime() - now.getTime()) / (1000 * 3600 * 24))
+
         if (card) {
           let changed = false
           if (card.getString('title') !== title) {
@@ -132,19 +141,22 @@ routerAdd(
             txApp.save(card)
           }
         } else {
-          const cardsCol = txApp.findCollectionByNameOrId('cards')
-          card = new Record(cardsCol)
-          card.set('title', title)
-          card.set('description', description)
-          if (dueDate) card.set('due_date', dueDate)
-          card.set('google_event_id', googleEventId)
-          card.set('board_id', boardId)
-          card.set('column_id', columnId)
-          card.set('sort_order', 0)
-          card.set('created_by', user.id)
-          txApp.save(card)
+          if (diffDays <= 7 && diffDays >= -1) {
+            const cardsCol = txApp.findCollectionByNameOrId('cards')
+            card = new Record(cardsCol)
+            card.set('title', title)
+            card.set('description', description)
+            if (dueDate) card.set('due_date', dueDate)
+            card.set('google_event_id', googleEventId)
+            card.set('board_id', boardId)
+            card.set('column_id', columnId)
+            card.set('sort_order', 0)
+            card.set('created_by', user.id)
+            card.set('is_recurring', false)
+            txApp.save(card)
+            importedCount++
+          }
         }
-        importedCount++
       }
 
       sync.set('last_synced_at', new Date().toISOString())
