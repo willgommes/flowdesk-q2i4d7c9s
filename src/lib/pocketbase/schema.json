@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-08T17:54:44.591Z",
+  "generatedAt": "2026-05-13T13:11:58.916Z",
   "collections": [
     {
       "name": "users",
@@ -92,6 +92,24 @@
         {
           "name": "can_manage_routines",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "google_access_token",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "google_refresh_token",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "google_token_expiry",
+          "type": "number",
           "required": false,
           "system": false
         }

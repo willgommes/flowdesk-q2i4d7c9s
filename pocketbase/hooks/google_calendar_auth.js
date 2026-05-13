@@ -43,14 +43,35 @@ routerAdd(
       return e.badRequestError('Failed to exchange code')
     }
 
-    const tokens = {
-      access_token: res.json.access_token,
-      refresh_token: res.json.refresh_token,
-      expiry: Date.now() + res.json.expires_in * 1000 - 60000,
+    const user = e.auth
+
+    if (res.json.access_token) {
+      user.set('google_access_token', res.json.access_token)
+      user.set('google_token_expiry', Date.now() + res.json.expires_in * 1000 - 60000)
     }
 
-    const user = e.auth
-    user.set('google_tokens', tokens)
+    if (res.json.refresh_token) {
+      user.set('google_refresh_token', res.json.refresh_token)
+    }
+
+    // fallback support for the legacy `google_tokens` field if it's there
+    let tokens = user.get('google_tokens')
+    if (typeof tokens === 'string') {
+      try {
+        tokens = JSON.parse(tokens)
+      } catch (e) {
+        tokens = {}
+      }
+    }
+    tokens = tokens || {}
+
+    const newTokens = {
+      access_token: res.json.access_token,
+      refresh_token: res.json.refresh_token || tokens.refresh_token,
+      expiry: Date.now() + res.json.expires_in * 1000 - 60000,
+    }
+    user.set('google_tokens', newTokens)
+
     $app.save(user)
 
     return e.json(200, { success: true })
@@ -63,6 +84,9 @@ routerAdd(
   '/backend/v1/google-calendar/disconnect',
   (e) => {
     const user = e.auth
+    user.set('google_access_token', '')
+    user.set('google_refresh_token', '')
+    user.set('google_token_expiry', 0)
     user.set('google_tokens', null)
     $app.save(user)
     return e.json(200, { success: true })
@@ -75,8 +99,20 @@ routerAdd(
   '/backend/v1/google-calendar/status',
   (e) => {
     const user = e.auth
-    const tokens = user.get('google_tokens')
-    return e.json(200, { connected: !!(tokens && tokens.refresh_token) })
+    const accessToken = user.getString('google_access_token')
+    const refreshToken = user.getString('google_refresh_token')
+
+    let tokens = user.get('google_tokens')
+    if (typeof tokens === 'string') {
+      try {
+        tokens = JSON.parse(tokens)
+      } catch (e) {
+        tokens = null
+      }
+    }
+
+    const connected = !!(accessToken || (tokens && tokens.refresh_token))
+    return e.json(200, { connected })
   },
   $apis.requireAuth(),
 )

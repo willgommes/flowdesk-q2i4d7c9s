@@ -30,8 +30,11 @@ import {
 } from '@/services/integrations'
 import { getBoards } from '@/services/boards'
 import { getBoardColumns } from '@/services/columns'
+import { useRealtime } from '@/hooks/use-realtime'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function IntegrationsPage() {
+  const { user } = useAuth()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [connected, setConnected] = useState(false)
@@ -51,6 +54,12 @@ export default function IntegrationsPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  useRealtime('users', (e) => {
+    if (user && e.record.id === user.id) {
+      loadData()
+    }
+  })
 
   const loadData = async () => {
     try {
