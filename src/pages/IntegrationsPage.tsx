@@ -70,7 +70,7 @@ export default function IntegrationsPage() {
 
       const syncsList = await pb.collection('calendar_sync').getFullList({
         sort: '-created',
-        expand: 'board_id,target_column_id',
+        expand: 'board_id.client_id,target_column_id',
       })
       setSyncs(syncsList)
     } catch (err) {
@@ -314,7 +314,16 @@ export default function IntegrationsPage() {
                               </TooltipContent>
                             </Tooltip>
                           </div>
-                          <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                          <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2 flex-wrap">
+                            <span>
+                              Cliente:{' '}
+                              <span className="font-medium text-foreground">
+                                {sync.expand?.board_id?.expand?.client_id?.name ||
+                                  sync.expand?.board_id?.client_name ||
+                                  'Sem Cliente'}
+                              </span>
+                            </span>
+                            <span className="hidden sm:inline">&bull;</span>
                             <span>
                               Quadro:{' '}
                               <span className="font-medium text-foreground">
