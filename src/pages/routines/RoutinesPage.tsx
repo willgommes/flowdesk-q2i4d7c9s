@@ -22,6 +22,16 @@ import { Edit2, Copy, Archive, Trash2, Repeat, History, Activity } from 'lucide-
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { CardDetail } from '@/components/cards/CardDetail'
 import { CreateRoutineDialog } from './CreateRoutineDialog'
 import { format } from 'date-fns'
@@ -119,6 +129,7 @@ export default function RoutinesPage() {
   const [editBoardData, setEditBoardData] = useState<any>(null)
 
   const [historyCard, setHistoryCard] = useState<any>(null)
+  const [deleteCard, setDeleteCard] = useState<any>(null)
 
   const fetchData = async () => {
     try {
@@ -195,19 +206,25 @@ export default function RoutinesPage() {
     }
   }
 
-  const handleDelete = async (card: any) => {
-    if (
-      !confirm(
-        'Excluir esta rotina permanentemente? Isso removerá o cartão base e todas as dependências.',
-      )
-    )
-      return
+  const handleDelete = (card: any) => {
+    setDeleteCard(card)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteCard) return
+    const idToDelete = deleteCard.id
+
+    setRoutines((prev) => prev.filter((r) => r.id !== idToDelete))
+    setDeleteCard(null)
+
     try {
-      await pb.collection('cards').delete(card.id)
-      toast({ title: 'Rotina excluída' })
+      await pb.collection('cards').delete(idToDelete)
+      toast({ title: 'Rotina excluída com sucesso' })
       fetchData()
-    } catch (err) {
-      toast({ title: 'Erro ao excluir', variant: 'destructive' })
+    } catch (err: any) {
+      console.error(err)
+      toast({ title: 'Erro ao excluir a rotina', description: err.message, variant: 'destructive' })
+      fetchData()
     }
   }
 
@@ -613,6 +630,27 @@ export default function RoutinesPage() {
           if (!o) setHistoryCard(null)
         }}
       />
+
+      <AlertDialog open={!!deleteCard} onOpenChange={(o) => !o && setDeleteCard(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza que deseja excluir esta rotina?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso removerá o cartão base e todas as dependências
+              permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
