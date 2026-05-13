@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Select,
   SelectContent,
@@ -94,11 +95,18 @@ export default function IntegrationsPage() {
   }
 
   const handleDisconnect = async () => {
-    if (!confirm('Deseja realmente desconectar o Google Agenda?')) return
+    if (
+      !confirm('Deseja realmente desconectar o Google Agenda? Todos os mapeamentos serão apagados.')
+    )
+      return
     try {
+      for (const sync of syncs) {
+        await pb.collection('calendar_sync').delete(sync.id)
+      }
       await disconnectGoogle()
       setConnected(false)
-      toast({ title: 'Conta desconectada' })
+      setSyncs([])
+      toast({ title: 'Conta desconectada e mapeamentos removidos' })
     } catch (err) {
       toast({ title: 'Erro ao desconectar', variant: 'destructive' })
     }
@@ -189,15 +197,25 @@ export default function IntegrationsPage() {
   const handleSyncNow = async (id: string) => {
     try {
       setSyncingId(id)
-      const res = await syncGoogleCalendar(id)
-      toast({ title: `Sincronização concluída! ${res.imported} eventos atualizados.` })
+      await syncGoogleCalendar(id)
+      toast({ title: `Sincronização concluída! Eventos atualizados com sucesso.` })
       loadData()
     } catch (err) {
+      const errorMsg = getErrorMessage(err)
+      const isAuthError =
+        errorMsg.toLowerCase().includes('token') ||
+        errorMsg.toLowerCase().includes('auth') ||
+        errorMsg.toLowerCase().includes('credentials')
       toast({
         title: 'Erro na sincronização',
-        description: getErrorMessage(err),
+        description: isAuthError
+          ? 'Sua conexão expirou. Por favor, desconecte e reconecte sua conta do Google.'
+          : errorMsg,
         variant: 'destructive',
       })
+      if (isAuthError) {
+        setConnected(false)
+      }
     } finally {
       setSyncingId(null)
     }
@@ -280,12 +298,21 @@ export default function IntegrationsPage() {
                     {syncs.map((sync) => (
                       <div
                         key={sync.id}
-                        className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 border rounded-lg bg-background hover:bg-muted/50 transition-colors"
+                        className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 border rounded-lg bg-background hover:bg-muted/50 transition-colors min-w-0"
                       >
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className="font-medium flex items-center gap-2 text-foreground">
-                            <Calendar className="w-4 h-4 text-primary" />
-                            {sync.calendar_id}
+                            <Calendar className="w-4 h-4 text-primary shrink-0" />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="truncate cursor-help w-fit max-w-[200px] sm:max-w-[300px] lg:max-w-[400px]">
+                                  {sync.calendar_id}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-[300px] break-all">{sync.calendar_id}</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                           <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
                             <span>

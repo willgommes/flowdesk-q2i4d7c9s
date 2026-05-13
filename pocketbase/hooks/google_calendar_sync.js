@@ -25,7 +25,7 @@ routerAdd(
     let existingCards = []
     try {
       existingCards = $app
-        .findRecordsByFilter('cards', "google_event_id != ''", '', 1000, 0)
+        .findRecordsByFilter('cards', "google_event_id != '' && archived = false", '', 1000, 0)
         .map((r) => r.getString('google_event_id'))
     } catch (err) {}
 
