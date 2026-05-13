@@ -53,6 +53,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -136,9 +137,7 @@ export default function RoutinesPage() {
   const [pendingRoutines, setPendingRoutines] = useState<any[]>([])
 
   const [routines, setRoutines] = useState<any[]>([])
-  const [routinePage, setRoutinePage] = useState(1)
-  const [routineTotalPages, setRoutineTotalPages] = useState(1)
-  const [routineTotalItems, setRoutineTotalItems] = useState(0)
+  const [isLoadingRoutines, setIsLoadingRoutines] = useState(false)
 
   const [syncs, setSyncs] = useState<any[]>([])
   const [syncPage, setSyncPage] = useState(1)
@@ -152,6 +151,7 @@ export default function RoutinesPage() {
   const [userFilter, setUserFilter] = useState('all')
   const [dailyBoardFilter, setDailyBoardFilter] = useState('all')
   const [dailyStatusFilter, setDailyStatusFilter] = useState('all')
+  const [routineMonthFilter, setRoutineMonthFilter] = useState('all')
 
   const [seasonalBoardFilter, setSeasonalBoardFilter] = useState('all')
   const [seasonalColumnFilter, setSeasonalColumnFilter] = useState('all')
@@ -217,6 +217,7 @@ export default function RoutinesPage() {
   }, [canManage])
 
   const fetchRoutines = useCallback(async () => {
+    setIsLoadingRoutines(true)
     try {
       const filters = [
         'is_recurring = true',
@@ -245,30 +246,45 @@ export default function RoutinesPage() {
       } else if (dailyStatusFilter === 'paused') {
         filters.push(`is_paused = true`)
       }
-      if (debouncedSearch) {
-        const safeSearch = debouncedSearch.replace(/"/g, '\\"')
-        filters.push(`(title ~ "${safeSearch}" || description ~ "${safeSearch}")`)
-      }
 
-      const res = await pb.collection('cards').getList(routinePage, 30, {
+      const res = await pb.collection('cards').getList(1, 500, {
         filter: filters.join(' && '),
         expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id, created_by',
         sort: '-created',
       })
 
-      setRoutines(res.items)
-      setRoutineTotalPages(res.totalPages)
-      setRoutineTotalItems(res.totalItems)
+      let items = res.items
+
+      if (routineMonthFilter !== 'all') {
+        items = items.filter((r) => {
+          if (!r.due_date) return false
+          const rMonth = new Date(r.due_date).getMonth() + 1
+          return rMonth.toString() === routineMonthFilter
+        })
+      }
+
+      if (debouncedSearch) {
+        const term = debouncedSearch.toLowerCase()
+        items = items.filter(
+          (r) =>
+            (r.title && r.title.toLowerCase().includes(term)) ||
+            (r.description && r.description.toLowerCase().includes(term)),
+        )
+      }
+
+      setRoutines(items)
     } catch (err) {
       console.error(err)
+    } finally {
+      setIsLoadingRoutines(false)
     }
   }, [
-    routinePage,
     viewMode,
     clientFilter,
     userFilter,
     dailyBoardFilter,
     dailyStatusFilter,
+    routineMonthFilter,
     debouncedSearch,
     user?.id,
   ])
@@ -310,11 +326,6 @@ export default function RoutinesPage() {
   useEffect(() => {
     fetchSyncs()
   }, [fetchSyncs])
-
-  // Reset pages on filter changes
-  useEffect(() => {
-    setRoutinePage(1)
-  }, [viewMode, clientFilter, userFilter, dailyBoardFilter, dailyStatusFilter, debouncedSearch])
 
   useEffect(() => {
     setSyncPage(1)
@@ -627,7 +638,7 @@ export default function RoutinesPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-card p-4 rounded-xl border shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 bg-card p-4 rounded-xl border shadow-sm">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                 Cliente
@@ -698,6 +709,31 @@ export default function RoutinesPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                Mês (Vencimento)
+              </Label>
+              <Select value={routineMonthFilter} onValueChange={setRoutineMonthFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os meses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  <SelectItem value="1">Janeiro</SelectItem>
+                  <SelectItem value="2">Fevereiro</SelectItem>
+                  <SelectItem value="3">Março</SelectItem>
+                  <SelectItem value="4">Abril</SelectItem>
+                  <SelectItem value="5">Maio</SelectItem>
+                  <SelectItem value="6">Junho</SelectItem>
+                  <SelectItem value="7">Julho</SelectItem>
+                  <SelectItem value="8">Agosto</SelectItem>
+                  <SelectItem value="9">Setembro</SelectItem>
+                  <SelectItem value="10">Outubro</SelectItem>
+                  <SelectItem value="11">Novembro</SelectItem>
+                  <SelectItem value="12">Dezembro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="bg-card rounded-xl border shadow-sm overflow-hidden w-full">
@@ -714,7 +750,35 @@ export default function RoutinesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {routines.length === 0 ? (
+                  {isLoadingRoutines ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <Skeleton className="h-4 w-3/4 mb-2" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-2/3 mt-1" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-1/2 mb-1" />
+                          <Skeleton className="h-3 w-1/3" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-5 w-12 rounded-full" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Skeleton className="h-8 w-8" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : routines.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                         Nenhuma rotina encontrada com os filtros atuais.
@@ -874,31 +938,11 @@ export default function RoutinesPage() {
               </Table>
             </div>
 
-            {routineTotalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
-                <div className="text-sm text-muted-foreground font-medium">
-                  Página {routinePage} de {routineTotalPages} (Total: {routineTotalItems})
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRoutinePage((p) => Math.max(1, p - 1))}
-                    disabled={routinePage === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRoutinePage((p) => Math.min(routineTotalPages, p + 1))}
-                    disabled={routinePage === routineTotalPages}
-                  >
-                    Próxima <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
+            <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
+              <div className="text-sm text-muted-foreground font-medium">
+                {routines.length} rotinas listadas (exibindo todas).
               </div>
-            )}
+            </div>
           </div>
         </TabsContent>
 
@@ -919,7 +963,8 @@ export default function RoutinesPage() {
                 <Table className="min-w-[900px]">
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-[35%]">Calendário</TableHead>
+                      <TableHead className="w-[30%]">Calendário</TableHead>
+                      <TableHead>Cliente</TableHead>
                       <TableHead>Quadro de Destino</TableHead>
                       <TableHead>Coluna de Destino</TableHead>
                       <TableHead>Status</TableHead>
@@ -929,7 +974,7 @@ export default function RoutinesPage() {
                   <TableBody>
                     {syncs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                           Nenhuma sincronização de calendário configurada. Acesse um Quadro para
                           adicionar.
                         </TableCell>
@@ -966,17 +1011,16 @@ export default function RoutinesPage() {
                               )}
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center flex-wrap gap-1 text-sm">
-                                <span className="text-muted-foreground">
-                                  {sync.expand?.board_id?.expand?.client_id?.name ||
-                                    sync.expand?.board_id?.client_name ||
-                                    'Interno'}
-                                </span>
-                                <span className="text-muted-foreground text-xs">&gt;</span>
-                                <span className="font-medium">
-                                  {sync.expand?.board_id?.name || 'Desconhecido'}
-                                </span>
-                              </div>
+                              <span className="font-medium text-sm text-foreground">
+                                {sync.expand?.board_id?.expand?.client_id?.name ||
+                                  sync.expand?.board_id?.client_name ||
+                                  'Interno'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-medium text-sm">
+                                {sync.expand?.board_id?.name || 'Desconhecido'}
+                              </span>
                             </TableCell>
                             <TableCell>
                               <Select

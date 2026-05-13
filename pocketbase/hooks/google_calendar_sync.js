@@ -45,24 +45,35 @@ routerAdd(
 
       if (token) {
         try {
-          const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime`
-          const res = $http.send({
-            url: url,
-            method: 'GET',
-            headers: {
-              Authorization: 'Bearer ' + token,
-            },
-            timeout: 15,
-          })
-          if (res.statusCode === 200 && res.json && res.json.items) {
-            events = res.json.items.map((item) => ({
-              id: item.id,
-              title: item.summary || 'Evento sem título',
-              date: item.start?.dateTime || item.start?.date,
-            }))
-          } else {
-            $app.logger().warn('Google API returned non-200 in sync', 'status', res.statusCode)
-          }
+          const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime&maxResults=250`
+          let pageToken = ''
+          do {
+            let fetchUrl = url
+            if (pageToken) {
+              fetchUrl += `&pageToken=${encodeURIComponent(pageToken)}`
+            }
+            const res = $http.send({
+              url: fetchUrl,
+              method: 'GET',
+              headers: { Authorization: 'Bearer ' + token },
+              timeout: 15,
+            })
+            if (res.statusCode === 200 && res.json) {
+              if (res.json.items) {
+                events = events.concat(
+                  res.json.items.map((item) => ({
+                    id: item.id,
+                    title: item.summary || 'Evento sem título',
+                    date: item.start?.dateTime || item.start?.date,
+                  })),
+                )
+              }
+              pageToken = res.json.nextPageToken || ''
+            } else {
+              $app.logger().warn('Google API returned non-200 in sync', 'status', res.statusCode)
+              break
+            }
+          } while (pageToken)
         } catch (err) {
           $app.logger().error('Error calling Google API in sync', 'error', err.message)
         }
