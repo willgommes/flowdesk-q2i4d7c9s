@@ -155,6 +155,7 @@ export default function RoutinesPage() {
 
   const [seasonalBoardFilter, setSeasonalBoardFilter] = useState('all')
   const [seasonalColumnFilter, setSeasonalColumnFilter] = useState('all')
+  const [seasonalMonthFilter, setSeasonalMonthFilter] = useState('all')
   const [seasonalPage, setSeasonalPage] = useState(1)
 
   const [viewMode, setViewMode] = useState<'my' | 'all'>('my')
@@ -281,7 +282,7 @@ export default function RoutinesPage() {
       }
       const res = await pb.collection('calendar_sync').getList(syncPage, 30, {
         filter: filterStr,
-        expand: 'board_id, target_column_id',
+        expand: 'board_id.client_id, target_column_id',
         sort: '-created',
       })
       setSyncs(res.items)
@@ -327,6 +328,10 @@ export default function RoutinesPage() {
     if (seasonalColumnFilter !== 'all') {
       const c = columns.find((x) => x.id === seasonalColumnFilter)
       if (c && ev.column_name !== c.name) return false
+    }
+    if (seasonalMonthFilter !== 'all') {
+      const evMonth = new Date(ev.date).getMonth() + 1
+      if (evMonth.toString() !== seasonalMonthFilter) return false
     }
     if (debouncedSearch) {
       const term = debouncedSearch.toLowerCase()
@@ -939,9 +944,11 @@ export default function RoutinesPage() {
                               <div className="flex items-center gap-2">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="flex items-center gap-2 cursor-help max-w-[200px] sm:max-w-[300px]">
-                                      <span className="font-medium truncate block w-full">
-                                        {sync.calendar_id}
+                                    <div className="flex items-center gap-2 cursor-help w-fit">
+                                      <span className="font-medium block">
+                                        {sync.calendar_id.length > 25
+                                          ? sync.calendar_id.slice(0, 25) + '...'
+                                          : sync.calendar_id}
                                       </span>
                                       <Info className="w-4 h-4 text-muted-foreground shrink-0" />
                                     </div>
@@ -958,7 +965,19 @@ export default function RoutinesPage() {
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell>{sync.expand?.board_id?.name || 'Desconhecido'}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center flex-wrap gap-1 text-sm">
+                                <span className="text-muted-foreground">
+                                  {sync.expand?.board_id?.expand?.client_id?.name ||
+                                    sync.expand?.board_id?.client_name ||
+                                    'Interno'}
+                                </span>
+                                <span className="text-muted-foreground text-xs">&gt;</span>
+                                <span className="font-medium">
+                                  {sync.expand?.board_id?.name || 'Desconhecido'}
+                                </span>
+                              </div>
+                            </TableCell>
                             <TableCell>
                               <Select
                                 value={sync.target_column_id}
@@ -1048,7 +1067,7 @@ export default function RoutinesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-card p-4 rounded-xl border shadow-sm mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-card p-4 rounded-xl border shadow-sm mb-6">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                   Quadro de Destino
@@ -1101,6 +1120,37 @@ export default function RoutinesPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                  Mês
+                </Label>
+                <Select
+                  value={seasonalMonthFilter}
+                  onValueChange={(val) => {
+                    setSeasonalMonthFilter(val)
+                    setSeasonalPage(1)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os meses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os meses</SelectItem>
+                    <SelectItem value="1">Janeiro</SelectItem>
+                    <SelectItem value="2">Fevereiro</SelectItem>
+                    <SelectItem value="3">Março</SelectItem>
+                    <SelectItem value="4">Abril</SelectItem>
+                    <SelectItem value="5">Maio</SelectItem>
+                    <SelectItem value="6">Junho</SelectItem>
+                    <SelectItem value="7">Julho</SelectItem>
+                    <SelectItem value="8">Agosto</SelectItem>
+                    <SelectItem value="9">Setembro</SelectItem>
+                    <SelectItem value="10">Outubro</SelectItem>
+                    <SelectItem value="11">Novembro</SelectItem>
+                    <SelectItem value="12">Dezembro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="overflow-hidden border rounded-lg bg-card w-full">
@@ -1133,8 +1183,8 @@ export default function RoutinesPage() {
                               </div>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="text-[10px] text-muted-foreground truncate max-w-[150px] cursor-help block mt-0.5">
-                                    ID: {ev.id}
+                                  <div className="text-[10px] text-muted-foreground cursor-help block mt-0.5 w-fit">
+                                    ID: {ev.id.length > 20 ? ev.id.slice(0, 20) + '...' : ev.id}
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">
