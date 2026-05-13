@@ -18,20 +18,22 @@ routerAdd(
     let ignoredEvents = []
     try {
       ignoredEvents = $app
-        .findRecordsByFilter('ignored_google_events', '1=1', '', 1000, 0)
+        .findRecordsByFilter('ignored_google_events', '1=1', '', 5000, 0)
         .map((r) => r.getString('google_event_id'))
     } catch (err) {}
 
     let existingCards = []
     try {
+      // Increase limit to ensure all existing events are mapped (prevents duplication for larger datasets)
       existingCards = $app
-        .findRecordsByFilter('cards', "google_event_id != ''", '', 1000, 0)
+        .findRecordsByFilter('cards', "google_event_id != ''", '', 5000, 0)
         .map((r) => r.getString('google_event_id'))
     } catch (err) {}
 
     const now = new Date()
     const timeMin = now.toISOString()
-    const timeMax = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    // Fetch up to 1 year ahead (365 days) to ensure all seasonal routines are fully synced
+    const timeMax = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()
 
     const token = e.auth?.getString('google_access_token')
 
@@ -113,7 +115,7 @@ routerAdd(
         const diffTime = eventDate.getTime() - now.getTime()
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-        if (diffDays >= 0 && diffDays <= 7) {
+        if (diffDays >= -30 && diffDays <= 365) {
           try {
             const cardsCol = $app.findCollectionByNameOrId('cards')
             const card = new Record(cardsCol)

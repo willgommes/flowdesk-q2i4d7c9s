@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Calendar,
+  CalendarDays,
   Users,
   LayoutList,
   Moon,
@@ -44,6 +45,7 @@ export function AppSidebar() {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Rotinas', href: '/rotinas', icon: Repeat },
+    { name: 'Sazonais', href: '/sazonais', icon: CalendarDays },
     { name: 'Quadros', href: '/boards', icon: LayoutList },
     { name: 'Calendário', href: '/calendario', icon: Calendar },
   ]

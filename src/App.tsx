@@ -9,6 +9,7 @@ import { NotificationProvider } from './components/NotificationProvider'
 import Index from './pages/Index'
 import BoardsPage from './pages/boards/BoardsPage'
 import RoutinesPage from './pages/routines/RoutinesPage'
+import SazonaisPage from './pages/sazonais/SazonaisPage'
 import BoardPage from './pages/boards/BoardPage'
 import { CardModalRoute } from './pages/boards/CardModalRoute'
 import Login from './pages/Login'
@@ -77,6 +78,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <RoutinesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sazonais"
+                element={
+                  <ProtectedRoute>
+                    <SazonaisPage />
                   </ProtectedRoute>
                 }
               />

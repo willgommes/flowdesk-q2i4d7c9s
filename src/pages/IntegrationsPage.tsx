@@ -294,82 +294,85 @@ export default function IntegrationsPage() {
                     <p className="text-sm">Clique no botão acima para mapear uma agenda.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {syncs.map((sync) => (
-                      <div
-                        key={sync.id}
-                        className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 border rounded-lg bg-background hover:bg-muted/50 transition-colors min-w-0"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium flex items-center gap-2 text-foreground">
-                            <Calendar className="w-4 h-4 text-primary shrink-0" />
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="truncate cursor-help w-full max-w-[200px] sm:max-w-[300px] lg:max-w-[400px]">
-                                  {sync.calendar_id}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="max-w-[300px] break-all">{sync.calendar_id}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2 flex-wrap">
-                            <span>
-                              Cliente:{' '}
-                              <span className="font-medium text-foreground">
-                                {sync.expand?.board_id?.expand?.client_id?.name ||
-                                  sync.expand?.board_id?.client_name ||
-                                  'Sem Cliente'}
-                              </span>
-                            </span>
-                            <span className="hidden sm:inline">&bull;</span>
-                            <span>
-                              Quadro:{' '}
+                  <div className="border rounded-md overflow-hidden bg-background shadow-sm">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-muted/50 text-muted-foreground border-b">
+                        <tr>
+                          <th className="px-4 py-3 font-medium">Agenda</th>
+                          <th className="px-4 py-3 font-medium">Cliente</th>
+                          <th className="px-4 py-3 font-medium">Quadro &rarr; Coluna</th>
+                          <th className="px-4 py-3 font-medium">Última Sincronização</th>
+                          <th className="px-4 py-3 font-medium text-right">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {syncs.map((sync) => (
+                          <tr key={sync.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2 max-w-[200px]">
+                                <Calendar className="w-4 h-4 text-primary shrink-0" />
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="truncate cursor-help font-medium">
+                                      {sync.calendar_id}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="max-w-[300px] break-all">{sync.calendar_id}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 font-medium text-foreground">
+                              {sync.expand?.board_id?.expand?.client_id?.name ||
+                                sync.expand?.board_id?.client_name ||
+                                'Sem Cliente'}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
                               <span className="font-medium text-foreground">
                                 {sync.expand?.board_id?.name || 'Desconhecido'}
                               </span>
-                            </span>
-                            <span>&rarr;</span>
-                            <span>
-                              Coluna:{' '}
+                              <span className="mx-2">&rarr;</span>
                               <span className="font-medium text-foreground">
                                 {sync.expand?.target_column_id?.name || 'Desconhecida'}
                               </span>
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
-                            <RefreshCw className="w-3 h-3" />
-                            Última sincronização:{' '}
-                            {sync.last_synced_at
-                              ? new Date(sync.last_synced_at).toLocaleString('pt-BR')
-                              : 'Nunca'}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2 md:mt-0">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleSyncNow(sync.id)}
-                            disabled={syncingId === sync.id}
-                            className="bg-primary/10 text-primary hover:bg-primary/20"
-                          >
-                            <RefreshCw
-                              className={`w-4 h-4 mr-2 ${syncingId === sync.id ? 'animate-spin' : ''}`}
-                            />
-                            {syncingId === sync.id ? 'Sincronizando...' : 'Sincronizar'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDelete(sync.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                              <div className="flex items-center gap-1.5">
+                                <RefreshCw className="w-3 h-3" />
+                                {sync.last_synced_at
+                                  ? new Date(sync.last_synced_at).toLocaleString('pt-BR')
+                                  : 'Nunca'}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleSyncNow(sync.id)}
+                                  disabled={syncingId === sync.id}
+                                  className="bg-primary/10 text-primary hover:bg-primary/20 h-8"
+                                >
+                                  <RefreshCw
+                                    className={`w-3.5 h-3.5 mr-1.5 ${syncingId === sync.id ? 'animate-spin' : ''}`}
+                                  />
+                                  {syncingId === sync.id ? 'Sincronizando...' : 'Sincronizar'}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDelete(sync.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
