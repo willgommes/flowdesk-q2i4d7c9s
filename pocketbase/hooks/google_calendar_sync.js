@@ -14,17 +14,19 @@ routerAdd(
     }
 
     const user = e.auth
-    let tokens = user.get('google_tokens')
+    let accessToken = user.getString('google_access_token')
+    let refreshToken = user.getString('google_refresh_token')
+    let expiry = user.getInt('google_token_expiry')
 
-    if (!tokens || !tokens.access_token) {
+    if (!accessToken) {
       return e.badRequestError('Not connected to Google')
     }
 
-    if (tokens.expiry && Date.now() > tokens.expiry) {
+    if (expiry && Date.now() > expiry) {
       const clientId = $secrets.get('GOOGLE_CLIENT_ID')
       const clientSecret = $secrets.get('GOOGLE_CLIENT_SECRET')
 
-      if (!tokens.refresh_token) {
+      if (!refreshToken) {
         return e.badRequestError('No refresh token available. Please reconnect Google account.')
       }
 
@@ -32,17 +34,22 @@ routerAdd(
         url: 'https://oauth2.googleapis.com/token',
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `client_id=${clientId}&client_secret=${clientSecret}&grant_type=refresh_token&refresh_token=${tokens.refresh_token}`,
+        body: `client_id=${clientId}&client_secret=${clientSecret}&grant_type=refresh_token&refresh_token=${refreshToken}`,
         timeout: 15,
       })
 
       if (refreshRes.statusCode === 200) {
-        tokens.access_token = refreshRes.json.access_token
+        accessToken = refreshRes.json.access_token
         if (refreshRes.json.refresh_token) {
-          tokens.refresh_token = refreshRes.json.refresh_token
+          refreshToken = refreshRes.json.refresh_token
         }
-        tokens.expiry = Date.now() + refreshRes.json.expires_in * 1000 - 60000
-        user.set('google_tokens', tokens)
+        expiry = Date.now() + refreshRes.json.expires_in * 1000 - 60000
+
+        user.set('google_access_token', accessToken)
+        if (refreshRes.json.refresh_token) {
+          user.set('google_refresh_token', refreshToken)
+        }
+        user.set('google_token_expiry', expiry)
         $app.save(user)
       } else {
         return e.badRequestError('Failed to refresh Google token. Please disconnect and reconnect.')
@@ -62,7 +69,7 @@ routerAdd(
     const res = $http.send({
       url: url,
       method: 'GET',
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
       timeout: 30,
     })
 

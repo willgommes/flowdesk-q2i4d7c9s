@@ -119,11 +119,19 @@ export default function IntegrationsPage() {
 
       setDialogOpen(true)
     } catch (err) {
+      const errorMsg = getErrorMessage(err)
       toast({
-        title: 'Erro ao buscar dados do Google',
-        description: getErrorMessage(err),
+        title: 'Erro ao buscar agendas',
+        description: errorMsg,
         variant: 'destructive',
       })
+      if (
+        errorMsg.includes('Not connected to Google') ||
+        errorMsg.includes('refresh Google token') ||
+        errorMsg.includes('No refresh token')
+      ) {
+        setConnected(false)
+      }
     } finally {
       setSaving(false)
     }
