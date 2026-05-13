@@ -114,6 +114,7 @@ export default function RoutinesPage() {
   const [routines, setRoutines] = useState<any[]>([])
   const [syncs, setSyncs] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [boards, setBoards] = useState<any[]>([])
   const [columns, setColumns] = useState<any[]>([])
@@ -134,7 +135,7 @@ export default function RoutinesPage() {
 
   const fetchData = async () => {
     try {
-      const [rRes, cRes, uRes, bRes, colRes, sRes] = await Promise.all([
+      const [rRes, cRes, uRes, bRes, colRes, sRes, evRes] = await Promise.all([
         pb.collection('cards').getFullList({
           filter: 'is_recurring = true && archived = false && approval_status != "rejected"',
           expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id, created_by',
@@ -147,6 +148,7 @@ export default function RoutinesPage() {
         pb
           .collection('calendar_sync')
           .getFullList({ expand: 'board_id, target_column_id', sort: '-created' }),
+        pb.send('/backend/v1/google-calendar/upcoming', { method: 'GET' }).catch(() => []),
       ])
       setRoutines(rRes)
       setClients(cRes)
@@ -154,6 +156,7 @@ export default function RoutinesPage() {
       setBoards(bRes)
       setColumns(colRes)
       setSyncs(sRes)
+      setUpcomingEvents(evRes)
     } catch (err) {
       console.error(err)
     }
@@ -319,6 +322,20 @@ export default function RoutinesPage() {
       fetchData()
     } catch (err: any) {
       toast({ title: 'Erro na sincronização', description: err.message, variant: 'destructive' })
+    }
+  }
+
+  const handleIgnoreEvent = async (eventId: string, syncId: string) => {
+    if (!confirm('Deseja ignorar este evento? Ele não será convertido em cartão no futuro.')) return
+    try {
+      await pb.collection('ignored_google_events').create({
+        google_event_id: eventId,
+        sync_id: syncId,
+      })
+      toast({ title: 'Evento ignorado com sucesso' })
+      fetchData()
+    } catch (err: any) {
+      toast({ title: 'Erro ao ignorar', description: err.message, variant: 'destructive' })
     }
   }
 
@@ -734,6 +751,58 @@ export default function RoutinesPage() {
                         </TableRow>
                       )
                     })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="mt-10 mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                Próximos Eventos (Preview)
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Eventos programados para os próximos meses. Eles serão convertidos em cartões
+                automaticamente 7 dias antes da data.
+              </p>
+            </div>
+
+            <div className="overflow-hidden border rounded-lg">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead>Evento</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Quadro de Destino</TableHead>
+                    <TableHead>Coluna de Destino</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcomingEvents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Nenhum evento sazonal futuro encontrado.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    upcomingEvents.map((ev) => (
+                      <TableRow key={ev.id}>
+                        <TableCell className="font-medium">{ev.title}</TableCell>
+                        <TableCell>{format(new Date(ev.date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>{ev.board_name}</TableCell>
+                        <TableCell>{ev.column_name}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => handleIgnoreEvent(ev.id, ev.sync_id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Ignorar
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>

@@ -25,15 +25,20 @@ import { cn } from '@/lib/utils'
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [cards, setCards] = useState<any[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null)
 
   const loadCards = async () => {
     try {
-      const data = await pb.collection('cards').getFullList({
-        filter: `due_date != '' && archived != true`,
-        expand: 'board_id',
-      })
+      const [data, events] = await Promise.all([
+        pb.collection('cards').getFullList({
+          filter: `due_date != '' && archived != true`,
+          expand: 'board_id',
+        }),
+        pb.send('/backend/v1/google-calendar/upcoming', { method: 'GET' }).catch(() => []),
+      ])
       setCards(data)
+      setUpcomingEvents(events)
     } catch (err) {
       console.error('Failed to load cards for calendar', err)
     }
@@ -110,6 +115,13 @@ export default function CalendarPage() {
                 const dateStr = c.due_date.substring(0, 10)
                 const cardDate = parseISO(dateStr)
                 return isSameDay(cardDate, day)
+              })
+
+              const dayEvents = upcomingEvents.filter((e) => {
+                if (!e.date) return false
+                const dateStr = e.date.substring(0, 10)
+                const evDate = parseISO(dateStr)
+                return isSameDay(evDate, day)
               })
 
               const isCurrentMonth = isSameMonth(day, monthStart)
@@ -199,6 +211,22 @@ export default function CalendarPage() {
                         >
                           {card.title}
                         </Link>
+                      )
+                    })}
+                    {dayEvents.map((ev) => {
+                      return (
+                        <div
+                          key={ev.id}
+                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm border border-dashed opacity-70 cursor-default"
+                          style={{
+                            backgroundColor: `#f8fafc`,
+                            borderColor: `#cbd5e1`,
+                            color: '#475569',
+                          }}
+                          title={`Sazonal: ${ev.title} (Quadro: ${ev.board_name})`}
+                        >
+                          🕒 {ev.title}
+                        </div>
                       )
                     })}
                   </div>

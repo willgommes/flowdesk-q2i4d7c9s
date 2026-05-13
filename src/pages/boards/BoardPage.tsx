@@ -706,15 +706,40 @@ export default function BoardPage() {
                 onDragEnter={(e: any) => handleDragEnter(e, col.id)}
                 onDragEnd={(e: any) => handleDragEnd(e, col.id)}
                 onDelete={async () => {
-                  if (confirm('Excluir coluna?')) {
+                  const colCards = cards.filter((c: any) => c.column_id === col.id)
+                  if (colCards.length > 0) {
+                    if (
+                      !confirm(
+                        'Esta coluna contém cards. Deseja excluir a coluna e todos os cards dentro dela?',
+                      )
+                    ) {
+                      return
+                    }
                     try {
+                      await Promise.all(
+                        colCards.map((c: any) => pb.collection('cards').delete(c.id)),
+                      )
                       await deleteColumn(col.id)
+                      toast({ title: 'Coluna e cartões excluídos com sucesso' })
                     } catch (err) {
                       toast({
                         title: 'Erro ao excluir',
                         description: getErrorMessage(err),
                         variant: 'destructive',
                       })
+                    }
+                  } else {
+                    if (confirm('Excluir coluna?')) {
+                      try {
+                        await deleteColumn(col.id)
+                        toast({ title: 'Coluna excluída com sucesso' })
+                      } catch (err) {
+                        toast({
+                          title: 'Erro ao excluir',
+                          description: getErrorMessage(err),
+                          variant: 'destructive',
+                        })
+                      }
                     }
                   }
                 }}
