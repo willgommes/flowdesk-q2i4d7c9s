@@ -25,29 +25,84 @@ routerAdd(
     let existingCards = []
     try {
       existingCards = $app
-        .findRecordsByFilter('cards', "google_event_id != '' && archived = false", '', 1000, 0)
+        .findRecordsByFilter('cards', "google_event_id != ''", '', 1000, 0)
         .map((r) => r.getString('google_event_id'))
     } catch (err) {}
 
     const now = new Date()
+    const timeMin = now.toISOString()
+    const timeMax = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
+    const token = e.auth?.getString('google_access_token')
 
     for (const sync of syncs) {
       const boardId = sync.getString('board_id')
       const targetColId = sync.getString('target_column_id')
       const syncId = sync.id
+      const calendarId = sync.getString('calendar_id')
 
-      const mockData = [
-        { id: `mock-${syncId}-1`, title: 'Dia das Mães - Campanha', days: 5 },
-        { id: `mock-${syncId}-2`, title: 'Black Friday - Preparação', days: 8 },
-        { id: `mock-${syncId}-3`, title: 'Natal - Especial', days: 20 },
-        { id: `mock-${syncId}-4`, title: 'Ano Novo - Planejamento', days: 25 },
-      ]
+      let events = []
 
-      for (const m of mockData) {
+      if (token) {
+        try {
+          const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime`
+          const res = $http.send({
+            url: url,
+            method: 'GET',
+            headers: {
+              Authorization: 'Bearer ' + token,
+            },
+            timeout: 15,
+          })
+          if (res.statusCode === 200 && res.json && res.json.items) {
+            events = res.json.items.map((item) => ({
+              id: item.id,
+              title: item.summary || 'Evento sem título',
+              date: item.start?.dateTime || item.start?.date,
+            }))
+          } else {
+            $app.logger().warn('Google API returned non-200 in sync', 'status', res.statusCode)
+          }
+        } catch (err) {
+          $app.logger().error('Error calling Google API in sync', 'error', err.message)
+        }
+      }
+
+      if (events.length === 0 && !token) {
+        events = [
+          {
+            id: `mock-${syncId}-1`,
+            title: 'Dia das Mães - Campanha',
+            date: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: `mock-${syncId}-2`,
+            title: 'Black Friday - Preparação',
+            date: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: `mock-${syncId}-3`,
+            title: 'Natal - Especial',
+            date: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: `mock-${syncId}-4`,
+            title: 'Ano Novo - Planejamento',
+            date: new Date(now.getTime() + 25 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+        ]
+      }
+
+      for (const m of events) {
+        if (!m.id) continue
         if (ignoredEvents.includes(m.id)) continue
         if (existingCards.includes(m.id)) continue
 
-        if (m.days <= 7) {
+        const eventDate = new Date(m.date)
+        const diffTime = eventDate.getTime() - now.getTime()
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+        if (diffDays >= 0 && diffDays <= 7) {
           try {
             const cardsCol = $app.findCollectionByNameOrId('cards')
             const card = new Record(cardsCol)
@@ -58,7 +113,6 @@ routerAdd(
             card.set('completed', false)
             card.set('archived', false)
 
-            const eventDate = new Date(now.getTime() + m.days * 24 * 60 * 60 * 1000)
             card.set('due_date', eventDate.toISOString())
 
             $app.save(card)

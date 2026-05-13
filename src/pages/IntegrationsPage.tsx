@@ -305,9 +305,9 @@ export default function IntegrationsPage() {
                             <Calendar className="w-4 h-4 text-primary shrink-0" />
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="truncate cursor-help w-fit max-w-[200px] sm:max-w-[300px] lg:max-w-[400px]">
+                                <div className="truncate cursor-help w-full max-w-[200px] sm:max-w-[300px] lg:max-w-[400px]">
                                   {sync.calendar_id}
-                                </span>
+                                </div>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="max-w-[300px] break-all">{sync.calendar_id}</p>
@@ -370,15 +370,15 @@ export default function IntegrationsPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[450px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
             <DialogTitle>Nova Sincronização</DialogTitle>
             <DialogDescription>
               Mapeie uma agenda do Google para enviar eventos como tarefas.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-5 py-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
             <div className="space-y-2">
               <Label>Agenda do Google</Label>
               <Select value={selectedCalendar} onValueChange={setSelectedCalendar}>
@@ -438,7 +438,7 @@ export default function IntegrationsPage() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="px-6 py-4 border-t shrink-0 bg-background">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>

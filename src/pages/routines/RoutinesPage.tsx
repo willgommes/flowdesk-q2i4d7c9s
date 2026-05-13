@@ -836,7 +836,7 @@ export default function RoutinesPage() {
           <DialogHeader className="p-4 border-b bg-muted/10 shrink-0">
             <DialogTitle>Editar Rotina</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
             {editCardData && editBoardData && (
               <CardDetail
                 card={editCardData}
