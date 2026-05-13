@@ -377,7 +377,9 @@ export default function IntegrationsPage() {
                 <SelectContent>
                   {boards.map((board) => (
                     <SelectItem key={board.id} value={board.id}>
-                      {board.name}
+                      {board.expand?.client_id?.name
+                        ? `${board.expand.client_id.name} - ${board.name}`
+                        : `Sem Cliente - ${board.name}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
