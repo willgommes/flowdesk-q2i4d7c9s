@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
 import {
@@ -125,16 +125,28 @@ export default function RoutinesPage() {
 
   const canManage = user?.role === 'admin' || user?.can_manage_routines
 
-  const [routines, setRoutines] = useState<any[]>([])
-  const [syncs, setSyncs] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
-  const [eventCards, setEventCards] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [boards, setBoards] = useState<any[]>([])
   const [columns, setColumns] = useState<any[]>([])
 
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
+  const [eventCards, setEventCards] = useState<any[]>([])
+
+  const [pendingRoutines, setPendingRoutines] = useState<any[]>([])
+
+  const [routines, setRoutines] = useState<any[]>([])
+  const [routinePage, setRoutinePage] = useState(1)
+  const [routineTotalPages, setRoutineTotalPages] = useState(1)
+  const [routineTotalItems, setRoutineTotalItems] = useState(0)
+
+  const [syncs, setSyncs] = useState<any[]>([])
+  const [syncPage, setSyncPage] = useState(1)
+  const [syncTotalPages, setSyncTotalPages] = useState(1)
+  const [syncTotalItems, setSyncTotalItems] = useState(0)
+
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   const [clientFilter, setClientFilter] = useState('all')
   const [userFilter, setUserFilter] = useState('all')
@@ -157,76 +169,155 @@ export default function RoutinesPage() {
   const [historyCard, setHistoryCard] = useState<any>(null)
   const [deleteCard, setDeleteCard] = useState<any>(null)
 
-  const fetchData = async () => {
+  // Debounce search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+    }, 400)
+    return () => clearTimeout(handler)
+  }, [searchTerm])
+
+  const fetchMetadata = useCallback(async () => {
     try {
-      const [rRes, cRes, uRes, bRes, colRes, sRes, evRes, ecRes] = await Promise.all([
-        pb.collection('cards').getFullList({
-          filter: 'is_recurring = true && archived = false && approval_status != "rejected"',
-          expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id, created_by',
-          sort: '-created',
-        }),
+      const [cRes, uRes, bRes, colRes, evRes, ecRes] = await Promise.all([
         pb.collection('clients').getFullList({ sort: 'name' }),
         pb.collection('users').getFullList({ sort: 'name' }),
         pb.collection('boards').getFullList({ expand: 'members' }),
         pb.collection('columns').getFullList({ sort: 'sort_order' }),
-        pb
-          .collection('calendar_sync')
-          .getFullList({ expand: 'board_id, target_column_id', sort: '-created' }),
         pb.send('/backend/v1/google-calendar/upcoming', { method: 'GET' }).catch(() => []),
         pb
           .collection('cards')
           .getFullList({ filter: "google_event_id != ''", fields: 'id,google_event_id,board_id' })
           .catch(() => []),
       ])
-      setRoutines(rRes)
       setClients(cRes)
       setUsers(uRes)
       setBoards(bRes)
       setColumns(colRes)
-      setSyncs(sRes)
       setUpcomingEvents(evRes)
       setEventCards(ecRes || [])
     } catch (err) {
       console.error(err)
     }
-  }
-
-  useEffect(() => {
-    fetchData()
   }, [])
 
-  const activeRoutines = routines.filter(
-    (r) => r.approval_status === 'active' || !r.approval_status,
-  )
-  const pendingRoutines = routines.filter((r) => r.approval_status === 'pending_approval')
-
-  const filteredRoutines = activeRoutines.filter((r) => {
-    if (viewMode === 'my') {
-      const memberIds = r.expand?.card_members_via_card_id?.map((m: any) => m.user_id) || []
-      if (!memberIds.includes(user?.id)) return false
+  const fetchPending = useCallback(async () => {
+    if (!canManage) return
+    try {
+      const res = await pb.collection('cards').getFullList({
+        filter: 'is_recurring = true && archived = false && approval_status = "pending_approval"',
+        expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id, created_by',
+        sort: '-created',
+      })
+      setPendingRoutines(res)
+    } catch (err) {
+      console.error(err)
     }
+  }, [canManage])
 
-    if (clientFilter !== 'all') {
-      const cid = r.expand?.board_id?.client_id || 'internal'
-      if (cid !== clientFilter) return false
-    }
-    if (userFilter !== 'all') {
-      const memberIds = r.expand?.card_members_via_card_id?.map((m: any) => m.user_id) || []
-      if (!memberIds.includes(userFilter)) return false
-    }
-    if (dailyBoardFilter !== 'all' && r.board_id !== dailyBoardFilter) return false
-    if (dailyStatusFilter === 'active' && r.is_paused) return false
-    if (dailyStatusFilter === 'paused' && !r.is_paused) return false
+  const fetchRoutines = useCallback(async () => {
+    try {
+      const filters = [
+        'is_recurring = true',
+        'archived = false',
+        '(approval_status = "active" || approval_status = "")',
+      ]
 
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      const matchTitle = r.title?.toLowerCase().includes(term)
-      const matchDesc = r.description?.toLowerCase().includes(term)
-      if (!matchTitle && !matchDesc) return false
-    }
+      if (viewMode === 'my' && user?.id) {
+        filters.push(`card_members_via_card_id.user_id ?= "${user.id}"`)
+      }
+      if (clientFilter !== 'all') {
+        if (clientFilter === 'internal') {
+          filters.push(`board_id.client_id = ""`)
+        } else {
+          filters.push(`board_id.client_id = "${clientFilter}"`)
+        }
+      }
+      if (userFilter !== 'all') {
+        filters.push(`card_members_via_card_id.user_id ?= "${userFilter}"`)
+      }
+      if (dailyBoardFilter !== 'all') {
+        filters.push(`board_id = "${dailyBoardFilter}"`)
+      }
+      if (dailyStatusFilter === 'active') {
+        filters.push(`is_paused = false`)
+      } else if (dailyStatusFilter === 'paused') {
+        filters.push(`is_paused = true`)
+      }
+      if (debouncedSearch) {
+        const safeSearch = debouncedSearch.replace(/"/g, '\\"')
+        filters.push(`(title ~ "${safeSearch}" || description ~ "${safeSearch}")`)
+      }
 
-    return true
-  })
+      const res = await pb.collection('cards').getList(routinePage, 30, {
+        filter: filters.join(' && '),
+        expand: 'board_id.client_id, column_id, card_members_via_card_id.user_id, created_by',
+        sort: '-created',
+      })
+
+      setRoutines(res.items)
+      setRoutineTotalPages(res.totalPages)
+      setRoutineTotalItems(res.totalItems)
+    } catch (err) {
+      console.error(err)
+    }
+  }, [
+    routinePage,
+    viewMode,
+    clientFilter,
+    userFilter,
+    dailyBoardFilter,
+    dailyStatusFilter,
+    debouncedSearch,
+    user?.id,
+  ])
+
+  const fetchSyncs = useCallback(async () => {
+    try {
+      let filterStr = ''
+      if (debouncedSearch) {
+        const safeSearch = debouncedSearch.replace(/"/g, '\\"')
+        filterStr = `calendar_id ~ "${safeSearch}" || board_id.name ~ "${safeSearch}"`
+      }
+      const res = await pb.collection('calendar_sync').getList(syncPage, 30, {
+        filter: filterStr,
+        expand: 'board_id, target_column_id',
+        sort: '-created',
+      })
+      setSyncs(res.items)
+      setSyncTotalPages(res.totalPages)
+      setSyncTotalItems(res.totalItems)
+    } catch (err) {
+      console.error(err)
+    }
+  }, [syncPage, debouncedSearch])
+
+  // Initial loads
+  useEffect(() => {
+    fetchMetadata()
+  }, [fetchMetadata])
+
+  useEffect(() => {
+    fetchPending()
+  }, [fetchPending])
+
+  // Data loads mapped to dependencies
+  useEffect(() => {
+    fetchRoutines()
+  }, [fetchRoutines])
+
+  useEffect(() => {
+    fetchSyncs()
+  }, [fetchSyncs])
+
+  // Reset pages on filter changes
+  useEffect(() => {
+    setRoutinePage(1)
+  }, [viewMode, clientFilter, userFilter, dailyBoardFilter, dailyStatusFilter, debouncedSearch])
+
+  useEffect(() => {
+    setSyncPage(1)
+  }, [debouncedSearch])
 
   const filteredUpcomingEvents = upcomingEvents.filter((ev) => {
     if (seasonalBoardFilter !== 'all') {
@@ -237,8 +328,10 @@ export default function RoutinesPage() {
       const c = columns.find((x) => x.id === seasonalColumnFilter)
       if (c && ev.column_name !== c.name) return false
     }
-    if (searchTerm) {
-      if (!ev.title?.toLowerCase().includes(searchTerm.toLowerCase())) return false
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase()
+      if (!ev.title?.toLowerCase().includes(term) && !ev.id?.toLowerCase().includes(term))
+        return false
     }
     return true
   })
@@ -253,11 +346,16 @@ export default function RoutinesPage() {
     seasonalPage * SEASONAL_ITEMS_PER_PAGE,
   )
 
+  const handleActionSuccess = () => {
+    fetchRoutines()
+    fetchPending()
+  }
+
   const togglePause = async (card: any) => {
     try {
       await pb.collection('cards').update(card.id, { is_paused: !card.is_paused })
       toast({ title: card.is_paused ? 'Rotina reativada' : 'Rotina pausada' })
-      fetchData()
+      handleActionSuccess()
     } catch (err) {
       toast({ title: 'Erro ao alterar status', variant: 'destructive' })
     }
@@ -273,7 +371,7 @@ export default function RoutinesPage() {
     try {
       await pb.collection('cards').update(card.id, { archived: true })
       toast({ title: 'Rotina arquivada' })
-      fetchData()
+      handleActionSuccess()
     } catch (err) {
       toast({ title: 'Erro', variant: 'destructive' })
     }
@@ -286,18 +384,15 @@ export default function RoutinesPage() {
   const confirmDelete = async () => {
     if (!deleteCard) return
     const idToDelete = deleteCard.id
-
-    setRoutines((prev) => prev.filter((r) => r.id !== idToDelete))
     setDeleteCard(null)
 
     try {
       await pb.collection('cards').delete(idToDelete)
       toast({ title: 'Rotina excluída com sucesso' })
-      fetchData()
+      handleActionSuccess()
     } catch (err: any) {
       console.error(err)
       toast({ title: 'Erro ao excluir a rotina', description: err.message, variant: 'destructive' })
-      fetchData()
     }
   }
 
@@ -305,7 +400,7 @@ export default function RoutinesPage() {
     try {
       await pb.collection('cards').update(card.id, { approval_status: 'active' })
       toast({ title: 'Rotina aprovada e ativada com sucesso!' })
-      fetchData()
+      handleActionSuccess()
     } catch (err) {
       toast({ title: 'Erro ao aprovar', variant: 'destructive' })
     }
@@ -316,7 +411,7 @@ export default function RoutinesPage() {
     try {
       await pb.collection('cards').update(card.id, { approval_status: 'rejected' })
       toast({ title: 'Sugestão rejeitada' })
-      fetchData()
+      handleActionSuccess()
     } catch (err) {
       toast({ title: 'Erro ao rejeitar', variant: 'destructive' })
     }
@@ -350,14 +445,14 @@ export default function RoutinesPage() {
       })
       setEditCardData(fullCard)
     }
-    fetchData()
+    fetchRoutines()
   }
 
   const handleUpdateSyncColumn = async (syncId: string, columnId: string) => {
     try {
       await pb.collection('calendar_sync').update(syncId, { target_column_id: columnId })
       toast({ title: 'Coluna de destino atualizada' })
-      fetchData()
+      fetchSyncs()
     } catch (err) {
       toast({ title: 'Erro ao atualizar coluna', variant: 'destructive' })
     }
@@ -367,7 +462,7 @@ export default function RoutinesPage() {
     try {
       await pb.collection('calendar_sync').update(syncId, { is_active: isActive })
       toast({ title: isActive ? 'Sincronização ativada' : 'Sincronização pausada' })
-      fetchData()
+      fetchSyncs()
     } catch (err) {
       toast({ title: 'Erro ao alterar status', variant: 'destructive' })
     }
@@ -384,7 +479,7 @@ export default function RoutinesPage() {
         body: JSON.stringify({ sync_id: syncId }),
       })
       toast({ title: 'Sincronização concluída com sucesso!' })
-      fetchData()
+      fetchMetadata() // To refresh upcoming events and cards
     } catch (err: any) {
       toast({ title: 'Erro na sincronização', description: err.message, variant: 'destructive' })
     }
@@ -398,7 +493,7 @@ export default function RoutinesPage() {
         sync_id: syncId,
       })
       toast({ title: 'Evento ignorado com sucesso' })
-      fetchData()
+      fetchMetadata()
     } catch (err: any) {
       toast({ title: 'Erro ao ignorar', description: err.message, variant: 'destructive' })
     }
@@ -614,14 +709,14 @@ export default function RoutinesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRoutines.length === 0 ? (
+                  {routines.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                         Nenhuma rotina encontrada com os filtros atuais.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredRoutines.map((r) => (
+                    routines.map((r) => (
                       <TableRow key={r.id} className="group hover:bg-muted/30 transition-colors">
                         <TableCell>
                           <div className="font-semibold text-foreground">{r.title}</div>
@@ -773,6 +868,32 @@ export default function RoutinesPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {routineTotalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
+                <div className="text-sm text-muted-foreground font-medium">
+                  Página {routinePage} de {routineTotalPages} (Total: {routineTotalItems})
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRoutinePage((p) => Math.max(1, p - 1))}
+                    disabled={routinePage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRoutinePage((p) => Math.min(routineTotalPages, p + 1))}
+                    disabled={routinePage === routineTotalPages}
+                  >
+                    Próxima <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -816,15 +937,14 @@ export default function RoutinesPage() {
                           <TableRow key={sync.id}>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <span
-                                  className="font-medium truncate max-w-[150px] sm:max-w-[250px]"
-                                  title={sync.calendar_id}
-                                >
-                                  {sync.calendar_id}
-                                </span>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Info className="w-4 h-4 text-muted-foreground shrink-0 cursor-help" />
+                                    <div className="flex items-center gap-2 cursor-help max-w-[200px] sm:max-w-[300px]">
+                                      <span className="font-medium truncate block w-full">
+                                        {sync.calendar_id}
+                                      </span>
+                                      <Info className="w-4 h-4 text-muted-foreground shrink-0" />
+                                    </div>
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
                                     <p className="max-w-[300px] break-all">{sync.calendar_id}</p>
@@ -889,6 +1009,31 @@ export default function RoutinesPage() {
                   </TableBody>
                 </Table>
               </div>
+              {syncTotalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
+                  <div className="text-sm text-muted-foreground font-medium">
+                    Página {syncPage} de {syncTotalPages} (Total: {syncTotalItems})
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSyncPage((p) => Math.max(1, p - 1))}
+                      disabled={syncPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSyncPage((p) => Math.min(syncTotalPages, p + 1))}
+                      disabled={syncPage === syncTotalPages}
+                    >
+                      Próxima <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-10 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -982,7 +1127,21 @@ export default function RoutinesPage() {
                         const convertedCard = eventCards.find((c) => c.google_event_id === ev.id)
                         return (
                           <TableRow key={ev.id}>
-                            <TableCell className="font-medium">{ev.title}</TableCell>
+                            <TableCell>
+                              <div className="font-medium truncate max-w-[200px] sm:max-w-[300px]">
+                                {ev.title}
+                              </div>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-[10px] text-muted-foreground truncate max-w-[150px] cursor-help block mt-0.5">
+                                    ID: {ev.id}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p className="max-w-[300px] break-all">{ev.id}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableCell>
                             <TableCell>{format(new Date(ev.date), 'dd/MM/yyyy')}</TableCell>
                             <TableCell>{ev.board_name}</TableCell>
                             <TableCell>{ev.column_name}</TableCell>
@@ -1045,7 +1204,7 @@ export default function RoutinesPage() {
       <CreateRoutineDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onSuccess={fetchData}
+        onSuccess={handleActionSuccess}
         boards={boards}
         columns={columns}
         clients={clients}
