@@ -112,7 +112,9 @@ routerAdd(
         if (ignoredEvents.includes(m.id)) continue
         if (existingCards.includes(m.id)) continue
 
-        const eventDate = new Date(m.date)
+        const dateStr = m.date ? m.date.substring(0, 10) : new Date().toISOString().substring(0, 10)
+        // Set time to 20:00:00 UTC so that it is perceived as 17:00 in UTC-3
+        const eventDate = new Date(`${dateStr}T20:00:00.000Z`)
         const diffTime = eventDate.getTime() - now.getTime()
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
