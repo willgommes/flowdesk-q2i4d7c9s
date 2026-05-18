@@ -32,10 +32,11 @@ routerAdd(
 
     const now = new Date()
     const timeMin = now.toISOString()
-    // Fetch up to 1 year ahead (365 days) to ensure all seasonal routines are fully synced
-    const timeMax = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()
+    // Fetch up to 7 days ahead as per unified sync window
+    const timeMax = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
     const token = e.auth?.getString('google_access_token')
+    let totalCreated = 0
 
     for (const sync of syncs) {
       const boardId = sync.getString('board_id')
@@ -115,8 +116,19 @@ routerAdd(
         const diffTime = eventDate.getTime() - now.getTime()
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-        if (diffDays >= -30 && diffDays <= 365) {
+        if (diffDays >= 0 && diffDays <= 7) {
           try {
+            let alreadyExists = false
+            try {
+              $app.findFirstRecordByData('cards', 'google_event_id', m.id)
+              alreadyExists = true
+            } catch (_) {}
+
+            if (alreadyExists) {
+              existingCards.push(m.id)
+              continue
+            }
+
             const cardsCol = $app.findCollectionByNameOrId('cards')
             const card = new Record(cardsCol)
             card.set('title', m.title)
@@ -130,6 +142,7 @@ routerAdd(
 
             $app.save(card)
             existingCards.push(m.id)
+            totalCreated++
 
             let board
             try {
@@ -168,7 +181,7 @@ routerAdd(
       } catch (e) {}
     }
 
-    return e.json(200, { success: true })
+    return e.json(200, { success: true, createdCount: totalCreated })
   },
   $apis.requireAuth(),
 )

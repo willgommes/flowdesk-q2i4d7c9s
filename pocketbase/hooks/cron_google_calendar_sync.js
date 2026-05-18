@@ -23,7 +23,7 @@ cronAdd('cron_google_calendar_sync', '0 1 * * *', () => {
 
   const now = new Date()
   const timeMin = now.toISOString()
-  const timeMax = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  const timeMax = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
   for (const sync of syncs) {
     const boardId = sync.getString('board_id')
@@ -105,6 +105,17 @@ cronAdd('cron_google_calendar_sync', '0 1 * * *', () => {
 
       if (diffDays >= 0 && diffDays <= 7) {
         try {
+          let alreadyExists = false
+          try {
+            $app.findFirstRecordByData('cards', 'google_event_id', m.id)
+            alreadyExists = true
+          } catch (_) {}
+
+          if (alreadyExists) {
+            existingCards.push(m.id)
+            continue
+          }
+
           const cardsCol = $app.findCollectionByNameOrId('cards')
           const card = new Record(cardsCol)
           card.set('title', m.title)

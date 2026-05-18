@@ -63,6 +63,28 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
     e.preventDefault()
     e.stopPropagation()
     try {
+      const collectionsToClean = [
+        'card_labels',
+        'card_members',
+        'attachments',
+        'checklist_items',
+        'comments',
+        'activity_logs',
+      ]
+
+      for (const coll of collectionsToClean) {
+        try {
+          const records = await pb.collection(coll).getFullList({
+            filter: `card_id='${localCard.id}'`,
+          })
+          for (const record of records) {
+            await pb.collection(coll).delete(record.id).catch(console.error)
+          }
+        } catch (err) {
+          console.error(`Erro ao limpar ${coll}:`, err)
+        }
+      }
+
       await pb.collection('cards').delete(localCard.id)
       toast({ title: 'Cartão excluído com sucesso' })
       setDeleteAlertOpen(false)

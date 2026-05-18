@@ -565,8 +565,11 @@ export default function BoardPage() {
               onClick={async () => {
                 try {
                   setSyncing(true)
-                  await syncGoogleCalendar(calendarSync.id)
-                  toast({ title: 'Calendário sincronizado com sucesso' })
+                  const res: any = await syncGoogleCalendar(calendarSync.id)
+                  const count = res?.createdCount ?? 0
+                  toast({
+                    title: `Sincronização concluída! ${count} novos eventos importados (limite de 7 dias).`,
+                  })
                   loadData()
                 } catch (err) {
                   toast({

@@ -197,8 +197,11 @@ export default function IntegrationsPage() {
   const handleSyncNow = async (id: string) => {
     try {
       setSyncingId(id)
-      await syncGoogleCalendar(id)
-      toast({ title: `Sincronização concluída! Eventos atualizados com sucesso.` })
+      const res: any = await syncGoogleCalendar(id)
+      const count = res?.createdCount ?? 0
+      toast({
+        title: `Sincronização concluída! ${count} novos eventos importados (limite de 7 dias).`,
+      })
       loadData()
     } catch (err) {
       const errorMsg = getErrorMessage(err)
