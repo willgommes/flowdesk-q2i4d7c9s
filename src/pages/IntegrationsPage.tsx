@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Plus, RefreshCw, Trash2, CalendarDays, ExternalLink, Calendar } from 'lucide-react'
+import {
+  Plus,
+  RefreshCw,
+  Trash2,
+  CalendarDays,
+  ExternalLink,
+  Calendar,
+  Terminal,
+  Copy,
+  Check,
+} from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { AppHeader } from '@/components/AppHeader'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import {
   Dialog,
@@ -51,6 +62,26 @@ export default function IntegrationsPage() {
   const [selectedColumn, setSelectedColumn] = useState('')
   const [saving, setSaving] = useState(false)
   const [syncingId, setSyncingId] = useState<string | null>(null)
+
+  const [copiedUrl, setCopiedUrl] = useState(false)
+  const [copiedKey, setCopiedKey] = useState(false)
+  const [copiedPayload, setCopiedPayload] = useState(false)
+
+  const webhookUrl = `${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/receive-card`
+  const apiKey = 'sk-flowdesk-prod-8f2c-9a4b-55e1-x9zq'
+  const payloadExample = `{
+  "client_name": "Nome do Cliente",
+  "board_name": "Nome do Quadro",
+  "column_name": "Nome da Coluna",
+  "card_name": "Título do Card",
+  "due_date": "2024-12-31"
+}`
+
+  const copyToClipboard = (text: string, setter: (val: boolean) => void) => {
+    navigator.clipboard.writeText(text)
+    setter(true)
+    setTimeout(() => setter(false), 2000)
+  }
 
   useEffect(() => {
     loadData()
@@ -245,6 +276,80 @@ export default function IntegrationsPage() {
             <p className="text-muted-foreground mt-1">
               Conecte serviços externos para sincronizar dados com seus quadros.
             </p>
+          </div>
+
+          <div className="bg-background rounded-xl border border-border shadow-sm p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <Terminal className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">API de Criação de Cards</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Endpoint para criar cards programaticamente via ferramentas externas.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 border-t pt-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Webhook URL</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value={webhookUrl} readOnly className="font-mono text-xs" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyToClipboard(webhookUrl, setCopiedUrl)}
+                    >
+                      {copiedUrl ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Secret Key (Bearer Token)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value={apiKey} readOnly className="font-mono text-xs" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyToClipboard(apiKey, setCopiedKey)}
+                    >
+                      {copiedKey ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Exemplo de Payload (JSON)</Label>
+                <div className="bg-muted p-4 rounded-md overflow-x-auto relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8 hover:bg-background/50"
+                    onClick={() => copyToClipboard(payloadExample, setCopiedPayload)}
+                  >
+                    {copiedPayload ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <pre className="text-xs font-mono text-muted-foreground">{payloadExample}</pre>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="bg-background rounded-xl border border-border shadow-sm p-6">
