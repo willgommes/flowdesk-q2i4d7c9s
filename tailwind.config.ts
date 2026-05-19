@@ -86,6 +86,11 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      boxShadow: {
+        subtle: '0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15)',
+        raised: '0 4px 12px rgba(0, 0, 0, 0.30)',
+        dialog: '0 20px 25px rgba(0, 0, 0, 0.25), 0 8px 10px rgba(0, 0, 0, 0.10)',
+      },
     },
   },
   plugins: [animatePlugin, typographyPlugin, aspectRatioPlugin],
