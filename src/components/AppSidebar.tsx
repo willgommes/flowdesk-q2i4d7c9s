@@ -12,6 +12,7 @@ import {
   Repeat,
   Activity,
   Blocks,
+  History,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
@@ -51,6 +52,7 @@ export function AppSidebar() {
   ]
 
   navigation.push({ name: 'Clientes', href: '/clientes', icon: Briefcase })
+  navigation.push({ name: 'Histórico', href: '/historico', icon: History })
 
   if (user.role === 'admin') {
     navigation.push({ name: 'Usuários', href: '/usuarios', icon: Users })

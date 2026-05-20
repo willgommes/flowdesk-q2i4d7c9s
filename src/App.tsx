@@ -21,6 +21,7 @@ import NotFound from './pages/NotFound'
 import CalendarPage from './pages/Calendar'
 import ClientsPage from './pages/clients/ClientsPage'
 import PunctualityPage from './pages/reports/PunctualityPage'
+import HistoryPage from './pages/HistoryPage'
 import RoutinePerformancePage from './pages/reports/RoutinePerformancePage'
 import IntegrationsPage from './pages/IntegrationsPage'
 import GoogleCallback from './pages/GoogleCallback'
@@ -112,6 +113,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <CalendarPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/historico"
+                element={
+                  <ProtectedRoute>
+                    <HistoryPage />
                   </ProtectedRoute>
                 }
               />

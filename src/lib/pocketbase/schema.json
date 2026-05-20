@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T13:56:52.528Z",
+  "generatedAt": "2026-05-20T17:51:49.359Z",
   "collections": [
     {
       "name": "users",
@@ -754,7 +754,10 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": []
+      "indexes": [
+        "CREATE INDEX `idx_activity_logs_created` ON `activity_logs` (created)",
+        "CREATE INDEX `idx_activity_logs_user_id` ON `activity_logs` (user_id)"
+      ]
     },
     {
       "name": "clients",
