@@ -69,6 +69,19 @@ import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { cn } from '@/lib/utils'
 
+const sortCardsByDueDateAndOrder = (a: any, b: any) => {
+  if (a.due_date && b.due_date) {
+    const timeA = new Date(a.due_date).getTime()
+    const timeB = new Date(b.due_date).getTime()
+    if (timeA !== timeB) return timeA - timeB
+  }
+  if (a.due_date && !b.due_date) return -1
+  if (!a.due_date && b.due_date) return 1
+
+  if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
+  return new Date(a.created || 0).getTime() - new Date(b.created || 0).getTime()
+}
+
 export default function BoardPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -123,7 +136,7 @@ export default function BoardPage() {
       if (card.column_id !== targetCol.id) {
         const colCards = cards
           .filter((c) => c.column_id === targetCol.id && c.id !== cardId)
-          .sort((a, b) => a.sort_order - b.sort_order)
+          .sort(sortCardsByDueDateAndOrder)
         newSortOrder = colCards.length > 0 ? colCards[colCards.length - 1].sort_order + 1 : 0
       }
 
@@ -183,13 +196,7 @@ export default function BoardPage() {
     columns.forEach((col) => {
       const colCards = newCards.filter((c) => c.column_id === col.id)
 
-      colCards.sort((a, b) => {
-        if (!a.due_date && !b.due_date) return a.sort_order - b.sort_order
-        if (!a.due_date) return 1
-        if (!b.due_date) return -1
-
-        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
-      })
+      colCards.sort(sortCardsByDueDateAndOrder)
 
       colCards.forEach((c, idx) => {
         if (c.sort_order !== idx) {
@@ -772,7 +779,7 @@ export default function BoardPage() {
                     // Filter cards for the target column
                     let colCards = currentCards
                       .filter((c) => c.column_id === colId && c.id !== cardId)
-                      .sort((a, b) => a.sort_order - b.sort_order)
+                      .sort(sortCardsByDueDateAndOrder)
 
                     if (targetCardId) {
                       const targetIdx = colCards.findIndex((c) => c.id === targetCardId)
@@ -840,7 +847,7 @@ export default function BoardPage() {
             {columns.map((col) => {
               const colCards = filteredCards
                 .filter((c) => c.column_id === col.id)
-                .sort((a, b) => a.sort_order - b.sort_order)
+                .sort(sortCardsByDueDateAndOrder)
 
               if (colCards.length === 0) return null
 
@@ -1159,26 +1166,24 @@ function Column({
           if (cardId) onCardDrop(cardId, column.id)
         }}
       >
-        {cards
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map((card: any) => (
-            <CardItem
-              key={card.id}
-              card={card}
-              boardId={column.board_id}
-              columnName={column.name}
-              onDragStart={(e: any) => {
-                e.dataTransfer.setData('cardId', card.id)
-              }}
-              onDropCard={(e: any, targetCard: any) => {
-                const cardId = e.dataTransfer.getData('cardId')
-                if (cardId && cardId !== targetCard.id) {
-                  onCardDrop(cardId, column.id, targetCard.id)
-                }
-              }}
-              onQuickMove={(action: any) => onQuickMove?.(card.id, action)}
-            />
-          ))}
+        {cards.sort(sortCardsByDueDateAndOrder).map((card: any) => (
+          <CardItem
+            key={card.id}
+            card={card}
+            boardId={column.board_id}
+            columnName={column.name}
+            onDragStart={(e: any) => {
+              e.dataTransfer.setData('cardId', card.id)
+            }}
+            onDropCard={(e: any, targetCard: any) => {
+              const cardId = e.dataTransfer.getData('cardId')
+              if (cardId && cardId !== targetCard.id) {
+                onCardDrop(cardId, column.id, targetCard.id)
+              }
+            }}
+            onQuickMove={(action: any) => onQuickMove?.(card.id, action)}
+          />
+        ))}
 
         {isAdding ? (
           <div className="bg-background p-2 rounded-lg border border-border mt-1 shadow-sm">
