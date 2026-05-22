@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   LayoutTemplate,
   Tag,
@@ -15,6 +15,13 @@ import {
   Play,
   Pencil,
   Repeat,
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import {
   Select,
@@ -54,6 +61,198 @@ const LABEL_COLORS = [
   '#6366f1',
   '#14b8a6',
 ]
+
+const RichTextEditor = ({ value, onChange, onBlur, minHeight = 'min-h-[120px]' }: any) => {
+  const editorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (editorRef.current) {
+      if (editorRef.current.innerHTML === '') {
+        editorRef.current.innerHTML = value || ''
+      }
+      editorRef.current.focus()
+      try {
+        const range = document.createRange()
+        const sel = window.getSelection()
+        range.selectNodeContents(editorRef.current)
+        range.collapse(false)
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+      } catch {
+        /* intentionally ignored */
+      }
+    }
+  }, [])
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    onChange(e.currentTarget.innerHTML)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      e.currentTarget.blur()
+    }
+  }
+
+  return (
+    <div
+      ref={editorRef}
+      contentEditable
+      suppressContentEditableWarning
+      onInput={handleInput}
+      onBlur={onBlur}
+      onKeyDown={handleKeyDown}
+      className={cn(
+        'prose prose-sm dark:prose-invert max-w-none w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 break-words',
+        minHeight,
+      )}
+      style={{ outline: 'none', whiteSpace: 'pre-wrap' }}
+    />
+  )
+}
+
+const DescriptionContainer = ({ card, description, setDescription, onChange, logAct }: any) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [showToggle, setShowToggle] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isEditing && contentRef.current) {
+      const isOverflowing = contentRef.current.scrollHeight > 200
+      setShowToggle(isOverflowing)
+    }
+  }, [description, isEditing, isExpanded])
+
+  const handleDescBlur = async () => {
+    setIsEditing(false)
+    if (description !== card.description) {
+      await pb.collection('cards').update(card.id, { description })
+      await logAct('edit_desc', 'Atualizou a descrição')
+      onChange()
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="space-y-2 relative animate-fade-in">
+        <div className="flex items-center gap-1 mb-2 bg-muted/50 p-1.5 rounded-md border border-border">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onMouseDown={(e: any) => {
+              e.preventDefault()
+              document.execCommand('bold', false)
+            }}
+            title="Negrito (Ctrl+B)"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onMouseDown={(e: any) => {
+              e.preventDefault()
+              document.execCommand('italic', false)
+            }}
+            title="Itálico (Ctrl+I)"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onMouseDown={(e: any) => {
+              e.preventDefault()
+              document.execCommand('underline', false)
+            }}
+            title="Sublinhado (Ctrl+U)"
+          >
+            <Underline className="h-4 w-4" />
+          </Button>
+          <div className="w-[1px] h-4 bg-border mx-1" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onMouseDown={(e: any) => {
+              e.preventDefault()
+              document.execCommand('insertUnorderedList', false)
+            }}
+            title="Lista com Marcadores"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onMouseDown={(e: any) => {
+              e.preventDefault()
+              document.execCommand('insertOrderedList', false)
+            }}
+            title="Lista Numerada"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+        </div>
+        <RichTextEditor value={description} onChange={setDescription} onBlur={handleDescBlur} />
+        <p className="text-[10px] text-muted-foreground mt-1 flex justify-end">
+          Pressione Ctrl+Enter para salvar
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative group">
+      {description ? (
+        <div className="space-y-2">
+          <div
+            ref={contentRef}
+            className={cn(
+              'cursor-pointer rounded-md bg-muted/20 p-3 hover:bg-muted/50 transition-colors prose prose-sm dark:prose-invert max-w-none overflow-hidden whitespace-pre-wrap break-words',
+              !isExpanded && 'max-h-[200px]',
+            )}
+            onClick={() => setIsEditing(true)}
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
+          {showToggle && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs font-medium w-full mt-2 transition-all hover:bg-muted"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="w-4 h-4 mr-2" />
+                  Mostrar Menos
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Mostrar Mais
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div
+          className="cursor-pointer rounded-md bg-muted/20 p-4 text-sm text-muted-foreground hover:bg-muted/50 transition-colors h-24 flex items-center justify-center border border-dashed group-hover:border-primary/50 group-hover:text-primary/70"
+          onClick={() => setIsEditing(true)}
+        >
+          Adicione uma descrição mais detalhada...
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function CardDetail({ card, board, columns = [], onChange, onClose }: any) {
   const { user } = useAuth()
@@ -146,11 +345,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   }
 
   const handleDescBlur = async () => {
-    if (description !== card.description) {
-      await pb.collection('cards').update(card.id, { description })
-      await logAct('edit_desc', 'Atualizou a descrição')
-      onChange()
-    }
+    // Only used if fallback text editing is needed. Logic handled by DescriptionContainer.
   }
 
   const logAct = async (type: string, desc: string, targetCardId: string = card.id) => {
@@ -442,18 +637,12 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <LayoutTemplate className="w-5 h-5 text-muted-foreground" /> Descrição
           </h3>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onBlur={handleDescBlur}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault()
-                e.currentTarget.blur()
-              }
-            }}
-            className="min-h-[120px] resize-none"
-            placeholder="Adicione uma descrição mais detalhada usando texto ou markdown..."
+          <DescriptionContainer
+            card={card}
+            description={description}
+            setDescription={setDescription}
+            onChange={onChange}
+            logAct={logAct}
           />
         </div>
 
