@@ -186,7 +186,7 @@ export function DailyBriefingModal() {
           <Icon className="w-5 h-5" />
           {title} ({cards.length})
         </h3>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {cards.map((card: any) => (
             <div
               key={card.id}
@@ -194,32 +194,36 @@ export function DailyBriefingModal() {
               onDragStart={(e) => handleDragStart(e, card.id)}
               onDrop={(e) => handleDrop(e, card.id, sectionKey)}
               onDragOver={handleDragOver}
-              className={`flex items-center gap-2 p-3 rounded-lg border cursor-grab active:cursor-grabbing ${bgClass} hover:opacity-90 transition-opacity overflow-hidden`}
+              className={`flex items-start gap-2 p-3 sm:p-4 rounded-lg border cursor-grab active:cursor-grabbing ${bgClass} hover:opacity-90 transition-all w-full`}
             >
-              <GripVertical className="w-5 h-5 opacity-50 shrink-0" />
+              <GripVertical className="w-5 h-5 opacity-50 shrink-0 mt-0.5" />
               <Link
                 to={`/boards/${card.board_id}/cards/${card.id}`}
                 onClick={() => setOpen(false)}
-                className="flex-1 min-w-0 block"
+                className="flex-1 min-w-0 w-full"
               >
-                <div className="font-medium flex items-center gap-2 w-full">
-                  <span className="truncate">{card.title}</span>
+                <div className="font-medium flex items-start gap-2 w-full mb-2">
+                  <span className="line-clamp-2 break-words flex-1 text-[15px] leading-snug">
+                    {card.title}
+                  </span>
                   {card.is_recurring && (
-                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none bg-indigo-500 shadow-sm flex items-center gap-1">
-                      <Repeat className="w-2.5 h-2.5" />
+                    <span className="shrink-0 px-1.5 py-0.5 mt-0.5 rounded text-[10px] font-semibold text-white leading-none bg-indigo-500 shadow-sm flex items-center gap-1">
+                      <Repeat className="w-3 h-3" />
                     </span>
                   )}
                 </div>
-                <div className="text-sm opacity-80 mt-1.5 flex justify-between items-center gap-3">
-                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span className="font-semibold text-[11px] uppercase tracking-wider bg-background/50 px-1.5 py-0.5 rounded text-muted-foreground border shrink-0 truncate max-w-[45%]">
+                <div className="text-sm opacity-80 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-4 w-full">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="font-semibold text-[11px] uppercase tracking-wider bg-background/50 px-2 py-0.5 rounded text-muted-foreground border shrink-0 truncate max-w-[140px]">
                       {card.expand?.board_id?.expand?.client_id?.name ||
                         card.expand?.board_id?.client_name ||
                         'Interno'}
                     </span>
-                    <span className="truncate min-w-0 text-xs">{card.expand?.board_id?.name}</span>
+                    <span className="truncate min-w-0 text-xs flex-1">
+                      {card.expand?.board_id?.name}
+                    </span>
                   </div>
-                  <span className="shrink-0 text-xs font-medium text-right whitespace-nowrap">
+                  <span className="shrink-0 text-xs font-semibold text-right whitespace-nowrap">
                     {(() => {
                       if (card.is_recurring && card.recurrence_time) {
                         return card.recurrence_time
@@ -250,8 +254,8 @@ export function DailyBriefingModal() {
         if (!val) setOpen(false)
       }}
     >
-      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+        <DialogHeader className="px-1">
           <DialogTitle className="text-2xl font-display font-bold">
             Bom dia! Seu Resumo Diário
           </DialogTitle>
@@ -260,8 +264,8 @@ export function DailyBriefingModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 w-full">
-          <div className="py-4 pr-3">
+        <ScrollArea className="flex-1 min-h-0 w-full pr-4">
+          <div className="py-4 px-1">
             <Section
               sectionKey="overdue"
               title="Vencidas / Atrasadas"
@@ -289,8 +293,10 @@ export function DailyBriefingModal() {
           </div>
         </ScrollArea>
 
-        <div className="pt-4 border-t mt-auto flex justify-end">
-          <Button onClick={handleAcknowledge}>Ciente</Button>
+        <div className="pt-4 border-t mt-auto flex justify-end px-1">
+          <Button onClick={handleAcknowledge} size="lg" className="font-semibold">
+            Ciente
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
