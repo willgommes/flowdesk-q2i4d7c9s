@@ -578,6 +578,14 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             }}
             className={`text-2xl font-bold border-none shadow-none px-0 focus-visible:ring-0 h-auto ${card.completed ? 'line-through text-muted-foreground' : ''}`}
           />
+          <div className="text-xs text-muted-foreground">
+            Criado por {card.expand?.created_by?.name || 'Sistema'}{' '}
+            {card.created
+              ? `em ${format(new Date(card.created), "d 'de' MMM, yyyy 'às' HH:mm", {
+                  locale: ptBR,
+                })}`
+              : ''}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-6">

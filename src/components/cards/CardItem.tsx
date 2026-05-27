@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import {
   Calendar,
@@ -52,12 +52,14 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
   const [localCard, setLocalCard] = useState(card)
   const [isDatePopoverOpen, setDatePopoverOpen] = useState(false)
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [tempDate, setTempDate] = useState<Date | undefined>()
   const [tempHour, setTempHour] = useState<string>('12')
   const [tempMinute, setTempMinute] = useState<string>('00')
   const [tempAmPm, setTempAmPm] = useState<string>('AM')
   const { user } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -256,10 +258,10 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
 
   return (
     <>
-      <Link
-        to={`/boards/${boardId}/cards/${localCard.id}`}
+      <div
+        onClick={() => navigate(`/boards/${boardId}/cards/${localCard.id}`)}
         className={cn(
-          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-primary/50 transition-all duration-300 relative',
+          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-primary/50 transition-all duration-300 relative cursor-pointer',
           isEffectivelyCompleted
             ? 'bg-secondary/50 opacity-70 border-transparent'
             : 'bg-background border-border',
@@ -323,6 +325,34 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
             {localCard.title}
           </h4>
         </div>
+
+        {localCard.description && (
+          <div className="mb-3 w-full pr-8">
+            <div
+              className={cn(
+                'text-xs text-muted-foreground/90 prose prose-sm dark:prose-invert max-w-none break-words leading-tight [&>p]:mb-1 [&>p]:mt-0 [&>ul]:my-1 [&>ol]:my-1 [&>ul]:pl-4 [&>ol]:pl-4 [&>ul]:list-disc [&>ol]:list-decimal',
+                !isExpanded && 'line-clamp-3',
+              )}
+              onClick={(e) => {
+                if ((e.target as HTMLElement).tagName.toLowerCase() === 'a') {
+                  e.stopPropagation()
+                }
+              }}
+              dangerouslySetInnerHTML={{ __html: localCard.description }}
+            />
+            <div
+              role="button"
+              className="text-[10px] font-medium text-primary mt-1 hover:underline cursor-pointer inline-block"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setIsExpanded(!isExpanded)
+              }}
+            >
+              {isExpanded ? 'Ver menos' : 'Ver mais'}
+            </div>
+          </div>
+        )}
 
         <div
           className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10"
@@ -551,7 +581,16 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
             <Progress value={progressPercentage} className="h-1.5" />
           </div>
         )}
-      </Link>
+
+        <div className="mt-3 text-[10px] text-muted-foreground/70 flex items-center justify-between border-t border-border/50 pt-2 w-full truncate">
+          <span className="truncate pr-2">
+            Criado por {localCard.expand?.created_by?.name || 'Sistema'}
+          </span>
+          <span className="shrink-0">
+            {localCard.created ? format(new Date(localCard.created), 'dd/MM/yyyy HH:mm') : ''}
+          </span>
+        </div>
+      </div>
 
       <AlertDialog open={deleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
