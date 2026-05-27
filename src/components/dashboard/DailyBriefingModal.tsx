@@ -194,7 +194,7 @@ export function DailyBriefingModal() {
               onDragStart={(e) => handleDragStart(e, card.id)}
               onDrop={(e) => handleDrop(e, card.id, sectionKey)}
               onDragOver={handleDragOver}
-              className={`flex items-center gap-2 p-3 rounded-lg border cursor-grab active:cursor-grabbing ${bgClass} hover:opacity-90 transition-opacity`}
+              className={`flex items-center gap-2 p-3 rounded-lg border cursor-grab active:cursor-grabbing ${bgClass} hover:opacity-90 transition-opacity overflow-hidden`}
             >
               <GripVertical className="w-5 h-5 opacity-50 shrink-0" />
               <Link
@@ -202,24 +202,24 @@ export function DailyBriefingModal() {
                 onClick={() => setOpen(false)}
                 className="flex-1 min-w-0 block"
               >
-                <div className="font-medium truncate flex items-center gap-2">
-                  {card.title}
+                <div className="font-medium flex items-center gap-2 w-full">
+                  <span className="truncate">{card.title}</span>
                   {card.is_recurring && (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none bg-indigo-500 shadow-sm flex items-center gap-1">
+                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none bg-indigo-500 shadow-sm flex items-center gap-1">
                       <Repeat className="w-2.5 h-2.5" />
                     </span>
                   )}
                 </div>
-                <div className="text-sm opacity-80 mt-1 flex justify-between items-center">
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span className="font-semibold text-[11px] uppercase tracking-wider bg-background/50 px-1.5 py-0.5 rounded text-muted-foreground border shrink-0">
+                <div className="text-sm opacity-80 mt-1.5 flex justify-between items-center gap-3">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <span className="font-semibold text-[11px] uppercase tracking-wider bg-background/50 px-1.5 py-0.5 rounded text-muted-foreground border shrink-0 truncate max-w-[45%]">
                       {card.expand?.board_id?.expand?.client_id?.name ||
                         card.expand?.board_id?.client_name ||
                         'Interno'}
                     </span>
-                    <span className="truncate">{card.expand?.board_id?.name}</span>
+                    <span className="truncate min-w-0 text-xs">{card.expand?.board_id?.name}</span>
                   </div>
-                  <span className="shrink-0 ml-2">
+                  <span className="shrink-0 text-xs font-medium text-right whitespace-nowrap">
                     {(() => {
                       if (card.is_recurring && card.recurrence_time) {
                         return card.recurrence_time
@@ -260,8 +260,8 @@ export function DailyBriefingModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
-          <div className="py-4">
+        <ScrollArea className="flex-1 min-h-0 w-full">
+          <div className="py-4 pr-3">
             <Section
               sectionKey="overdue"
               title="Vencidas / Atrasadas"
