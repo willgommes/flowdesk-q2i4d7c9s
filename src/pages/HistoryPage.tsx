@@ -48,6 +48,7 @@ export default function HistoryPage() {
   const [endDate, setEndDate] = useState<string>('')
   const [search, setSearch] = useState<string>('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [quickDate, setQuickDate] = useState<string>('custom')
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -110,9 +111,29 @@ export default function HistoryPage() {
     setActionType('_all')
     setStartDate('')
     setEndDate('')
+    setQuickDate('custom')
     setSearch('')
     setDebouncedSearch('')
     setCurrentPage(1)
+  }
+
+  const handleQuickDate = (val: string) => {
+    setQuickDate(val)
+    setCurrentPage(1)
+    if (val === '7days') {
+      const d = new Date()
+      d.setDate(d.getDate() - 7)
+      setStartDate(format(d, 'yyyy-MM-dd'))
+      setEndDate('')
+    } else if (val === '30days') {
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      setStartDate(format(d, 'yyyy-MM-dd'))
+      setEndDate('')
+    } else {
+      setStartDate('')
+      setEndDate('')
+    }
   }
 
   return (
@@ -172,26 +193,41 @@ export default function HistoryPage() {
           </SelectContent>
         </Select>
 
-        <div className="flex space-x-2">
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value)
-              setCurrentPage(1)
-            }}
-            className="w-[140px]"
-          />
-          <span className="flex items-center text-muted-foreground">-</span>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value)
-              setCurrentPage(1)
-            }}
-            className="w-[140px]"
-          />
+        <div className="flex space-x-2 items-center flex-wrap gap-y-2">
+          <Select value={quickDate} onValueChange={handleQuickDate}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="custom">Personalizado</SelectItem>
+              <SelectItem value="7days">Últimos 7 dias</SelectItem>
+              <SelectItem value="30days">Últimos 30 dias</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {quickDate === 'custom' && (
+            <>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-[140px]"
+              />
+              <span className="flex items-center text-muted-foreground">-</span>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-[140px]"
+              />
+            </>
+          )}
         </div>
 
         <Button variant="outline" onClick={clearFilters} title="Limpar Filtros">

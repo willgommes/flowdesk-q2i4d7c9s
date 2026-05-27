@@ -267,7 +267,7 @@ export default function BoardPage() {
       const c = await pb.collection('cards').getFullList({
         filter: `board_id = '${id}' && archived != true && is_recurring != true`,
         expand:
-          'card_labels_via_card_id.label_id,card_members_via_card_id.user_id,comments_via_card_id,checklist_items_via_card_id,attachments_via_card_id',
+          'card_labels_via_card_id.label_id,card_members_via_card_id.user_id,comments_via_card_id,checklist_items_via_card_id,attachments_via_card_id,created_by',
         sort: 'sort_order',
       })
       setCards(c)
@@ -868,9 +868,10 @@ export default function BoardPage() {
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
-                          <TableHead className="w-[45%]">Título</TableHead>
+                          <TableHead className="w-[40%]">Título</TableHead>
                           <TableHead>Etiquetas</TableHead>
                           <TableHead>Membros</TableHead>
+                          <TableHead>Criado</TableHead>
                           <TableHead className="w-[140px]">Prazo</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -962,6 +963,18 @@ export default function BoardPage() {
                                   {members.length === 0 && (
                                     <span className="text-xs text-muted-foreground ml-1.5">-</span>
                                   )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3 text-xs text-muted-foreground">
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-foreground/80 truncate">
+                                    {card.expand?.created_by?.name || 'Sistema'}
+                                  </span>
+                                  <span className="text-[10px]">
+                                    {card.created
+                                      ? new Date(card.created).toLocaleDateString('pt-BR')
+                                      : '-'}
+                                  </span>
                                 </div>
                               </TableCell>
                               <TableCell className="py-3">
