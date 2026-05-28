@@ -2,6 +2,7 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { Loader2 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -39,22 +40,41 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean
   withNeon?: boolean
+  loading?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, withNeon = true, ...props }, ref) => {
+  (
+    { className, variant, size, asChild = false, withNeon = true, loading = false, ...props },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : 'button'
 
     const neonStyles = withNeon
-      ? 'before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-3/4 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-blue-600 dark:before:via-blue-500 before:to-transparent before:opacity-0 before:transition-opacity before:duration-500 before:ease-in-out hover:before:opacity-100 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-blue-600 dark:after:via-blue-500 after:to-transparent after:opacity-0 after:transition-opacity after:duration-500 after:ease-in-out hover:after:opacity-30'
+      ? 'before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-3/4 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-blue-500 dark:before:via-blue-500 before:to-transparent before:opacity-0 before:transition-opacity before:duration-500 before:ease-in-out hover:before:opacity-100 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-blue-600 dark:after:via-blue-500 after:to-transparent after:opacity-0 after:transition-opacity after:duration-500 after:ease-in-out hover:after:opacity-30'
       : ''
+
+    if (asChild) {
+      return (
+        <Comp
+          className={cn(buttonVariants({ variant, size, className }), neonStyles)}
+          ref={ref}
+          {...props}
+        />
+      )
+    }
 
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }), neonStyles)}
         ref={ref}
+        disabled={loading || props.disabled}
+        aria-busy={loading ? 'true' : undefined}
         {...props}
-      />
+      >
+        {loading && <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden="true" />}
+        {loading ? <span className="opacity-70 truncate">{props.children}</span> : props.children}
+      </Comp>
     )
   },
 )

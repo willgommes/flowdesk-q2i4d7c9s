@@ -511,18 +511,18 @@ export default function BoardPage() {
           )}
 
           <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar cartões..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-40 lg:w-56 pl-9 pr-8 h-8 text-xs bg-background/50 focus-visible:ring-1"
+              className="w-40 lg:w-56 pl-10 pr-9 h-8 text-xs bg-background/50 focus-visible:ring-1"
             />
             {searchQuery && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground"
                 onClick={() => setSearchQuery('')}
               >
                 <X className="w-3 h-3" />
@@ -569,6 +569,7 @@ export default function BoardPage() {
             <Button
               variant="outline"
               size="sm"
+              loading={syncing}
               onClick={async () => {
                 try {
                   setSyncing(true)
@@ -588,10 +589,9 @@ export default function BoardPage() {
                   setSyncing(false)
                 }
               }}
-              disabled={syncing}
               className="h-8 text-xs bg-background/50 shrink-0 border-primary/20"
             >
-              <RefreshCw className={cn('w-3.5 h-3.5 sm:mr-2', syncing && 'animate-spin')} />
+              {!syncing && <RefreshCw className="w-3.5 h-3.5 sm:mr-2" />}
               <span className="hidden sm:inline">Sincronizar Agenda</span>
             </Button>
           )}
