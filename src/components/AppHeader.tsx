@@ -10,10 +10,10 @@ export function AppHeader({ rightAction }: { rightAction?: React.ReactNode }) {
   if (location.pathname.startsWith('/perfil')) title = 'Meu Perfil'
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-background z-10 sticky top-0">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-4 bg-white/5 backdrop-blur-md z-10 sticky top-0 text-gray-100">
       <div className="flex items-center gap-2">
-        <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
-        <Separator orientation="vertical" className="h-4" />
+        <SidebarTrigger className="-ml-1 text-gray-400 hover:text-gray-100" />
+        <Separator orientation="vertical" className="h-4 bg-white/20" />
         <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
       </div>
       <div>{rightAction}</div>

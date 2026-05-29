@@ -6,41 +6,40 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --background: 220 36% 7%; /* #0b0f17 */
+    --foreground: 0 0% 95%; /* gray-100 */
+    --card: 220 36% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 220 36% 10%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Primary Accent: #AA1677 */
-    --primary: 321 77% 38%;
+    --primary: 321 77% 58%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary Accent (Warning/Subtle details): #FFC300 */
-    --secondary: 46 100% 50%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 46 100% 40%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 321 77% 96%;
-    --accent-foreground: 321 77% 38%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 321 77% 38%;
+    --muted: 220 36% 15%;
+    --muted-foreground: 0 0% 60%; /* gray-400 */
+    --accent: 220 36% 15%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 84% 60%; /* red-500 */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 60%;
+    --input: 0 0% 100%;
+    --ring: 160 84% 39%; /* emerald-400 */
     --radius: 0.5rem;
 
-    /* Sidebar Neutrals */
-    --sidebar-background: 210 40% 98%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 321 77% 38%;
+    --sidebar-background: 220 36% 7%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 321 77% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 321 77% 96%;
-    --sidebar-accent-foreground: 321 77% 38%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 321 77% 38%;
+    --sidebar-accent: 220 36% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 100%;
+    --sidebar-ring: 160 84% 39%;
 
     --chart-1: 0 84.2% 60.2%;
     --chart-2: 142.1 70.6% 45.3%;
@@ -50,34 +49,34 @@
   }
 
   .dark {
-    --background: 0 0% 10%;
-    --foreground: 0 0% 96%;
-    --card: 0 0% 14%;
-    --card-foreground: 0 0% 96%;
-    --popover: 0 0% 14%;
-    --popover-foreground: 0 0% 96%;
+    --background: 220 36% 7%;
+    --foreground: 0 0% 95%;
+    --card: 220 36% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 220 36% 10%;
+    --popover-foreground: 0 0% 95%;
     --primary: 321 77% 58%;
     --primary-foreground: 0 0% 100%;
     --secondary: 46 100% 40%;
     --secondary-foreground: 0 0% 96%;
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 20%;
-    --accent-foreground: 0 0% 96%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 96%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 321 77% 58%;
+    --muted: 220 36% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 220 36% 15%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 60%;
+    --input: 0 0% 100%;
+    --ring: 160 84% 39%;
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 96%;
+    --sidebar-background: 220 36% 7%;
+    --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 321 77% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 20%;
-    --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 321 77% 58%;
+    --sidebar-accent: 220 36% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 100%;
+    --sidebar-ring: 160 84% 39%;
 
     --chart-1: 0 62.8% 30.6%;
     --chart-2: 142.1 70.6% 45.3%;
@@ -87,10 +86,10 @@
   }
 
   * {
-    @apply border-border;
+    border-color: hsl(var(--border) / 0.2);
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-[#0b0f17] text-gray-100 font-sans antialiased;
   }
 
   section[aria-label='Notifications alt+T'],
@@ -99,7 +98,6 @@
     margin: 0 !important;
   }
 
-  /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -132,8 +130,6 @@
   .animate-fade-in {
     animation: fade-in 0.4s ease-out;
   }
-
-  /* Custom micro-interactions */
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-[1.02];
   }
@@ -157,7 +153,6 @@
     background-color: white !important;
     color: black !important;
   }
-
   @page {
     margin: 1.5cm;
     size: A4;

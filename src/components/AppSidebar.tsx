@@ -64,11 +64,15 @@ export function AppSidebar() {
   const avatarUrl = user.avatar ? pb.files.getURL(user as any, user.avatar) : ''
 
   return (
-    <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="p-4 flex h-16 items-center flex-row">
-        <div className="flex items-center gap-2 font-display font-bold text-xl tracking-tight text-foreground">
-          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-white" />
+    <Sidebar
+      variant="sidebar"
+      collapsible="icon"
+      className="border-r border-white/10 bg-[#0b0f17]/50 backdrop-blur-xl"
+    >
+      <SidebarHeader className="p-4 flex h-16 items-center flex-row border-b border-white/10">
+        <div className="flex items-center gap-2 font-display font-bold text-xl tracking-tight text-gray-100">
+          <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-[#0b0f17]" />
           </div>
           {state === 'expanded' && <span>FlowDesk</span>}
         </div>
@@ -86,8 +90,8 @@ export function AppSidebar() {
                   tooltip={item.name}
                   className={
                     isActive
-                      ? 'relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-8 before:bg-primary before:rounded-r-md bg-accent text-accent-foreground'
-                      : ''
+                      ? 'relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-8 before:bg-emerald-500 before:rounded-r-md bg-white/10 text-emerald-400 hover:bg-white/15'
+                      : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
                   }
                 >
                   <Link to={item.href} className="flex items-center gap-3">
@@ -101,27 +105,27 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t">
+      <SidebarFooter className="p-2 border-t border-white/10">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="w-full data-[state=open]:bg-white/10 data-[state=open]:text-white hover:bg-white/5"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={avatarUrl} alt={user.name} />
-                <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+                <AvatarFallback className="rounded-lg bg-emerald-500/20 text-emerald-400">
                   {user.name?.substring(0, 2).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <span className="truncate font-semibold text-gray-100">{user.name}</span>
+                <span className="truncate text-xs text-gray-400">{user.email}</span>
               </div>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border border-white/20 bg-[#0b0f17]/90 backdrop-blur-xl text-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
             align="end"
             side="right"
             sideOffset={4}
@@ -130,18 +134,21 @@ export function AppSidebar() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={avatarUrl} alt={user.name} />
-                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+                  <AvatarFallback className="rounded-lg bg-emerald-500/20 text-emerald-400">
                     {user.name?.substring(0, 2).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                  <span className="truncate font-semibold text-gray-100">{user.name}</span>
+                  <span className="truncate text-xs text-gray-400">{user.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="cursor-pointer">
+            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer hover:bg-white/10 focus:bg-white/10"
+            >
               <Link to="/perfil">Meu Perfil</Link>
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -150,14 +157,14 @@ export function AppSidebar() {
                 const newTheme = user.theme === 'dark' ? 'light' : 'dark'
                 updateTheme(newTheme)
               }}
-              className="cursor-pointer flex items-center justify-between"
+              className="cursor-pointer flex items-center justify-between hover:bg-white/10 focus:bg-white/10"
             >
               <span>Modo Escuro</span>
               {user.theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={logout}
-              className="cursor-pointer text-destructive focus:text-destructive"
+              className="cursor-pointer text-red-400 focus:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10"
             >
               Sair
             </DropdownMenuItem>
