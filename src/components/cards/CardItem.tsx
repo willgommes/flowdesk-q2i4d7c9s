@@ -135,19 +135,19 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
     const isOverdue = date < now
 
     if (isCompleted) {
-      dateBadgeClass = 'bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20'
+      dateBadgeClass = 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
     } else if (isOverdue) {
-      dateBadgeClass = 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+      dateBadgeClass = 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
     } else if (isToday(cardDate)) {
       dateBadgeClass =
         'bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20'
     } else if (cardDate <= addDays(today, 7)) {
       dateBadgeClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20'
     } else {
-      dateBadgeClass = 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+      dateBadgeClass = 'bg-secondary text-gray-100 hover:bg-secondary/80'
     }
   } else {
-    dateBadgeClass = 'bg-muted/50 text-muted-foreground border border-dashed border-border'
+    dateBadgeClass = 'bg-muted/50 text-gray-400 border border-dashed border-border'
   }
 
   const handleOpenChange = (open: boolean) => {
@@ -309,7 +309,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
         )}
         <div className="flex items-start gap-2 mb-2 w-full">
           {isEffectivelyCompleted ? (
-            <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
           ) : (
             <div
               className="w-2 h-2 rounded-full bg-yellow-500 shrink-0 mt-1.5"
@@ -319,7 +319,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
           <h4
             className={cn(
               'text-sm font-medium break-words whitespace-normal leading-snug flex-1 min-w-0 pr-20 transition-all duration-300',
-              isEffectivelyCompleted ? 'line-through text-muted-foreground' : '',
+              isEffectivelyCompleted ? 'line-through text-gray-400' : 'text-gray-100',
             )}
           >
             {localCard.title}
@@ -330,7 +330,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
           <div className="mb-3 w-full pr-8">
             <div
               className={cn(
-                'text-xs text-muted-foreground/90 prose prose-sm dark:prose-invert max-w-none break-words leading-tight [&>p]:mb-1 [&>p]:mt-0 [&>ul]:my-1 [&>ol]:my-1 [&>ul]:pl-4 [&>ol]:pl-4 [&>ul]:list-disc [&>ol]:list-decimal',
+                'text-xs text-gray-400 prose prose-sm dark:prose-invert max-w-none break-words leading-tight [&>p]:mb-1 [&>p]:mt-0 [&>ul]:my-1 [&>ol]:my-1 [&>ul]:pl-4 [&>ol]:pl-4 [&>ul]:list-disc [&>ol]:list-decimal',
                 !isExpanded && 'line-clamp-3',
               )}
               onClick={(e) => {
@@ -383,7 +383,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
               }}
               title="Mover para Concluído"
             >
-              <CheckSquare className="w-3.5 h-3.5 text-green-500" />
+              <CheckSquare className="w-3.5 h-3.5 text-emerald-500" />
             </div>
           )}
           <DropdownMenu>
@@ -397,12 +397,12 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                 }}
                 title="Mais ações"
               >
-                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                <MoreHorizontal className="w-4 h-4 text-gray-400" />
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem
-                className="text-destructive focus:text-destructive cursor-pointer"
+                className="text-red-500 focus:text-red-500 cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -416,7 +416,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
           </DropdownMenu>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground mt-3 w-full">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400 mt-3 w-full">
           <div className="flex flex-wrap items-center gap-3">
             {!isEffectivelyCompleted ? (
               <Popover open={isDatePopoverOpen} onOpenChange={handleOpenChange}>
@@ -456,7 +456,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                 >
                   <div className="flex flex-col gap-4">
                     <div className="flex flex-col space-y-1">
-                      <span className="text-sm font-medium">Prazo de Entrega</span>
+                      <span className="text-sm font-medium text-gray-100">Prazo de Entrega</span>
                     </div>
                     <CalendarComponent
                       mode="single"
@@ -476,7 +476,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                         className="h-8 w-16 text-center"
                         placeholder="HH"
                       />
-                      <span className="text-muted-foreground font-bold">:</span>
+                      <span className="text-gray-400 font-bold">:</span>
                       <Input
                         type="number"
                         min={0}
@@ -499,7 +499,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                       )}
                     </div>
                     {isInvalidDate && (
-                      <span className="text-xs text-destructive font-medium">
+                      <span className="text-xs text-red-500 font-medium">
                         A data/hora não pode ser no passado.
                       </span>
                     )}
@@ -508,7 +508,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 px-2"
+                          className="h-8 text-red-500 hover:text-red-500 hover:bg-red-500/10 px-2"
                           onClick={handleRemoveDate}
                         >
                           Remover
@@ -571,7 +571,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
 
         {checklistCount > 0 && (
           <div className="mt-3 space-y-1.5 w-full">
-            <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium">
+            <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
               <span className="flex items-center gap-1">
                 <CheckSquare className="w-3 h-3" />
                 {checklistCompleted}/{checklistCount}
@@ -582,7 +582,7 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
           </div>
         )}
 
-        <div className="mt-3 text-[10px] text-muted-foreground/70 flex items-center justify-between border-t border-border/50 pt-2 w-full truncate">
+        <div className="mt-3 text-[10px] text-gray-400 flex items-center justify-between border-t border-border/50 pt-2 w-full truncate">
           <span className="truncate pr-2">
             Criado por {localCard.expand?.created_by?.name || 'Sistema'}
           </span>

@@ -108,12 +108,18 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome *</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+            />
           </div>
           <div className="space-y-2">
             <Label>Cliente</Label>
             <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger>
+              <SelectTrigger className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50">
                 <SelectValue placeholder="Selecione um cliente" />
               </SelectTrigger>
               <SelectContent>
@@ -132,6 +138,7 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
               id="desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                   e.preventDefault()
@@ -176,7 +183,7 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
           {board && syncData && (
             <div className="space-y-2 pt-4 border-t">
               <Label>Sincronização Google Calendar</Label>
-              <div className="text-sm text-muted-foreground flex flex-col gap-1">
+              <div className="text-sm text-gray-400 flex flex-col gap-1">
                 <span>Status: {syncData.is_active ? '🟢 Ativa' : '🔴 Inativa'}</span>
                 <span>
                   Última sinc:{' '}

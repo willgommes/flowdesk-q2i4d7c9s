@@ -70,7 +70,7 @@ export function Checklist({ cardId, items, onChange }: any) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Progresso {percent}%</span>
+        <span className="text-sm font-medium text-gray-100">Progresso {percent}%</span>
         <div className="h-2 flex-1 bg-muted rounded-full overflow-hidden">
           <div className="h-full bg-primary transition-all" style={{ width: `${percent}%` }} />
         </div>
@@ -87,7 +87,7 @@ export function Checklist({ cardId, items, onChange }: any) {
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, item.id)}
             >
-              <div className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+              <div className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-100">
                 <GripVertical className="w-4 h-4" />
               </div>
               <Checkbox
@@ -95,14 +95,14 @@ export function Checklist({ cardId, items, onChange }: any) {
                 onCheckedChange={() => toggle(item.id, item.completed)}
               />
               <span
-                className={`text-sm flex-1 ${item.completed ? 'line-through text-muted-foreground' : ''}`}
+                className={`text-sm flex-1 ${item.completed ? 'line-through text-gray-400' : 'text-gray-100'}`}
               >
                 {item.text}
               </span>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                className="h-6 w-6 text-gray-400 hover:text-red-500"
                 onClick={() => remove(item.id)}
               >
                 ×
@@ -115,7 +115,7 @@ export function Checklist({ cardId, items, onChange }: any) {
         onChange={(e) => setNewItem(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
         placeholder="Adicionar item..."
-        className="h-8 text-sm"
+        className="h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
       />
     </div>
   )

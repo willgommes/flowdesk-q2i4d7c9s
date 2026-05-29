@@ -165,10 +165,10 @@ export default function BoardsPage() {
       <div className="p-8 max-w-6xl mx-auto w-full flex-1">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
+            <h1 className="text-3xl font-display font-semibold tracking-tight text-gray-100">
               Quadros
             </h1>
-            <p className="text-muted-foreground">Gerencie seus projetos e processos.</p>
+            <p className="text-gray-400">Gerencie seus projetos e processos.</p>
           </div>
           <div className="flex items-center gap-4">
             {isAdmin && (
@@ -189,7 +189,7 @@ export default function BoardsPage() {
 
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               placeholder="Buscar por nome ou cliente..."
               value={search}
@@ -201,7 +201,7 @@ export default function BoardsPage() {
           <Select value={selectedClient} onValueChange={setSelectedClient}>
             <SelectTrigger className="w-full sm:w-[200px]">
               <div className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-muted-foreground" />
+                <Briefcase className="w-4 h-4 text-gray-400" />
                 <SelectValue placeholder="Filtrar por cliente" />
               </div>
             </SelectTrigger>
@@ -222,9 +222,9 @@ export default function BoardsPage() {
           </div>
         ) : filteredBoards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 rounded-lg border border-dashed animate-fade-in">
-            <LayoutTemplate className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">Nenhum quadro encontrado</h3>
-            <p className="text-muted-foreground max-w-sm mb-4">
+            <LayoutTemplate className="w-16 h-16 text-gray-400 mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-gray-100">Nenhum quadro encontrado</h3>
+            <p className="text-gray-400 max-w-sm mb-4">
               {search
                 ? 'Tente buscar com outros termos.'
                 : 'Crie seu primeiro quadro para começar a organizar seus projetos.'}
@@ -254,7 +254,7 @@ export default function BoardsPage() {
                         </span>
                       </CardTitle>
                       {(board.client_name || board.expand?.client_id) && (
-                        <CardDescription className="mt-2 font-medium text-foreground/70 break-words whitespace-normal flex items-center gap-1.5">
+                        <CardDescription className="mt-2 font-medium text-gray-400 break-words whitespace-normal flex items-center gap-1.5">
                           {board.expand?.client_id?.logo && (
                             <img
                               src={pb.files.getURL(
@@ -280,7 +280,7 @@ export default function BoardsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="w-8 h-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 data-[state=open]:opacity-100"
+                            className="w-8 h-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 data-[state=open]:opacity-100"
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
@@ -298,7 +298,7 @@ export default function BoardsPage() {
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                className="text-red-500 focus:text-red-500 focus:bg-red-500/10"
                                 onClick={() => setBoardToDelete(board)}
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
@@ -312,11 +312,11 @@ export default function BoardsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-col flex-1">
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4 break-words whitespace-normal">
+                  <p className="text-sm text-gray-400 line-clamp-2 mb-4 break-words whitespace-normal">
                     {board.description || 'Sem descrição'}
                   </p>
                   <div className="flex flex-col gap-2 mb-4">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between text-xs text-gray-400">
                       <div className="flex items-center gap-1.5 font-medium">
                         <ListTodo className="w-3.5 h-3.5" />
                         <span>
@@ -356,7 +356,7 @@ export default function BoardsPage() {
                         </Avatar>
                       ))}
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-gray-400">
                       {board.updated
                         ? formatDistanceToNow(new Date(board.updated), {
                             addSuffix: true,

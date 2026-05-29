@@ -109,9 +109,11 @@ export function ArchivedCardsSheet({ open, onOpenChange, boardId }: ArchivedCard
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               </div>
             ) : cards.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground bg-muted/30 rounded-xl border border-dashed border-border/60">
+              <div className="flex flex-col items-center justify-center py-12 text-center text-gray-400 bg-muted/30 rounded-xl border border-dashed border-border/60">
                 <ArchiveX className="w-12 h-12 mb-4 opacity-20" />
-                <p className="text-sm font-medium">Nenhum cartão arquivado encontrado.</p>
+                <p className="text-sm font-medium text-gray-100">
+                  Nenhum cartão arquivado encontrado.
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -121,8 +123,10 @@ export function ArchivedCardsSheet({ open, onOpenChange, boardId }: ArchivedCard
                     className="bg-muted/30 border border-border rounded-lg p-4 flex flex-col gap-3 transition-colors hover:bg-muted/50"
                   >
                     <div>
-                      <h4 className="font-medium text-sm leading-tight mb-2">{card.title}</h4>
-                      <Badge variant="secondary" className="text-[10px] font-normal">
+                      <h4 className="font-medium text-sm leading-tight mb-2 text-gray-100">
+                        {card.title}
+                      </h4>
+                      <Badge variant="secondary" className="text-[10px] font-normal text-gray-100">
                         Coluna: {card.expand?.column_id?.name || 'Desconhecida'}
                       </Badge>
                     </div>

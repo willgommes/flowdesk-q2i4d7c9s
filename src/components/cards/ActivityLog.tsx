@@ -33,7 +33,7 @@ export function ActivityLog({ cardId }: { cardId: string }) {
   return (
     <div className="space-y-3 bg-muted/30 p-3 rounded-lg">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-semibold text-muted-foreground">Histórico de Atividades</span>
+        <span className="text-sm font-semibold text-gray-400">Histórico de Atividades</span>
         <Button
           variant="ghost"
           size="sm"
@@ -49,12 +49,12 @@ export function ActivityLog({ cardId }: { cardId: string }) {
             <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary/50 border-2 border-background" />
             <div className="flex flex-col">
               <div className="flex gap-1.5 items-center">
-                <span className="font-semibold text-foreground">
+                <span className="font-semibold text-gray-100">
                   {log.expand?.user_id?.name || 'Alguém'}
                 </span>
-                <span className="text-muted-foreground">{log.description}</span>
+                <span className="text-gray-400">{log.description}</span>
               </div>
-              <span className="text-xs text-muted-foreground mt-0.5">
+              <span className="text-xs text-gray-400 mt-0.5">
                 {format(new Date(log.created), `dd/MM/yyyy ${timeFormatStr}`)}
               </span>
             </div>

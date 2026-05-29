@@ -201,7 +201,7 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
           </Button>
         </div>
         <RichTextEditor value={description} onChange={setDescription} onBlur={handleDescBlur} />
-        <p className="text-[10px] text-muted-foreground mt-1 flex justify-end">
+        <p className="text-[10px] text-gray-400 mt-1 flex justify-end">
           Pressione Ctrl+Enter para salvar
         </p>
       </div>
@@ -244,7 +244,7 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
         </div>
       ) : (
         <div
-          className="cursor-pointer rounded-md bg-muted/20 p-4 text-sm text-muted-foreground hover:bg-muted/50 transition-colors h-24 flex items-center justify-center border border-dashed group-hover:border-primary/50 group-hover:text-primary/70"
+          className="cursor-pointer rounded-md bg-muted/20 p-4 text-sm text-gray-400 hover:bg-muted/50 transition-colors h-24 flex items-center justify-center border border-dashed group-hover:border-primary/50 group-hover:text-primary/70"
           onClick={() => setIsEditing(true)}
         >
           Adicione uma descrição mais detalhada...
@@ -557,7 +557,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
     <div className="flex h-auto md:h-full md:max-h-full flex-col md:flex-row md:overflow-hidden">
       <div className="flex-1 md:overflow-y-auto p-4 md:p-6 space-y-6 md:space-y-8 bg-background">
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-2 font-medium">
+          <div className="flex flex-wrap items-center text-sm text-gray-400 gap-2 font-medium">
             <LayoutTemplate className="w-4 h-4" />
             <span>{board.name}</span>
             {(card.is_recurring || (card.recurrence_days && card.recurrence_days.length > 0)) && (
@@ -576,9 +576,9 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 e.currentTarget.blur()
               }
             }}
-            className={`text-2xl font-bold border-none shadow-none px-0 focus-visible:ring-0 h-auto ${card.completed ? 'line-through text-muted-foreground' : ''}`}
+            className={`text-2xl font-bold px-3 py-1 h-auto ${card.completed ? 'line-through text-gray-400' : 'text-gray-100'} rounded-lg border border-white/30 bg-white/10 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50`}
           />
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-gray-400">
             Criado por {card.expand?.created_by?.name || 'Sistema'}{' '}
             {card.created
               ? `em ${format(new Date(card.created), "d 'de' MMM, yyyy 'às' HH:mm", {
@@ -590,7 +590,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
 
         <div className="flex flex-wrap gap-6">
           <div className="space-y-1.5">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase">Membros</h4>
+            <h4 className="text-xs font-semibold text-gray-400 uppercase">Membros</h4>
             <div className="flex flex-wrap gap-1.5 items-center">
               {members.length > 0 ? (
                 members.map((cm: any) => {
@@ -613,16 +613,14 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   )
                 })
               ) : (
-                <span className="text-sm text-muted-foreground italic h-8 flex items-center">
-                  Nenhum
-                </span>
+                <span className="text-sm text-gray-400 italic h-8 flex items-center">Nenhum</span>
               )}
             </div>
           </div>
 
           {labels.length > 0 && (
             <div className="space-y-1.5">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase">Etiquetas</h4>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase">Etiquetas</h4>
               <div className="flex flex-wrap gap-2">
                 {labels.map(
                   (cl: any) =>
@@ -642,8 +640,8 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <LayoutTemplate className="w-5 h-5 text-muted-foreground" /> Descrição
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-100">
+            <LayoutTemplate className="w-5 h-5 text-gray-400" /> Descrição
           </h3>
           <DescriptionContainer
             card={card}
@@ -655,16 +653,16 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <CheckSquare className="w-5 h-5 text-muted-foreground" /> Checklist
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-100">
+            <CheckSquare className="w-5 h-5 text-gray-400" /> Checklist
           </h3>
           <Checklist cardId={card.id} items={checklist} onChange={onChange} />
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Paperclip className="w-5 h-5 text-muted-foreground" /> Anexos
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-100">
+              <Paperclip className="w-5 h-5 text-gray-400" /> Anexos
             </h3>
             <Button
               variant="outline"
@@ -693,30 +691,32 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                         alt={a.name}
                       />
                     ) : (
-                      <Paperclip className="w-8 h-8 text-muted-foreground" />
+                      <Paperclip className="w-8 h-8 text-gray-400" />
                     )}
                   </div>
-                  <div className="p-2 text-xs truncate font-medium bg-background">{a.name}</div>
+                  <div className="p-2 text-xs truncate font-medium bg-background text-gray-100">
+                    {a.name}
+                  </div>
                 </a>
               ))}
             </div>
           ) : (
-            <div className="text-sm text-muted-foreground border-2 border-dashed p-6 text-center rounded-lg">
+            <div className="text-sm text-gray-400 border-2 border-dashed p-6 text-center rounded-lg">
               Nenhum anexo neste cartão.
             </div>
           )}
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Activity className="w-5 h-5 text-muted-foreground" /> Atividades
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-100">
+            <Activity className="w-5 h-5 text-gray-400" /> Atividades
           </h3>
           <ActivityLog cardId={card.id} />
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-muted-foreground" /> Comentários
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-100">
+            <MessageSquare className="w-5 h-5 text-gray-400" /> Comentários
           </h3>
           <Comments cardId={card.id} comments={comments} onChange={onChange} />
         </div>
@@ -746,7 +746,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
 
         <div className="space-y-3">
-          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
             Adicionar ao cartão
           </h4>
 
@@ -761,7 +761,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-3" align="end">
-                <h4 className="font-semibold text-sm mb-3">Membros do Quadro</h4>
+                <h4 className="font-semibold text-sm mb-3 text-gray-100">Membros do Quadro</h4>
                 <div className="space-y-1">
                   {board.expand?.members?.map((m: any) => {
                     const isAssigned = members.some((cm: any) => cm.user_id === m.id)
@@ -805,7 +805,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-3" align="end">
-                <h4 className="font-semibold text-sm mb-3">Etiquetas</h4>
+                <h4 className="font-semibold text-sm mb-3 text-gray-100">Etiquetas</h4>
                 <div className="space-y-1 max-h-48 overflow-auto mb-3">
                   {boardLabels.map((l: any) => {
                     const isActive = labels.some((cl: any) => cl.label_id === l.id)
@@ -831,7 +831,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6 text-muted-foreground hover:text-primary"
+                              className="h-6 w-6 text-gray-400 hover:text-primary"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 setEditingLabel(l)
@@ -843,7 +843,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                className="h-6 w-6 text-gray-400 hover:text-red-500"
                                 title="Remover do cartão"
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -870,7 +870,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   className="space-y-3 border-t pt-3 mt-2"
                 >
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-xs text-muted-foreground">
+                    <h4 className="font-medium text-xs text-gray-400">
                       {editingLabel ? 'Editar Etiqueta' : 'Nova Etiqueta'}
                     </h4>
                     {editingLabel && (
@@ -890,7 +890,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     placeholder="Nome da etiqueta..."
                     required
                     defaultValue={editingLabel?.name}
-                    className="h-8 text-sm"
+                    className="h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
                   />
                   <div className="flex flex-wrap gap-1.5 justify-between">
                     {LABEL_COLORS.map((c) => (
@@ -935,13 +935,13 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
               <PopoverContent className="w-72 p-3" align="end">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-sm">Tarefa Recorrente</h4>
+                    <h4 className="font-semibold text-sm text-gray-100">Tarefa Recorrente</h4>
                     <Switch checked={isRecurring} onCheckedChange={handleRecurrenceChange} />
                   </div>
                   {isRecurring && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                        <label className="text-xs font-medium text-gray-400 mb-1.5 block">
                           Repetir nos dias
                         </label>
                         <div className="flex justify-between gap-1">
@@ -952,7 +952,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                                 'w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center transition-colors',
                                 recurrenceDays.includes(d.value)
                                   ? 'bg-indigo-600 text-white'
-                                  : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                                  : 'bg-muted text-gray-400 hover:bg-muted/80',
                               )}
                               onClick={() => toggleRecurrenceDay(d.value)}
                             >
@@ -962,14 +962,14 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                         </div>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                        <label className="text-xs font-medium text-gray-400 mb-1.5 block">
                           Horário de Entrega
                         </label>
                         <Input
                           type="time"
                           value={recurrenceTime}
                           onChange={(e) => updateRecurrenceConfig(recurrenceDays, e.target.value)}
-                          className="h-8 text-sm"
+                          className="h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
                         />
                       </div>
                     </div>
@@ -1039,7 +1039,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 />
                 <div className="p-3 border-t border-border flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <Clock className="w-4 h-4 text-gray-400" />
                     <Input
                       type="time"
                       value={timeStr}
@@ -1080,14 +1080,14 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           onChange()
                         }
                       }}
-                      className="w-[100px] h-8 text-sm"
+                      className="w-[100px] h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
                     />
                   </div>
                   {card.due_date && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive h-8 px-2"
+                      className="text-red-500 hover:text-red-500 h-8 px-2"
                       onClick={async () => {
                         await pb.collection('cards').update(card.id, { due_date: null })
                         await logAct('date_change', 'Removeu a data de entrega')
@@ -1105,9 +1105,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
 
         <div className="space-y-3 pt-2 md:pt-6">
-          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Ações
-          </h4>
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Ações</h4>
 
           <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
             <Popover>
@@ -1120,7 +1118,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-3" align="end">
-                <h4 className="font-semibold text-sm mb-3">Mover para Coluna</h4>
+                <h4 className="font-semibold text-sm mb-3 text-gray-100">Mover para Coluna</h4>
                 <Select
                   value={card.column_id}
                   onValueChange={async (val) => {
@@ -1130,7 +1128,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     onChange()
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50">
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1162,11 +1160,11 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
 
             <Button
               variant="secondary"
-              className="w-full justify-start bg-destructive/10 hover:bg-destructive/20 border border-transparent hover:border-destructive/30"
+              className="w-full justify-start bg-red-500/10 hover:bg-red-500/20 border border-transparent hover:border-red-500/30"
               onClick={handleDelete}
             >
-              <Trash2 className="w-4 h-4 mr-2 text-destructive" />{' '}
-              <span className="text-destructive font-medium">Excluir</span>
+              <Trash2 className="w-4 h-4 mr-2 text-red-500" />{' '}
+              <span className="text-red-500 font-medium">Excluir</span>
             </Button>
           </div>
         </div>

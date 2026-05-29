@@ -43,7 +43,7 @@ export function Comments({ cardId, comments, onChange }: any) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Escreva um comentário..."
-            className="min-h-[80px]"
+            className="min-h-[80px] rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
           />
           <Button onClick={handleAdd} size="sm">
             Salvar Comentário
@@ -68,8 +68,10 @@ export function Comments({ cardId, comments, onChange }: any) {
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{c.expand?.user_id?.name}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-sm text-gray-100">
+                      {c.expand?.user_id?.name}
+                    </span>
+                    <span className="text-xs text-gray-400">
                       {new Date(c.created).toLocaleString()}
                     </span>
                   </div>
@@ -77,14 +79,14 @@ export function Comments({ cardId, comments, onChange }: any) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive transition-opacity"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-red-500 transition-opacity"
                       onClick={() => remove(c.id)}
                     >
                       ×
                     </Button>
                   )}
                 </div>
-                <p className="text-sm mt-1 bg-muted/50 p-3 rounded-lg">{c.content}</p>
+                <p className="text-sm mt-1 bg-muted/50 p-3 rounded-lg text-gray-100">{c.content}</p>
               </div>
             </div>
           ))}
