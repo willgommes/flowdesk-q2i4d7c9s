@@ -13,7 +13,7 @@
     --popover: 220 36% 10%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 321 77% 58%;
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 46 100% 40%;
@@ -34,7 +34,7 @@
 
     --sidebar-background: 220 36% 7%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 321 77% 58%;
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 36% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
@@ -55,7 +55,7 @@
     --card-foreground: 0 0% 95%;
     --popover: 220 36% 10%;
     --popover-foreground: 0 0% 95%;
-    --primary: 321 77% 58%;
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
     --secondary: 46 100% 40%;
     --secondary-foreground: 0 0% 96%;
@@ -71,7 +71,7 @@
 
     --sidebar-background: 220 36% 7%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 321 77% 58%;
+    --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 36% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
@@ -99,22 +99,22 @@
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.3);
+    background-color: hsl(var(--muted-foreground) / 0.2);
     border-radius: 10px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground) / 0.5);
+    background-color: hsl(var(--primary) / 0.5);
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
   }
 }
 

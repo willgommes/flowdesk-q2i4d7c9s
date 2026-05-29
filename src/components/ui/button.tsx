@@ -14,7 +14,7 @@ const buttonVariants = cva(
         default:
           'bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 active:bg-white/15',
         solid:
-          'bg-blue-500 text-white hover:bg-blue-600 border border-transparent hover:border-white/50 duration-200 active:bg-blue-700',
+          'bg-primary text-primary-foreground hover:bg-primary/90 border border-transparent hover:border-white/50 duration-200 active:bg-primary/80',
         ghost:
           'bg-transparent border border-transparent hover:border-white/10 hover:bg-white/5 active:bg-white/10',
         destructive:
@@ -54,7 +54,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : 'button'
 
     const neonStyles = withNeon
-      ? 'before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-3/4 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-blue-500 dark:before:via-blue-500 before:to-transparent before:opacity-0 before:transition-opacity before:duration-500 before:ease-in-out hover:before:opacity-100 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-blue-600 dark:after:via-blue-500 after:to-transparent after:opacity-0 after:transition-opacity after:duration-500 after:ease-in-out hover:after:opacity-30'
+      ? 'before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-3/4 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-primary dark:before:via-primary before:to-transparent before:opacity-0 before:transition-opacity before:duration-500 before:ease-in-out hover:before:opacity-100 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-primary dark:after:via-primary after:to-transparent after:opacity-0 after:transition-opacity after:duration-500 after:ease-in-out hover:after:opacity-30'
       : ''
 
     if (asChild) {

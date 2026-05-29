@@ -90,7 +90,7 @@ export default function RoutinePerformancePage() {
           </p>
         </div>
 
-        <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-sm overflow-hidden transition-all duration-300 hover:bg-white/10 focus-within:shadow-lg">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>

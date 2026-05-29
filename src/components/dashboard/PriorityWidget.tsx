@@ -53,7 +53,7 @@ export function PriorityWidget({
   const priorityTasks = priorityCards.filter((c) => !c.completed).slice(0, 5)
 
   return (
-    <Card className="border-border/60 shadow-subtle flex flex-col h-full bg-card group/widget">
+    <Card className="flex flex-col h-full group/widget">
       <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0 cursor-grab active:cursor-grabbing">
         <div>
           <CardTitle className="text-base flex items-center gap-2">
@@ -80,12 +80,12 @@ export function PriorityWidget({
                 <Link key={task.id} to={`/boards/${task.board_id}/cards/${task.id}`}>
                   <div
                     className={cn(
-                      'flex flex-col p-2.5 rounded-md border bg-card hover:bg-accent/50 transition-colors group',
+                      'flex flex-col p-2.5 rounded-md border bg-white/5 hover:bg-white/10 transition-colors group',
                       isUrgent
                         ? 'border-red-500/40 bg-red-50/30 dark:bg-red-950/10'
                         : isHigh
                           ? 'border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10'
-                          : 'border-border/40',
+                          : 'border-border/20',
                     )}
                   >
                     <div className="flex justify-between items-start gap-2 mb-1">
@@ -127,7 +127,7 @@ export function PriorityWidget({
             })}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/50 rounded-lg bg-muted/10">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/20 rounded-lg bg-white/5">
             <CheckCircle2 className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhuma tarefa urgente</p>
           </div>

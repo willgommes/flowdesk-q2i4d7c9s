@@ -21,7 +21,7 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
     .slice(0, 5)
 
   return (
-    <Card className="border-border/60 shadow-subtle flex flex-col h-full bg-card group/widget">
+    <Card className="flex flex-col h-full group/widget">
       <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0 cursor-grab active:cursor-grabbing">
         <div>
           <CardTitle className="text-base flex items-center gap-2">
@@ -50,7 +50,7 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
               const isOverdue = isPast(due)
               return (
                 <Link key={task.id} to={`/boards/${task.board_id}/cards/${task.id}`}>
-                  <div className="flex flex-col p-2.5 rounded-md border border-border/40 bg-card hover:bg-accent/50 transition-colors group">
+                  <div className="flex flex-col p-2.5 rounded-md border border-border/20 bg-white/5 hover:bg-white/10 transition-colors group">
                     <div className="flex justify-between items-start gap-2 mb-1">
                       <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                         {task.title}
@@ -86,7 +86,7 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
             })}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/50 rounded-lg bg-muted/10">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/20 rounded-lg bg-white/5">
             <Clock className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhum prazo próximo</p>
           </div>

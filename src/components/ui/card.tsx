@@ -7,7 +7,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        'rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl text-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.15)]',
+        'rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg text-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-all duration-300 hover:bg-white/10 hover:shadow-lg focus-within:shadow-lg',
         className,
       )}
       {...props}
@@ -21,7 +21,7 @@ const InnerCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
     <div
       ref={ref}
       className={cn(
-        'rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg p-2 sm:p-3 text-gray-100',
+        'rounded-lg border border-white/10 bg-white/5 backdrop-blur-md p-2 sm:p-3 text-gray-100 transition-all duration-300 hover:bg-white/10 hover:shadow-lg focus-within:shadow-lg',
         className,
       )}
       {...props}

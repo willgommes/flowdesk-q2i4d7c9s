@@ -58,7 +58,7 @@ export function DailyRoutineWidget({
   const completedTasks = todaysTasks.filter((t) => t.completed)
 
   return (
-    <Card className="border-border/60 shadow-subtle flex flex-col h-full bg-card group/widget min-h-[350px]">
+    <Card className="flex flex-col h-full group/widget min-h-[350px]">
       <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0 cursor-grab active:cursor-grabbing shrink-0">
         <div>
           <CardTitle className="text-base flex items-center gap-2">
@@ -91,7 +91,7 @@ export function DailyRoutineWidget({
                         'flex items-center gap-3 p-2.5 rounded-md border transition-colors',
                         isOverdue
                           ? 'border-red-500/40 bg-red-50/30 dark:bg-red-950/10'
-                          : 'border-border/40 bg-card hover:bg-accent/50',
+                          : 'border-border/20 bg-white/5 hover:bg-white/10',
                       )}
                     >
                       <Checkbox
@@ -149,7 +149,7 @@ export function DailyRoutineWidget({
                 {completedTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center gap-3 p-2.5 rounded-md border border-border/40 bg-muted/30 opacity-70 transition-opacity hover:opacity-100"
+                    className="flex items-center gap-3 p-2.5 rounded-md border border-border/20 bg-white/5 opacity-70 transition-opacity hover:opacity-100 hover:bg-white/10"
                   >
                     <Checkbox
                       checked={task.completed}
@@ -179,7 +179,7 @@ export function DailyRoutineWidget({
             )}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/50 rounded-lg bg-muted/10">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/20 rounded-lg bg-white/5">
             <Repeat className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhuma rotina para hoje</p>
           </div>

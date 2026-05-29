@@ -5,7 +5,7 @@ import pb from '@/lib/pocketbase/client'
 
 export function BoardsWidget({ boards, loading }: { boards: any[]; loading: boolean }) {
   return (
-    <Card className="border-border/60 shadow-subtle flex flex-col h-full bg-card group/widget">
+    <Card className="flex flex-col h-full group/widget">
       <CardHeader className="pb-4 flex flex-row items-start justify-between space-y-0 cursor-grab active:cursor-grabbing">
         <CardTitle className="text-base flex items-center gap-2">
           <FolderKanbanIcon className="w-4 h-4 text-muted-foreground" />
@@ -15,11 +15,11 @@ export function BoardsWidget({ boards, loading }: { boards: any[]; loading: bool
       </CardHeader>
       <CardContent className="flex-1 p-0">
         {loading ? (
-          <div className="h-32 flex items-center justify-center border-t border-border/30 bg-muted/5">
+          <div className="h-32 flex items-center justify-center border-t border-border/20 bg-muted/5">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
           </div>
         ) : boards.length > 0 ? (
-          <div className="grid grid-cols-1 divide-y divide-border/30 border-t border-border/30">
+          <div className="grid grid-cols-1 divide-y divide-border/20 border-t border-border/20">
             {boards.map((board) => (
               <Link key={board.id} to={`/boards/${board.id}`}>
                 <div className="flex items-center gap-4 p-4 hover:bg-accent/30 transition-colors group">
@@ -56,7 +56,7 @@ export function BoardsWidget({ boards, loading }: { boards: any[]; loading: bool
             ))}
           </div>
         ) : (
-          <div className="h-32 flex items-center justify-center border-t border-border/30 bg-muted/5">
+          <div className="h-32 flex items-center justify-center border-t border-border/20 bg-muted/5">
             <p className="text-muted-foreground text-sm font-medium">
               Os quadros aparecerão aqui em breve.
             </p>

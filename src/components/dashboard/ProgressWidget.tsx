@@ -9,7 +9,7 @@ export function ProgressWidget({ cards, loading }: { cards: any[]; loading: bool
   const progressPercentage = totalCards === 0 ? 0 : Math.round((completedCards / totalCards) * 100)
 
   return (
-    <Card className="border-border/60 shadow-subtle flex flex-col h-full bg-card group/widget">
+    <Card className="flex flex-col h-full group/widget">
       <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0 cursor-grab active:cursor-grabbing">
         <div>
           <CardTitle className="text-base flex items-center gap-2">

@@ -437,7 +437,7 @@ export default function BoardPage() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#0b0f17]">
       <AppHeader />
 
-      <div className="bg-background border-b px-6 py-4 flex flex-wrap items-center justify-between gap-4 shrink-0">
+      <div className="bg-background border-b border-border/20 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link to="/boards">
@@ -665,7 +665,7 @@ export default function BoardPage() {
         </div>
       </div>
 
-      <div className="bg-background/60 border-b px-6 py-2.5 flex items-center gap-6 shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] text-sm">
+      <div className="bg-background/60 border-b border-border/20 px-6 py-2.5 flex items-center gap-6 shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] text-sm">
         <div className="flex items-center gap-2 min-w-max">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
             <CalendarDays className="w-3.5 h-3.5 text-primary" />
@@ -674,7 +674,7 @@ export default function BoardPage() {
           <span className="font-semibold text-gray-100">{stats.total}</span>
         </div>
 
-        <div className="w-px h-4 bg-border shrink-0"></div>
+        <div className="w-px h-4 bg-border/20 shrink-0"></div>
 
         <div className="flex items-center gap-2 min-w-max">
           <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
@@ -684,7 +684,7 @@ export default function BoardPage() {
           <span className="font-semibold text-blue-600">{stats.open}</span>
         </div>
 
-        <div className="w-px h-4 bg-border shrink-0"></div>
+        <div className="w-px h-4 bg-border/20 shrink-0"></div>
 
         <div className="flex items-center gap-2 min-w-max">
           <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -694,7 +694,7 @@ export default function BoardPage() {
           <span className="font-semibold text-emerald-500">{stats.completed}</span>
         </div>
 
-        <div className="w-px h-4 bg-border shrink-0"></div>
+        <div className="w-px h-4 bg-border/20 shrink-0"></div>
 
         <div className="flex items-center gap-2 min-w-max">
           <div className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -711,7 +711,7 @@ export default function BoardPage() {
 
         <div
           className={cn(
-            'flex-1 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] relative z-10 p-4 lg:p-6',
+            'flex-1 rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,0.15)] relative z-10 p-4 lg:p-6',
             view === 'kanban' ? 'overflow-x-auto overflow-y-hidden' : 'overflow-auto',
           )}
         >
@@ -846,7 +846,7 @@ export default function BoardPage() {
 
               <Button
                 variant="ghost"
-                className="shrink-0 w-[280px] h-[50px] bg-background/50 border border-dashed border-border/60 hover:bg-background justify-start"
+                className="shrink-0 w-[280px] h-[50px] bg-white/5 border border-dashed border-border/20 hover:bg-white/10 justify-start"
                 onClick={handleAddColumn}
               >
                 <Plus className="w-4 h-4 mr-2" /> Adicionar coluna
@@ -874,9 +874,9 @@ export default function BoardPage() {
                       </span>
                     </div>
 
-                    <div className="bg-background rounded-xl border border-border shadow-sm overflow-hidden">
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-md overflow-hidden">
                       <Table>
-                        <TableHeader className="bg-muted/50">
+                        <TableHeader className="bg-white/5">
                           <TableRow>
                             <TableHead className="w-[40%]">Título</TableHead>
                             <TableHead>Etiquetas</TableHead>
@@ -1017,7 +1017,7 @@ export default function BoardPage() {
               })}
 
               {filteredCards.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400 border-2 border-dashed border-border rounded-xl bg-background/30">
+                <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400 border-2 border-dashed border-border/20 rounded-xl bg-white/5">
                   <Search className="w-10 h-10 mb-4 opacity-20" />
                   <p className="text-lg font-medium text-gray-100">Nenhum cartão encontrado</p>
                   <p className="text-sm">Tente ajustar seus filtros ou termo de busca.</p>
@@ -1094,10 +1094,10 @@ function Column({
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
       onDragEnd={onDragEnd}
-      className="shrink-0 w-[300px] max-h-full flex flex-col bg-background/50 rounded-xl border border-border/50 shadow-subtle cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-border"
+      className="shrink-0 w-[300px] max-h-full flex flex-col bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-md cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-white/20"
     >
       <div
-        className="p-3 flex items-center justify-between group border-b border-border/50"
+        className="p-3 flex items-center justify-between group border-b border-border/20"
         style={{
           borderTop: `4px solid ${column.color || '#e2e8f0'}`,
           borderTopLeftRadius: '12px',
@@ -1207,7 +1207,7 @@ function Column({
         ))}
 
         {isAdding ? (
-          <div className="bg-background p-2 rounded-lg border border-border mt-1 shadow-sm">
+          <div className="bg-white/5 p-2 rounded-lg border border-border/20 mt-1 shadow-sm">
             <Input
               autoFocus
               value={newCardTitle}
