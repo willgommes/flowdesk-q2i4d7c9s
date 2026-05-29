@@ -80,12 +80,12 @@ export function PriorityWidget({
                 <Link key={task.id} to={`/boards/${task.board_id}/cards/${task.id}`}>
                   <div
                     className={cn(
-                      'flex flex-col p-2.5 rounded-md border bg-white/5 hover:bg-white/10 transition-colors group',
+                      'flex flex-col p-2.5 rounded-md border backdrop-blur-sm transition-colors group',
                       isUrgent
                         ? 'border-red-500/40 bg-red-50/30 dark:bg-red-950/10'
                         : isHigh
                           ? 'border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10'
-                          : 'border-border/20',
+                          : 'border-white/10 bg-white/10 hover:bg-white/15',
                     )}
                   >
                     <div className="flex justify-between items-start gap-2 mb-1">
@@ -127,7 +127,7 @@ export function PriorityWidget({
             })}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/20 rounded-lg bg-white/5">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-white/20 rounded-lg bg-white/5 backdrop-blur-sm">
             <CheckCircle2 className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhuma tarefa urgente</p>
           </div>

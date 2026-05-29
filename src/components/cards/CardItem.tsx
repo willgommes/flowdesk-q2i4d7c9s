@@ -261,10 +261,10 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
       <div
         onClick={() => navigate(`/boards/${boardId}/cards/${localCard.id}`)}
         className={cn(
-          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-primary/50 hover:bg-white/10 hover:shadow-lg focus-within:shadow-lg transition-all duration-300 relative cursor-pointer',
+          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-primary/50 hover:bg-white/[0.12] hover:shadow-lg focus-within:shadow-lg transition-all duration-300 relative cursor-pointer backdrop-blur-md',
           isEffectivelyCompleted
-            ? 'bg-secondary/50 opacity-70 border-transparent hover:bg-secondary/70'
-            : 'bg-background border-border',
+            ? 'bg-white/5 opacity-70 border-transparent hover:bg-white/[0.08]'
+            : 'bg-white/[0.07] border-white/5',
         )}
         draggable
         onDragStart={(e) => {

@@ -33,11 +33,11 @@ export function ActivitiesWidget({ activities, loading }: { activities: any[]; l
       </CardHeader>
       <CardContent className="flex-1 p-0">
         {loading ? (
-          <div className="h-32 flex items-center justify-center border-t border-border/20 bg-muted/5">
+          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/5">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
           </div>
         ) : activities.length > 0 ? (
-          <div className="divide-y divide-border/20 border-t border-border/20">
+          <div className="divide-y divide-white/10 border-t border-white/10">
             {activities.map((activity) => {
               const activityUser = activity.expand?.user_id
               const card = activity.expand?.card_id
@@ -45,7 +45,7 @@ export function ActivitiesWidget({ activities, loading }: { activities: any[]; l
               return (
                 <div
                   key={activity.id}
-                  className="flex items-start gap-3 p-4 hover:bg-accent/10 transition-colors"
+                  className="flex items-start gap-3 p-4 hover:bg-white/10 transition-colors"
                 >
                   <Avatar className="h-8 w-8 shrink-0 border border-border/50">
                     <AvatarImage
@@ -84,7 +84,7 @@ export function ActivitiesWidget({ activities, loading }: { activities: any[]; l
             })}
           </div>
         ) : (
-          <div className="h-32 flex items-center justify-center border-t border-border/20 bg-muted/5">
+          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/5">
             <p className="text-muted-foreground text-sm font-medium">Nenhuma atividade pendente.</p>
           </div>
         )}

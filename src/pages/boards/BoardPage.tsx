@@ -462,7 +462,7 @@ export default function BoardPage() {
                   }
                 }}
                 autoFocus
-                className="h-8 text-xl font-semibold w-64 rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                className="h-8 text-xl font-semibold w-64 rounded-lg border border-white/20 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             ) : (
               <h1
@@ -516,7 +516,7 @@ export default function BoardPage() {
               placeholder="Buscar cartões..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-40 lg:w-56 pl-10 pr-9 h-8 text-xs rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+              className="w-40 lg:w-56 pl-10 pr-9 h-8 text-xs rounded-lg border border-white/20 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
             {searchQuery && (
               <Button
@@ -604,7 +604,7 @@ export default function BoardPage() {
 
           <div className="flex items-center gap-2 shrink-0">
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[140px] lg:w-[180px] h-8 text-xs rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50">
+              <SelectTrigger className="w-[140px] lg:w-[180px] h-8 text-xs rounded-lg border border-white/20 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary/50">
                 <SelectValue placeholder="Filtrar por data" />
               </SelectTrigger>
               <SelectContent>
@@ -711,7 +711,7 @@ export default function BoardPage() {
 
         <div
           className={cn(
-            'flex-1 rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,0.15)] relative z-10 p-4 lg:p-6',
+            'flex-1 rounded-xl border border-white/5 bg-white/[0.08] backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,0.15)] relative z-10 p-4 lg:p-6',
             view === 'kanban' ? 'overflow-x-auto overflow-y-hidden' : 'overflow-auto',
           )}
         >
@@ -846,7 +846,7 @@ export default function BoardPage() {
 
               <Button
                 variant="ghost"
-                className="shrink-0 w-[280px] h-[50px] bg-white/5 border border-dashed border-border/20 hover:bg-white/10 justify-start"
+                className="shrink-0 w-[280px] h-[50px] bg-white/[0.08] border border-dashed border-white/5 hover:bg-white/[0.12] justify-start backdrop-blur-sm"
                 onClick={handleAddColumn}
               >
                 <Plus className="w-4 h-4 mr-2" /> Adicionar coluna
@@ -874,9 +874,9 @@ export default function BoardPage() {
                       </span>
                     </div>
 
-                    <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-md overflow-hidden">
+                    <div className="bg-white/[0.08] backdrop-blur-lg rounded-xl border border-white/5 shadow-md overflow-hidden">
                       <Table>
-                        <TableHeader className="bg-white/5">
+                        <TableHeader className="bg-white/[0.08]">
                           <TableRow>
                             <TableHead className="w-[40%]">Título</TableHead>
                             <TableHead>Etiquetas</TableHead>
@@ -900,9 +900,9 @@ export default function BoardPage() {
                               <TableRow
                                 key={card.id}
                                 className={cn(
-                                  'cursor-pointer hover:bg-muted/50 transition-all duration-300',
+                                  'cursor-pointer hover:bg-white/[0.12] transition-all duration-300',
                                   (card.completed || col.name.toUpperCase() === 'CONCLUÍDO') &&
-                                    'opacity-70 bg-secondary/50',
+                                    'opacity-70 bg-white/5',
                                 )}
                                 onClick={() => navigate(`/boards/${id}/cards/${card.id}`)}
                               >
@@ -1017,7 +1017,7 @@ export default function BoardPage() {
               })}
 
               {filteredCards.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400 border-2 border-dashed border-border/20 rounded-xl bg-white/5">
+                <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400 border-2 border-dashed border-white/20 rounded-xl bg-white/5 backdrop-blur-sm">
                   <Search className="w-10 h-10 mb-4 opacity-20" />
                   <p className="text-lg font-medium text-gray-100">Nenhum cartão encontrado</p>
                   <p className="text-sm">Tente ajustar seus filtros ou termo de busca.</p>
@@ -1094,8 +1094,9 @@ function Column({
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
       onDragEnd={onDragEnd}
-      className="shrink-0 w-[300px] max-h-full flex flex-col bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-md cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-white/20"
+      className="shrink-0 w-[300px] max-h-full flex flex-col bg-white/[0.08] backdrop-blur-lg rounded-xl border border-white/5 shadow-md cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-white/10 hover:bg-white/[0.12]"
     >
+      {' '}
       <div
         className="p-3 flex items-center justify-between group border-b border-border/20"
         style={{
@@ -1121,7 +1122,7 @@ function Column({
                 setName(column.name)
               }
             }}
-            className="h-7 text-sm font-semibold rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+            className="h-7 text-sm font-semibold rounded-lg border border-white/20 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         ) : (
           <div
@@ -1177,7 +1178,6 @@ function Column({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
       <div
         className="p-3 flex-1 overflow-y-auto min-h-[100px] flex flex-col gap-2"
         onDragOver={(e) => e.preventDefault()}
@@ -1205,15 +1205,14 @@ function Column({
             onQuickMove={(action: any) => onQuickMove?.(card.id, action)}
           />
         ))}
-
         {isAdding ? (
-          <div className="bg-white/5 p-2 rounded-lg border border-border/20 mt-1 shadow-sm">
+          <div className="bg-white/[0.08] backdrop-blur-md p-2 rounded-lg border border-white/5 mt-1 shadow-sm">
             <Input
               autoFocus
               value={newCardTitle}
               onChange={(e) => setNewCardTitle(e.target.value)}
               placeholder="Título do cartão..."
-              className="h-8 mb-2 text-sm shadow-none rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+              className="h-8 mb-2 text-sm shadow-none rounded-lg border border-white/20 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary/50"
               onKeyDown={async (e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
@@ -1268,11 +1267,11 @@ function Column({
           <Button
             variant="ghost"
             onClick={() => setIsAdding(true)}
-            className="w-full text-gray-400 justify-start text-sm h-8 border border-dashed hover:bg-muted shrink-0 mt-1"
+            className="w-full text-gray-400 justify-start text-sm h-8 border border-dashed border-white/5 hover:bg-white/[0.12] hover:border-white/10 shrink-0 mt-1"
           >
             <Plus className="w-4 h-4 mr-2" /> Adicionar cartão
           </Button>
-        )}
+        )}{' '}
       </div>
     </div>
   )

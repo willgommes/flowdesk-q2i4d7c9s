@@ -12,7 +12,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 active:bg-white/15',
+          'bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/15 active:bg-white/20',
         solid:
           'bg-primary text-primary-foreground hover:bg-primary/90 border border-transparent hover:border-white/50 duration-200 active:bg-primary/80',
         ghost:

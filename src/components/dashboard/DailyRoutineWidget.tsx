@@ -88,10 +88,10 @@ export function DailyRoutineWidget({
                     <div
                       key={task.id}
                       className={cn(
-                        'flex items-center gap-3 p-2.5 rounded-md border transition-colors',
+                        'flex items-center gap-3 p-2.5 rounded-md border transition-colors backdrop-blur-sm',
                         isOverdue
                           ? 'border-red-500/40 bg-red-50/30 dark:bg-red-950/10'
-                          : 'border-border/20 bg-white/5 hover:bg-white/10',
+                          : 'border-white/10 bg-white/10 hover:bg-white/15',
                       )}
                     >
                       <Checkbox
@@ -149,7 +149,7 @@ export function DailyRoutineWidget({
                 {completedTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center gap-3 p-2.5 rounded-md border border-border/20 bg-white/5 opacity-70 transition-opacity hover:opacity-100 hover:bg-white/10"
+                    className="flex items-center gap-3 p-2.5 rounded-md border border-white/10 bg-white/5 backdrop-blur-sm opacity-70 transition-opacity hover:opacity-100 hover:bg-white/10"
                   >
                     <Checkbox
                       checked={task.completed}
@@ -179,7 +179,7 @@ export function DailyRoutineWidget({
             )}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-border/20 rounded-lg bg-white/5">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-white/20 rounded-lg bg-white/5 backdrop-blur-sm">
             <Repeat className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhuma rotina para hoje</p>
           </div>
