@@ -7,20 +7,23 @@ import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative text-foreground',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative text-gray-100',
   {
     variants: {
       variant: {
-        default: 'bg-blue-500/5 border border-blue-500/20 hover:bg-transparent',
+        default:
+          'bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 active:bg-white/15',
         solid:
-          'bg-blue-500 text-white hover:bg-blue-600 border border-transparent hover:border-foreground/50 duration-200',
-        ghost: 'bg-transparent border border-transparent hover:border-zinc-600 hover:bg-white/10',
+          'bg-blue-500 text-white hover:bg-blue-600 border border-transparent hover:border-white/50 duration-200 active:bg-blue-700',
+        ghost:
+          'bg-transparent border border-transparent hover:border-white/10 hover:bg-white/5 active:bg-white/10',
         destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90 border border-transparent',
-        outline: 'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground',
+          'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 backdrop-blur-xl active:bg-destructive/30',
+        outline:
+          'bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 active:bg-white/15',
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-transparent',
-        link: 'underline-offset-4 hover:underline border border-transparent',
+          'bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 active:bg-white/15',
+        link: 'underline-offset-4 hover:underline border border-transparent active:text-white/70',
       },
       size: {
         default: 'px-7 py-1.5',

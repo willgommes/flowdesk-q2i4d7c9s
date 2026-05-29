@@ -560,7 +560,7 @@ export default function SazonaisPage() {
               <Button onClick={() => setCreateOpen(true)} className="shadow-sm">
                 <Plus className="w-4 h-4 mr-2" /> Nova Sazonal
               </Button>
-              <Button variant="outline" onClick={handleForceSyncAll} className="shadow-sm">
+              <Button onClick={handleForceSyncAll} className="shadow-sm">
                 <Repeat className="w-4 h-4 mr-2" /> Sincronizar Agora
               </Button>
             </div>
