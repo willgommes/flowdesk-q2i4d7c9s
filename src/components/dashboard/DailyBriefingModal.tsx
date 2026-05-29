@@ -183,8 +183,10 @@ export function DailyBriefingModal() {
     return (
       <div className="mb-6 last:mb-0">
         <h3 className={`flex items-center gap-2 font-semibold text-lg mb-3 ${colorClass}`}>
-          <Icon className="w-5 h-5" />
-          {title} ({cards.length})
+          <Icon className="w-5 h-5 drop-shadow-md" />
+          <span className="drop-shadow-sm">
+            {title} ({cards.length})
+          </span>
         </h3>
         <div className="space-y-3">
           {cards.map((card: any) => (
@@ -194,7 +196,7 @@ export function DailyBriefingModal() {
               onDragStart={(e) => handleDragStart(e, card.id)}
               onDrop={(e) => handleDrop(e, card.id, sectionKey)}
               onDragOver={handleDragOver}
-              className={`flex items-start gap-2 p-3 sm:p-4 rounded-lg border cursor-grab active:cursor-grabbing ${bgClass} hover:opacity-90 transition-all w-full`}
+              className={`flex items-start gap-2 p-3 sm:p-4 rounded-2xl border cursor-grab active:cursor-grabbing ${bgClass} hover:scale-[1.01] hover:shadow-lg transition-all w-full backdrop-blur-sm`}
             >
               <GripVertical className="w-5 h-5 opacity-50 shrink-0 mt-0.5" />
               <Link
@@ -254,12 +256,12 @@ export function DailyBriefingModal() {
         if (!val) setOpen(false)
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden bg-background/60 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl sm:rounded-[2rem]">
         <DialogHeader className="px-1">
           <DialogTitle className="text-2xl font-display font-bold">
             Bom dia! Seu Resumo Diário
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-foreground/70">
             Aqui estão as tarefas que exigem sua atenção imediata. Arraste para priorizar.
           </DialogDescription>
         </DialogHeader>
@@ -271,7 +273,7 @@ export function DailyBriefingModal() {
               title="Vencidas / Atrasadas"
               icon={AlertCircle}
               colorClass="text-red-600 dark:text-red-400"
-              bgClass="bg-red-50 border-red-100 text-red-900 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-200"
+              bgClass="bg-red-500/10 border-red-500/20 text-red-900 dark:text-red-200"
               cards={data.overdue}
             />
             <Section
@@ -279,7 +281,7 @@ export function DailyBriefingModal() {
               title="Vencendo Hoje"
               icon={Clock}
               colorClass="text-orange-600 dark:text-orange-400"
-              bgClass="bg-orange-50 border-orange-100 text-orange-900 dark:bg-orange-950/30 dark:border-orange-900/50 dark:text-orange-200"
+              bgClass="bg-orange-500/10 border-orange-500/20 text-orange-900 dark:text-orange-200"
               cards={data.today}
             />
             <Section
@@ -287,16 +289,22 @@ export function DailyBriefingModal() {
               title="Próximas 24h"
               icon={Calendar}
               colorClass="text-yellow-600 dark:text-yellow-400"
-              bgClass="bg-yellow-50 border-yellow-100 text-yellow-900 dark:bg-yellow-950/30 dark:border-yellow-900/50 dark:text-yellow-200"
+              bgClass="bg-yellow-500/10 border-yellow-500/20 text-yellow-900 dark:text-yellow-200"
               cards={data.next24hCards}
             />
           </div>
         </ScrollArea>
 
-        <div className="pt-4 border-t mt-auto flex justify-end px-1">
-          <Button onClick={handleAcknowledge} size="lg" className="font-semibold">
-            Ciente
-          </Button>
+        <div className="pt-4 border-t border-border/30 mt-auto flex justify-end px-1">
+          <div className="rounded-full p-[1px] bg-gradient-to-r from-primary to-secondary shadow-[0_0_15px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.6)] transition-shadow">
+            <Button
+              onClick={handleAcknowledge}
+              size="lg"
+              className="font-semibold rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 border-0 text-foreground w-full sm:w-auto min-w-[120px]"
+            >
+              Ciente
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
