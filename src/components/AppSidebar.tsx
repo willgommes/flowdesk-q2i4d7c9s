@@ -67,9 +67,9 @@ export function AppSidebar() {
     <Sidebar
       variant="sidebar"
       collapsible="icon"
-      className="border-r border-white/10 bg-[#0b0f17]/50 backdrop-blur-xl"
+      className="border-r border-white/[0.03] !bg-white/[0.04] backdrop-blur-xl"
     >
-      <SidebarHeader className="p-4 flex h-16 items-center flex-row border-b border-white/10">
+      <SidebarHeader className="p-4 flex h-16 items-center flex-row border-b border-white/[0.03]">
         <div className="flex items-center gap-2 font-display font-bold text-xl tracking-tight text-gray-100">
           <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center">
             <div className="w-2 h-2 rounded-full bg-[#0b0f17]" />
@@ -90,8 +90,8 @@ export function AppSidebar() {
                   tooltip={item.name}
                   className={
                     isActive
-                      ? 'relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-8 before:bg-emerald-500 before:rounded-r-md bg-white/10 text-emerald-400 hover:bg-white/15'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                      ? 'relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-8 before:bg-emerald-500 before:rounded-r-md bg-white/[0.08] text-emerald-400 hover:bg-white/[0.12]'
+                      : 'text-gray-400 hover:bg-white/[0.12] hover:text-gray-200'
                   }
                 >
                   <Link to={item.href} className="flex items-center gap-3">
@@ -105,12 +105,12 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t border-white/10">
+      <SidebarFooter className="p-2 border-t border-white/[0.03]">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="w-full data-[state=open]:bg-white/10 data-[state=open]:text-white hover:bg-white/5"
+              className="w-full data-[state=open]:bg-white/[0.08] data-[state=open]:text-white hover:bg-white/[0.12]"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={avatarUrl} alt={user.name} />
@@ -125,7 +125,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border border-white/20 bg-[#0b0f17]/90 backdrop-blur-xl text-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border border-white/[0.03] bg-white/[0.04] backdrop-blur-xl text-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
             align="end"
             side="right"
             sideOffset={4}
@@ -144,10 +144,10 @@ export function AppSidebar() {
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuSeparator className="bg-white/[0.03]" />
             <DropdownMenuItem
               asChild
-              className="cursor-pointer hover:bg-white/10 focus:bg-white/10"
+              className="cursor-pointer hover:bg-white/[0.12] focus:bg-white/[0.12]"
             >
               <Link to="/perfil">Meu Perfil</Link>
             </DropdownMenuItem>
@@ -157,14 +157,14 @@ export function AppSidebar() {
                 const newTheme = user.theme === 'dark' ? 'light' : 'dark'
                 updateTheme(newTheme)
               }}
-              className="cursor-pointer flex items-center justify-between hover:bg-white/10 focus:bg-white/10"
+              className="cursor-pointer flex items-center justify-between hover:bg-white/[0.12] focus:bg-white/[0.12]"
             >
               <span>Modo Escuro</span>
               {user.theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={logout}
-              className="cursor-pointer text-red-400 focus:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10"
+              className="cursor-pointer text-red-400 focus:text-red-300 hover:bg-white/[0.12] focus:bg-white/[0.12]"
             >
               Sair
             </DropdownMenuItem>

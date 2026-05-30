@@ -711,7 +711,7 @@ export default function BoardPage() {
 
         <div
           className={cn(
-            'flex-1 rounded-xl border border-white/5 bg-white/[0.08] backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,0.15)] relative z-10 p-4 lg:p-6',
+            'flex-1 rounded-xl border border-white/[0.03] bg-white/[0.02] backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,0.15)] relative z-10 p-4 lg:p-6',
             view === 'kanban' ? 'overflow-x-auto overflow-y-hidden' : 'overflow-auto',
           )}
         >
@@ -846,7 +846,7 @@ export default function BoardPage() {
 
               <Button
                 variant="ghost"
-                className="shrink-0 w-[280px] h-[50px] bg-white/[0.08] border border-dashed border-white/5 hover:bg-white/[0.12] justify-start backdrop-blur-sm"
+                className="shrink-0 w-[280px] h-[50px] bg-white/[0.04] border border-dashed border-white/[0.03] hover:bg-white/[0.08] justify-start backdrop-blur-sm"
                 onClick={handleAddColumn}
               >
                 <Plus className="w-4 h-4 mr-2" /> Adicionar coluna
@@ -874,9 +874,9 @@ export default function BoardPage() {
                       </span>
                     </div>
 
-                    <div className="bg-white/[0.08] backdrop-blur-lg rounded-xl border border-white/5 shadow-md overflow-hidden">
+                    <div className="bg-white/[0.04] backdrop-blur-lg rounded-xl border border-white/[0.03] shadow-md overflow-hidden">
                       <Table>
-                        <TableHeader className="bg-white/[0.08]">
+                        <TableHeader className="bg-white/[0.04]">
                           <TableRow>
                             <TableHead className="w-[40%]">Título</TableHead>
                             <TableHead>Etiquetas</TableHead>
@@ -1094,7 +1094,7 @@ function Column({
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
       onDragEnd={onDragEnd}
-      className="shrink-0 w-[300px] max-h-full flex flex-col bg-white/[0.08] backdrop-blur-lg rounded-xl border border-white/5 shadow-md cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-white/10 hover:bg-white/[0.12]"
+      className="shrink-0 w-[300px] max-h-full flex flex-col bg-white/[0.04] backdrop-blur-lg rounded-xl border border-white/[0.03] shadow-md cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-white/10 hover:bg-white/[0.08]"
     >
       {' '}
       <div
@@ -1206,7 +1206,7 @@ function Column({
           />
         ))}
         {isAdding ? (
-          <div className="bg-white/[0.08] backdrop-blur-md p-2 rounded-lg border border-white/5 mt-1 shadow-sm">
+          <div className="bg-white/[0.08] backdrop-blur-md p-2 rounded-lg border border-white/[0.03] mt-1 shadow-sm">
             <Input
               autoFocus
               value={newCardTitle}
@@ -1267,7 +1267,7 @@ function Column({
           <Button
             variant="ghost"
             onClick={() => setIsAdding(true)}
-            className="w-full text-gray-400 justify-start text-sm h-8 border border-dashed border-white/5 hover:bg-white/[0.12] hover:border-white/10 shrink-0 mt-1"
+            className="w-full text-gray-400 justify-start text-sm h-8 border border-dashed border-white/[0.03] hover:bg-white/[0.12] hover:border-white/10 shrink-0 mt-1"
           >
             <Plus className="w-4 h-4 mr-2" /> Adicionar cartão
           </Button>
