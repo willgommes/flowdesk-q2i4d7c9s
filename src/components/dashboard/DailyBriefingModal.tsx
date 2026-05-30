@@ -178,7 +178,7 @@ export function DailyBriefingModal() {
 
   if (!data) return null
 
-  const Section = ({ title, icon: Icon, colorClass, bgClass, cards, sectionKey }: any) => {
+  const Section = ({ title, icon: Icon, colorClass, cards, sectionKey }: any) => {
     if (cards.length === 0) return null
     return (
       <div className="mb-6 last:mb-0">
@@ -196,7 +196,7 @@ export function DailyBriefingModal() {
               onDragStart={(e) => handleDragStart(e, card.id)}
               onDrop={(e) => handleDrop(e, card.id, sectionKey)}
               onDragOver={handleDragOver}
-              className={`flex items-start gap-2 p-3 sm:p-4 rounded-2xl border cursor-grab active:cursor-grabbing ${bgClass} hover:scale-[1.01] hover:shadow-lg transition-all w-full backdrop-blur-sm`}
+              className={`flex items-start gap-2 p-3 sm:p-4 rounded-2xl border border-white/3 bg-white/8 hover:bg-white/12 cursor-grab active:cursor-grabbing hover:scale-[1.01] hover:shadow-lg transition-all w-full backdrop-blur-sm text-foreground`}
             >
               <GripVertical className="w-5 h-5 opacity-50 shrink-0 mt-0.5" />
               <Link
@@ -256,7 +256,7 @@ export function DailyBriefingModal() {
         if (!val) setOpen(false)
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden bg-background/60 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl sm:rounded-[2rem]">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden bg-white/4 backdrop-blur-xl border border-white/3 shadow-2xl sm:rounded-[2rem]">
         <DialogHeader className="px-1">
           <DialogTitle className="text-2xl font-display font-bold">
             Bom dia! Seu Resumo Diário
@@ -273,7 +273,6 @@ export function DailyBriefingModal() {
               title="Vencidas / Atrasadas"
               icon={AlertCircle}
               colorClass="text-red-600 dark:text-red-400"
-              bgClass="bg-red-500/10 border-red-500/20 text-red-900 dark:text-red-200"
               cards={data.overdue}
             />
             <Section
@@ -281,7 +280,6 @@ export function DailyBriefingModal() {
               title="Vencendo Hoje"
               icon={Clock}
               colorClass="text-orange-600 dark:text-orange-400"
-              bgClass="bg-orange-500/10 border-orange-500/20 text-orange-900 dark:text-orange-200"
               cards={data.today}
             />
             <Section
@@ -289,22 +287,19 @@ export function DailyBriefingModal() {
               title="Próximas 24h"
               icon={Calendar}
               colorClass="text-yellow-600 dark:text-yellow-400"
-              bgClass="bg-yellow-500/10 border-yellow-500/20 text-yellow-900 dark:text-yellow-200"
               cards={data.next24hCards}
             />
           </div>
         </ScrollArea>
 
         <div className="pt-4 border-t border-border/30 mt-auto flex justify-end px-1">
-          <div className="rounded-full p-[1px] bg-gradient-to-r from-primary to-secondary shadow-[0_0_15px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.6)] transition-shadow">
-            <Button
-              onClick={handleAcknowledge}
-              size="lg"
-              className="font-semibold rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 border-0 text-foreground w-full sm:w-auto min-w-[120px]"
-            >
-              Ciente
-            </Button>
-          </div>
+          <Button
+            onClick={handleAcknowledge}
+            size="lg"
+            className="font-semibold w-full sm:w-auto min-w-[120px]"
+          >
+            Ciente
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
