@@ -80,34 +80,34 @@ export function PriorityWidget({
                 <Link key={task.id} to={`/boards/${task.board_id}/cards/${task.id}`}>
                   <div
                     className={cn(
-                      'flex flex-col p-2.5 rounded-md border backdrop-blur-sm transition-colors group',
+                      'flex flex-col p-4 rounded-lg border backdrop-blur-md transition-all duration-300 group',
                       isUrgent
-                        ? 'border-red-500/40 bg-red-50/30 dark:bg-red-950/10'
+                        ? 'border-red-500/40 bg-red-500/10 hover:bg-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]'
                         : isHigh
-                          ? 'border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10'
-                          : 'border-white/10 bg-white/10 hover:bg-white/15',
+                          ? 'border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+                          : 'border-white/[0.03] bg-white/[0.08] hover:bg-white/[0.12] hover:border-emerald-500/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)]',
                     )}
                   >
-                    <div className="flex justify-between items-start gap-2 mb-1">
-                      <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                    <div className="flex justify-between items-start gap-2 mb-1 w-full">
+                      <span className="font-medium text-sm text-gray-100 truncate group-hover:text-emerald-400 transition-colors">
                         {task.title}
                       </span>
                       <span
                         className={cn(
-                          'text-[10px] uppercase tracking-wider whitespace-nowrap px-2 py-0.5 rounded-full font-semibold',
+                          'text-[10px] uppercase tracking-wider whitespace-nowrap px-2 py-0.5 rounded font-semibold border',
                           isUrgent
-                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
                             : isHigh
-                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                              : 'bg-muted text-muted-foreground',
+                              ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                              : 'bg-white/10 text-gray-300 border-white/20',
                         )}
                       >
                         {task.label?.name || 'Prioridade'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                    <div className="flex items-center justify-between text-xs text-gray-400 mt-2 w-full">
                       <div className="flex items-center gap-1.5 truncate pr-2">
-                        <span className="font-semibold text-[10px] uppercase tracking-wider bg-muted/50 px-1.5 py-0.5 rounded border border-border/50 shrink-0 max-w-[100px] truncate">
+                        <span className="font-semibold text-[10px] uppercase tracking-wider bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-gray-300 shrink-0 max-w-[100px] truncate shadow-sm">
                           {task.expand?.board_id?.expand?.client_id?.name ||
                             task.expand?.board_id?.client_name ||
                             'Interno'}
@@ -127,7 +127,7 @@ export function PriorityWidget({
             })}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-white/20 rounded-lg bg-white/5 backdrop-blur-sm">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-gray-400 mt-4 border border-dashed border-white/10 rounded-lg bg-white/[0.02] backdrop-blur-md">
             <CheckCircle2 className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhuma tarefa urgente</p>
           </div>

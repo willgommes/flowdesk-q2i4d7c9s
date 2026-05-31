@@ -31,7 +31,7 @@ export function BoardsWidget({ boards, loading }: { boards: any[]; loading: bool
           <div className="grid grid-cols-1 divide-y divide-white/10 border-t border-white/10">
             {boards.map((board) => (
               <Link key={board.id} to={`/boards/${board.id}`}>
-                <div className="flex items-center gap-4 p-4 hover:bg-white/10 transition-colors group">
+                <div className="flex items-center gap-4 p-4 hover:bg-white/[0.08] transition-colors group">
                   <div
                     className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 shadow-sm"
                     style={{ backgroundColor: board.color || '#e2e8f0' }}
@@ -65,8 +65,8 @@ export function BoardsWidget({ boards, loading }: { boards: any[]; loading: bool
             ))}
           </div>
         ) : (
-          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/5">
-            <p className="text-muted-foreground text-sm font-medium">
+          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/[0.02]">
+            <p className="text-gray-400 text-sm font-medium">
               Os quadros aparecerão aqui em breve.
             </p>
           </div>

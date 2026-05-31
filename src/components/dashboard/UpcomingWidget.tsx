@@ -50,19 +50,19 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
               const isOverdue = isPast(due)
               return (
                 <Link key={task.id} to={`/boards/${task.board_id}/cards/${task.id}`}>
-                  <div className="flex flex-col p-2.5 rounded-md border border-white/10 bg-white/10 hover:bg-white/15 backdrop-blur-sm transition-colors group">
-                    <div className="flex justify-between items-start gap-2 mb-1">
-                      <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                  <div className="flex flex-col p-4 rounded-lg border border-white/[0.03] bg-white/[0.08] hover:bg-white/[0.12] hover:border-emerald-500/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] backdrop-blur-md transition-all duration-300 group">
+                    <div className="flex justify-between items-start gap-2 mb-1 w-full">
+                      <span className="font-medium text-sm text-gray-100 truncate group-hover:text-emerald-400 transition-colors">
                         {task.title}
                       </span>
                       <span
                         className={cn(
-                          'text-[10px] uppercase tracking-wider whitespace-nowrap px-2 py-0.5 rounded-full font-semibold',
+                          'text-[10px] uppercase tracking-wider whitespace-nowrap px-2 py-0.5 rounded font-semibold border',
                           isOverdue
-                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
                             : isToday(due)
-                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              : 'bg-white/10 text-gray-300 border-white/20',
                         )}
                       >
                         {hasTime && isToday(due)
@@ -72,21 +72,21 @@ export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: bool
                             : format(due, hasTime ? 'dd/MM, HH:mm' : 'dd/MM', { locale: ptBR })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
-                      <span className="font-semibold text-[10px] uppercase tracking-wider bg-muted/50 px-1.5 py-0.5 rounded border border-border/50 shrink-0 max-w-[100px] truncate">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-2 truncate w-full">
+                      <span className="font-semibold text-[10px] uppercase tracking-wider bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-gray-300 shrink-0 max-w-[100px] truncate shadow-sm">
                         {task.expand?.board_id?.expand?.client_id?.name ||
                           task.expand?.board_id?.client_name ||
                           'Interno'}
                       </span>
                       <span className="truncate">{task.expand?.board_id?.name || 'Quadro'}</span>
                     </div>
-                  </div>
+                  </div>{' '}
                 </Link>
               )
             })}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-white/20 rounded-lg bg-white/5 backdrop-blur-sm">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-gray-400 mt-4 border border-dashed border-white/10 rounded-lg bg-white/[0.02] backdrop-blur-md">
             <Clock className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhum prazo próximo</p>
           </div>

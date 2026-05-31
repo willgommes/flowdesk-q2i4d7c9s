@@ -88,18 +88,20 @@ export function DailyRoutineWidget({
                     <div
                       key={task.id}
                       className={cn(
-                        'flex items-center gap-3 p-2.5 rounded-md border transition-colors backdrop-blur-sm',
+                        'flex items-center gap-3 p-4 rounded-lg border backdrop-blur-md transition-all duration-300 group',
                         isOverdue
-                          ? 'border-red-500/40 bg-red-50/30 dark:bg-red-950/10'
-                          : 'border-white/10 bg-white/10 hover:bg-white/15',
+                          ? 'border-red-500/40 bg-red-500/10 hover:bg-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]'
+                          : 'border-white/[0.03] bg-white/[0.08] hover:bg-white/[0.12] hover:border-emerald-500/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)]',
                       )}
                     >
                       <Checkbox
                         checked={task.completed}
                         onCheckedChange={(val) => toggleComplete(task, !!val)}
                         className={cn(
-                          'w-5 h-5 rounded-full shrink-0',
-                          isOverdue ? 'border-red-500 data-[state=checked]:bg-red-500' : '',
+                          'w-5 h-5 rounded-full shrink-0 border-white/30',
+                          isOverdue
+                            ? 'border-red-500 data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500'
+                            : 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500',
                         )}
                       />
                       <Link
@@ -108,20 +110,20 @@ export function DailyRoutineWidget({
                       >
                         <span
                           className={cn(
-                            'font-medium text-sm truncate transition-colors hover:text-primary',
-                            isOverdue && 'text-red-700 dark:text-red-400',
+                            'font-medium text-sm truncate transition-colors group-hover:text-emerald-400',
+                            isOverdue ? 'text-red-400' : 'text-gray-100',
                           )}
                         >
                           {task.title}
                         </span>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
                           {task.recurrence_time && (
-                            <span className="flex items-center gap-1 font-medium">
+                            <span className="flex items-center gap-1 font-medium bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[10px] text-gray-300">
                               <Clock className="w-3 h-3" />
                               {task.recurrence_time}
                             </span>
                           )}
-                          <span className="truncate opacity-75 bg-background/50 px-1.5 py-0.5 rounded border shadow-sm">
+                          <span className="truncate font-semibold uppercase tracking-wider text-[10px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-gray-300 shadow-sm">
                             {task.expand?.board_id?.expand?.client_id?.name ||
                               task.expand?.board_id?.client_name ||
                               'Interno'}{' '}
@@ -130,7 +132,7 @@ export function DailyRoutineWidget({
                         </div>
                       </Link>
                       {isOverdue && (
-                        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-full shrink-0">
+                        <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded shrink-0 shadow-sm">
                           <AlertCircle className="w-3 h-3" />
                           Atrasada
                         </div>
@@ -149,28 +151,30 @@ export function DailyRoutineWidget({
                 {completedTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center gap-3 p-2.5 rounded-md border border-white/10 bg-white/5 backdrop-blur-sm opacity-70 transition-opacity hover:opacity-100 hover:bg-white/10"
+                    className="flex items-center gap-3 p-4 rounded-lg border border-transparent bg-white/5 backdrop-blur-md opacity-70 transition-all duration-300 hover:bg-white/[0.08] hover:opacity-100 group"
                   >
                     <Checkbox
                       checked={task.completed}
                       onCheckedChange={(val) => toggleComplete(task, !!val)}
-                      className="w-5 h-5 rounded-full shrink-0"
+                      className="w-5 h-5 rounded-full shrink-0 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                     />
                     <Link
                       to={`/boards/${task.board_id}/cards/${task.id}`}
                       className="flex-1 min-w-0 flex flex-col"
                     >
-                      <span className="font-medium text-sm truncate line-through text-muted-foreground transition-colors hover:text-primary">
+                      <span className="font-medium text-sm truncate line-through text-gray-400 transition-colors group-hover:text-emerald-400">
                         {task.title}
                       </span>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
                         {task.recurrence_time && (
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[10px]">
                             <Clock className="w-3 h-3" />
                             {task.recurrence_time}
                           </span>
                         )}
-                        <span className="truncate opacity-75">{task.expand?.board_id?.name}</span>
+                        <span className="truncate font-semibold uppercase tracking-wider text-[10px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10">
+                          {task.expand?.board_id?.name}
+                        </span>
                       </div>
                     </Link>
                   </div>
@@ -179,7 +183,7 @@ export function DailyRoutineWidget({
             )}
           </div>
         ) : (
-          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground mt-4 border border-dashed border-white/20 rounded-lg bg-white/5 backdrop-blur-sm">
+          <div className="h-full min-h-[120px] flex flex-col items-center justify-center text-gray-400 mt-4 border border-dashed border-white/10 rounded-lg bg-white/[0.02] backdrop-blur-md">
             <Repeat className="w-8 h-8 mb-2 text-muted-foreground/30" />
             <p className="text-sm font-medium">Nenhuma rotina para hoje</p>
           </div>

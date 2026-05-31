@@ -54,7 +54,7 @@ export function ActivitiesWidget({ activities, loading }: { activities: any[]; l
               return (
                 <div
                   key={activity.id}
-                  className="flex items-start gap-3 p-4 hover:bg-white/10 transition-colors"
+                  className="flex items-start gap-3 p-4 hover:bg-white/[0.08] transition-colors"
                 >
                   <Avatar className="h-8 w-8 shrink-0 border border-border/50">
                     <AvatarImage
@@ -93,8 +93,8 @@ export function ActivitiesWidget({ activities, loading }: { activities: any[]; l
             })}
           </div>
         ) : (
-          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/5">
-            <p className="text-muted-foreground text-sm font-medium">Nenhuma atividade pendente.</p>
+          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/[0.02]">
+            <p className="text-gray-400 text-sm font-medium">Nenhuma atividade pendente.</p>
           </div>
         )}
       </CardContent>
