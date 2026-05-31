@@ -255,6 +255,53 @@ export function DailyBriefingModal() {
       onOpenChange={(val) => {
         if (!val) setOpen(false)
       }}
-    ></Dialog>
+    >
+      <DialogContent className="max-w-2xl bg-white/4 backdrop-blur-xl border-white/3 text-foreground p-6 shadow-2xl sm:rounded-[2rem]">
+        <DialogHeader className="mb-2 text-left">
+          <DialogTitle className="text-2xl font-bold tracking-tight">
+            Bom dia! Seu Resumo Diário
+          </DialogTitle>
+          <DialogDescription className="text-base text-muted-foreground mt-1.5">
+            Aqui estão as tarefas que exigem sua atenção imediata. Arraste para priorizar.
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[55vh] pr-4 -mr-4">
+          <div className="space-y-6 pb-2 pt-2">
+            <Section
+              title="Vencidas / Atrasadas"
+              icon={AlertCircle}
+              colorClass="text-red-500"
+              cards={data.overdue}
+              sectionKey="overdue"
+            />
+            <Section
+              title="Para Hoje"
+              icon={Clock}
+              colorClass="text-amber-500"
+              cards={data.today}
+              sectionKey="today"
+            />
+            <Section
+              title="Próximas 24h"
+              icon={Calendar}
+              colorClass="text-blue-500"
+              cards={data.next24hCards}
+              sectionKey="next24hCards"
+            />
+          </div>
+        </ScrollArea>
+
+        <div className="mt-4 pt-5 border-t border-white/5 flex justify-end">
+          <Button
+            onClick={handleAcknowledge}
+            size="lg"
+            className="rounded-full px-10 font-semibold shadow-md"
+          >
+            Ciente
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
