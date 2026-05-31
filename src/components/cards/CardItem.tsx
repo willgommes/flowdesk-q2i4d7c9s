@@ -48,7 +48,15 @@ import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
 
-export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, onQuickMove }: any) {
+export function CardItem({
+  card,
+  index = 0,
+  boardId,
+  columnName,
+  onDragStart,
+  onDropCard,
+  onQuickMove,
+}: any) {
   const [localCard, setLocalCard] = useState(card)
   const [isDatePopoverOpen, setDatePopoverOpen] = useState(false)
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false)
@@ -261,11 +269,12 @@ export function CardItem({ card, boardId, columnName, onDragStart, onDropCard, o
       <div
         onClick={() => navigate(`/boards/${boardId}/cards/${localCard.id}`)}
         className={cn(
-          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-primary/50 hover:bg-white/[0.12] hover:shadow-lg focus-within:shadow-lg transition-all duration-300 relative cursor-pointer backdrop-blur-md',
+          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-primary/50 hover:bg-white/[0.12] hover:shadow-lg focus-within:shadow-lg transition-all duration-300 relative cursor-pointer backdrop-blur-md animate-fade-in-up fill-mode-both',
           isEffectivelyCompleted
             ? 'bg-white/5 opacity-70 border-transparent hover:bg-white/[0.08]'
             : 'bg-white/[0.08] border-white/[0.03]',
         )}
+        style={{ animationDelay: `${index * 50}ms` }}
         draggable
         onDragStart={(e) => {
           e.stopPropagation()

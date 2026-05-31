@@ -717,9 +717,10 @@ export default function BoardPage() {
         >
           {view === 'kanban' ? (
             <div className="flex gap-6 h-full items-start">
-              {columns.map((col) => (
+              {columns.map((col, idx) => (
                 <Column
                   key={col.id}
+                  index={idx}
                   column={col}
                   cards={filteredCards.filter((c) => c.column_id === col.id)}
                   onDragStart={(e: any) => handleDragStart(e, col.id)}
@@ -846,7 +847,8 @@ export default function BoardPage() {
 
               <Button
                 variant="ghost"
-                className="shrink-0 w-[280px] h-[50px] bg-white/[0.04] border border-dashed border-white/[0.03] hover:bg-white/[0.08] justify-start backdrop-blur-sm"
+                className="shrink-0 w-[280px] h-[50px] bg-white/[0.04] border border-dashed border-white/[0.03] hover:bg-white/[0.08] justify-start backdrop-blur-sm animate-fade-in-up fill-mode-both"
+                style={{ animationDelay: `${columns.length * 100}ms` }}
                 onClick={handleAddColumn}
               >
                 <Plus className="w-4 h-4 mr-2" /> Adicionar coluna
@@ -886,7 +888,7 @@ export default function BoardPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {colCards.map((card) => {
+                          {colCards.map((card, idx) => {
                             const labels =
                               card.expand?.card_labels_via_card_id?.map(
                                 (cl: any) => cl.expand?.label_id,
@@ -900,10 +902,11 @@ export default function BoardPage() {
                               <TableRow
                                 key={card.id}
                                 className={cn(
-                                  'cursor-pointer hover:bg-white/[0.12] transition-all duration-300',
+                                  'cursor-pointer hover:bg-white/[0.12] transition-all duration-300 animate-fade-in-up fill-mode-both',
                                   (card.completed || col.name.toUpperCase() === 'CONCLUÍDO') &&
                                     'opacity-70 bg-white/5',
                                 )}
+                                style={{ animationDelay: `${idx * 50}ms` }}
                                 onClick={() => navigate(`/boards/${id}/cards/${card.id}`)}
                               >
                                 <TableCell className="font-medium py-3">
@@ -1051,6 +1054,7 @@ export default function BoardPage() {
 
 function Column({
   column,
+  index = 0,
   cards = [],
   onDragStart,
   onDragEnter,
@@ -1094,7 +1098,8 @@ function Column({
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
       onDragEnd={onDragEnd}
-      className="shrink-0 w-[300px] max-h-full flex flex-col bg-white/[0.04] backdrop-blur-lg rounded-xl border border-white/[0.03] shadow-md cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-white/10 hover:bg-white/[0.08]"
+      className="shrink-0 w-[300px] max-h-full flex flex-col bg-white/[0.04] backdrop-blur-lg rounded-xl border border-white/[0.03] shadow-md cursor-grab active:cursor-grabbing transition-all duration-200 hover:border-white/10 hover:bg-white/[0.08] animate-fade-in-up fill-mode-both"
+      style={{ animationDelay: `${index * 100}ms` }}
     >
       {' '}
       <div
@@ -1187,9 +1192,10 @@ function Column({
           if (cardId) onCardDrop(cardId, column.id)
         }}
       >
-        {cards.sort(sortCardsByDueDateAndOrder).map((card: any) => (
+        {cards.sort(sortCardsByDueDateAndOrder).map((card: any, idx: number) => (
           <CardItem
             key={card.id}
+            index={idx}
             card={card}
             boardId={column.board_id}
             columnName={column.name}

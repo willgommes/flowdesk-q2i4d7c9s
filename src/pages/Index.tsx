@@ -350,11 +350,12 @@ export default function Index() {
                 }}
                 className={cn(
                   spanClass,
-                  'transition-all duration-200 ease-in-out',
+                  'transition-all duration-200 ease-in-out animate-fade-in-up fill-mode-both',
                   isDragging && 'opacity-50 scale-[0.98] rotate-1 z-10',
                   isOver &&
                     'border-primary/50 border-2 border-dashed rounded-xl bg-primary/5 scale-[1.02]',
                 )}
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 {renderWidget(id)}
               </div>

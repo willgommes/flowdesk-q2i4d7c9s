@@ -189,14 +189,15 @@ export function DailyBriefingModal() {
           </span>
         </h3>
         <div className="space-y-3">
-          {cards.map((card: any) => (
+          {cards.map((card: any, idx: number) => (
             <div
               key={card.id}
               draggable
               onDragStart={(e) => handleDragStart(e, card.id)}
               onDrop={(e) => handleDrop(e, card.id, sectionKey)}
               onDragOver={handleDragOver}
-              className={`flex items-start gap-2 p-3 sm:p-4 rounded-2xl border border-white/3 bg-white/8 hover:bg-white/12 cursor-grab active:cursor-grabbing hover:scale-[1.01] hover:shadow-lg transition-all w-full backdrop-blur-sm text-foreground`}
+              className={`flex items-start gap-2 p-3 sm:p-4 rounded-2xl border border-white/3 bg-white/8 hover:bg-white/12 cursor-grab active:cursor-grabbing hover:scale-[1.01] hover:shadow-lg transition-all w-full backdrop-blur-sm text-foreground animate-fade-in-up fill-mode-both`}
+              style={{ animationDelay: `${idx * 80}ms` }}
             >
               <GripVertical className="w-5 h-5 opacity-50 shrink-0 mt-0.5" />
               <Link
@@ -292,12 +293,15 @@ export function DailyBriefingModal() {
           </div>
         </ScrollArea>
 
-        <div className="mt-4 pt-5 border-t border-white/10 flex justify-end">
+        <div
+          className="mt-4 pt-5 border-t border-white/10 flex justify-end animate-fade-in-up fill-mode-both"
+          style={{ animationDelay: '300ms' }}
+        >
           <Button
             onClick={handleAcknowledge}
             size="lg"
             variant="default"
-            className="rounded-full px-10 font-semibold shadow-md border-none outline-none"
+            className="rounded-full px-10 font-semibold shadow-md border-none outline-none hover:opacity-90 hover:scale-[1.02] transition-all duration-300"
           >
             Ciente
           </Button>
