@@ -43,14 +43,18 @@ export function Comments({ cardId, comments, onChange }: any) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Escreva um comentário..."
-            className="min-h-[80px] rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+            className="min-h-[80px] rounded-lg border border-white/10 bg-white/5 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
           />
-          <Button onClick={handleAdd} size="sm">
+          <Button
+            onClick={handleAdd}
+            size="sm"
+            className="active:scale-[0.98] transition-transform"
+          >
             Salvar Comentário
           </Button>
         </div>
       </div>
-      <div className="space-y-4 pt-4 border-t">
+      <div className="space-y-4 pt-4 border-t border-white/10">
         {comments
           .sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime())
           .map((c: any) => (
@@ -79,14 +83,16 @@ export function Comments({ cardId, comments, onChange }: any) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-red-500 transition-opacity"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-white/5 transition-opacity"
                       onClick={() => remove(c.id)}
                     >
                       ×
                     </Button>
                   )}
                 </div>
-                <p className="text-sm mt-1 bg-muted/50 p-3 rounded-lg text-gray-100">{c.content}</p>
+                <p className="text-sm mt-1 bg-white/5 border border-white/10 p-3 rounded-lg text-gray-100">
+                  {c.content}
+                </p>
               </div>
             </div>
           ))}

@@ -36,7 +36,7 @@ export function ActivityLog({ cardId }: { cardId: string }) {
     )
 
   return (
-    <div className="space-y-3 bg-white/5 border border-white/10 p-4 rounded-lg">
+    <div className="space-y-3 bg-white/5 border border-white/10 p-4 rounded-lg backdrop-blur-sm">
       <div className="flex justify-between items-center mb-4">
         <span className="text-sm font-semibold text-gray-300">Histórico de Atividades</span>
         <Button

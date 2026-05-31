@@ -27,7 +27,7 @@ export function CardModalRoute() {
   if (isMobile) {
     return (
       <Drawer open={true} onOpenChange={(o) => !o && handleClose()}>
-        <DrawerContent className="h-[96vh] flex flex-col p-0 overflow-hidden">
+        <DrawerContent className="h-[96vh] flex flex-col p-0 overflow-hidden bg-black/60 backdrop-blur-xl border-white/10 text-gray-100">
           <DrawerHeader className="sr-only">
             <DrawerTitle>Detalhes do Cartão</DrawerTitle>
             <DrawerDescription>Visualização e edição do cartão Kanban.</DrawerDescription>
@@ -48,7 +48,7 @@ export function CardModalRoute() {
 
   return (
     <Dialog open={true} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-background rounded-xl border-border shadow-xl sm:rounded-xl">
+      <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-white/10 backdrop-blur-xl rounded-xl border-white/10 shadow-2xl sm:rounded-xl">
         <DialogTitle className="sr-only">Detalhes do Cartão</DialogTitle>
         <DialogDescription className="sr-only">
           Visualização e edição do cartão Kanban.

@@ -137,7 +137,7 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
   if (isEditing) {
     return (
       <div className="space-y-2 relative animate-fade-in">
-        <div className="flex items-center gap-1 mb-2 bg-muted/50 p-1.5 rounded-md border border-border">
+        <div className="flex items-center gap-1 mb-2 bg-white/5 p-1.5 rounded-md border border-white/10">
           <Button
             variant="ghost"
             size="icon"
@@ -174,7 +174,7 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
           >
             <Underline className="h-4 w-4" />
           </Button>
-          <div className="w-[1px] h-4 bg-border mx-1" />
+          <div className="w-[1px] h-4 bg-white/10 mx-1" />
           <Button
             variant="ghost"
             size="icon"
@@ -225,7 +225,7 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
             <Button
               variant="outline"
               size="sm"
-              className="text-xs font-medium w-full mt-2 transition-all hover:bg-muted"
+              className="text-xs font-medium w-full mt-2 transition-all bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-gray-300 active:scale-[0.99]"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               {isExpanded ? (
@@ -555,7 +555,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
 
   return (
     <div className="flex h-auto md:h-full md:max-h-full flex-col md:flex-row md:overflow-hidden">
-      <div className="flex-1 md:overflow-y-auto p-4 md:p-6 space-y-6 md:space-y-8 bg-background">
+      <div className="flex-1 md:overflow-y-auto p-4 md:p-6 space-y-6 md:space-y-8 bg-transparent">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center text-sm text-gray-400 gap-2 font-medium">
             <LayoutTemplate className="w-4 h-4" />
@@ -599,9 +599,10 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   return (
                     <Tooltip key={cm.id}>
                       <TooltipTrigger asChild>
-                        <Avatar className="w-8 h-8 border border-border shadow-sm cursor-help">
+                        <Avatar className="w-8 h-8 border border-white/10 shadow-sm cursor-help">
                           <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : undefined} />
                           <AvatarFallback className="text-xs font-medium">
+                            {' '}
                             {m.name?.[0]?.toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
@@ -667,6 +668,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             <Button
               variant="outline"
               size="sm"
+              className="bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-gray-300"
               onClick={() => document.getElementById('file-upload')?.click()}
             >
               Adicionar Anexo
@@ -681,9 +683,9 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   href={pb.files.getURL(a, a.file)}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex flex-col border rounded-lg overflow-hidden group hover:border-primary shadow-sm transition-all hover:shadow-md"
+                  className="flex flex-col border border-white/10 rounded-lg overflow-hidden group hover:border-emerald-500/50 shadow-sm transition-all hover:shadow-md bg-white/5"
                 >
-                  <div className="bg-muted/50 h-24 flex items-center justify-center relative">
+                  <div className="bg-black/20 h-24 flex items-center justify-center relative">
                     {a.type?.includes('image') ? (
                       <img
                         src={pb.files.getURL(a, a.file)}
@@ -694,14 +696,14 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                       <Paperclip className="w-8 h-8 text-gray-400" />
                     )}
                   </div>
-                  <div className="p-2 text-xs truncate font-medium bg-background text-gray-100">
+                  <div className="p-2 text-xs truncate font-medium bg-transparent text-gray-100 border-t border-white/10">
                     {a.name}
                   </div>
                 </a>
               ))}
             </div>
           ) : (
-            <div className="text-sm text-gray-400 border-2 border-dashed p-6 text-center rounded-lg">
+            <div className="text-sm text-gray-400 border-2 border-dashed border-white/10 bg-white/5 p-6 text-center rounded-lg">
               Nenhum anexo neste cartão.
             </div>
           )}
@@ -722,11 +724,14 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
       </div>
 
-      <div className="w-full md:w-[280px] shrink-0 bg-muted/20 p-4 pt-12 md:p-6 md:pt-14 space-y-6 border-t md:border-t-0 md:border-l border-border md:overflow-y-auto">
+      <div className="w-full md:w-[280px] shrink-0 bg-white/5 p-4 pt-12 md:p-6 md:pt-14 space-y-6 border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto backdrop-blur-md">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-2">
           <Button
             variant={card.completed ? 'outline' : 'default'}
-            className="w-full justify-start font-semibold shadow-sm"
+            className={cn(
+              'w-full justify-start font-semibold shadow-sm active:scale-[0.98] transition-all',
+              card.completed ? 'bg-white/5 border-white/10 hover:bg-white/10' : '',
+            )}
             onClick={toggleComplete}
           >
             <CheckSquare className="w-4 h-4 mr-2" />
@@ -736,7 +741,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           {!card.completed && (
             <Button
               variant="outline"
-              className="w-full justify-start font-semibold shadow-sm text-emerald-500 hover:text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all"
+              className="w-full justify-start font-semibold shadow-sm text-emerald-500 hover:text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all active:scale-[0.98]"
               onClick={() => handleQuickMove('in_progress')}
             >
               <Play className="w-4 h-4 mr-2 fill-current" />
@@ -755,12 +760,15 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all active:scale-[0.98]"
                 >
                   <Users className="w-4 h-4 mr-2 text-emerald-500/70" /> Membros
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-3" align="end">
+              <PopoverContent
+                className="w-64 p-3 bg-zinc-950/90 backdrop-blur-xl border-white/10"
+                align="end"
+              >
                 <h4 className="font-semibold text-sm mb-3 text-gray-100">Membros do Quadro</h4>
                 <div className="space-y-1">
                   {board.expand?.members?.map((m: any) => {
@@ -768,7 +776,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     return (
                       <div
                         key={m.id}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded-md transition-colors"
+                        className="flex items-center gap-2 cursor-pointer hover:bg-white/10 p-2 rounded-md transition-colors"
                         onClick={async () => {
                           if (isAssigned) {
                             const cm = members.find((x: any) => x.user_id === m.id)
@@ -799,12 +807,15 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all active:scale-[0.98]"
                 >
                   <Tag className="w-4 h-4 mr-2 text-emerald-500/70" /> Etiquetas
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-3" align="end">
+              <PopoverContent
+                className="w-64 p-3 bg-zinc-950/90 backdrop-blur-xl border-white/10"
+                align="end"
+              >
                 <h4 className="font-semibold text-sm mb-3 text-gray-100">Etiquetas</h4>
                 <div className="space-y-1 max-h-48 overflow-auto mb-3">
                   {boardLabels.map((l: any) => {
@@ -812,7 +823,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     return (
                       <div
                         key={l.id}
-                        className="flex items-center justify-between group p-1.5 rounded-md hover:bg-muted transition-colors"
+                        className="flex items-center justify-between group p-1.5 rounded-md hover:bg-white/10 transition-colors"
                       >
                         <div
                           className="flex items-center gap-2 cursor-pointer flex-1"
@@ -878,7 +889,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-5 text-[10px] px-2"
+                        className="h-5 text-[10px] px-2 hover:bg-white/10"
                         onClick={() => setEditingLabel(null)}
                       >
                         Cancelar
@@ -890,7 +901,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     placeholder="Nome da etiqueta..."
                     required
                     defaultValue={editingLabel?.name}
-                    className="h-8 text-sm"
+                    className="h-8 text-sm bg-white/5 border-white/10 focus-visible:ring-emerald-500/50"
                   />
                   <div className="flex flex-wrap gap-1.5 justify-between">
                     {LABEL_COLORS.map((c) => (
@@ -912,7 +923,11 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                       </label>
                     ))}
                   </div>
-                  <Button type="submit" size="sm" className="w-full h-8">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="w-full h-8 active:scale-[0.98] transition-transform"
+                  >
                     {editingLabel ? 'Salvar Alterações' : 'Criar Etiqueta'}
                   </Button>
                 </form>
@@ -924,7 +939,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 <Button
                   variant="outline"
                   className={cn(
-                    'w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all',
+                    'w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all active:scale-[0.98]',
                     isRecurring &&
                       'text-emerald-500 border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10',
                   )}
@@ -938,7 +953,10 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   {isRecurring ? 'Recorrente' : 'Recorrência'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 p-3" align="end">
+              <PopoverContent
+                className="w-72 p-3 bg-zinc-950/90 backdrop-blur-xl border-white/10"
+                align="end"
+              >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-sm text-gray-100">Tarefa Recorrente</h4>
@@ -975,7 +993,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           type="time"
                           value={recurrenceTime}
                           onChange={(e) => updateRecurrenceConfig(recurrenceDays, e.target.value)}
-                          className="h-8 text-sm"
+                          className="h-8 text-sm bg-white/5 border-white/10 focus-visible:ring-emerald-500/50"
                         />
                       </div>
                     </div>
@@ -988,7 +1006,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all active:scale-[0.98]"
                 >
                   <Clock className="w-4 h-4 mr-2 text-emerald-500/70" />
                   {card.due_date && dueDateObj
@@ -1002,7 +1020,10 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     : 'Data de Entrega'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
+              <PopoverContent
+                className="w-auto p-0 bg-zinc-950/90 backdrop-blur-xl border-white/10"
+                align="end"
+              >
                 <Calendar
                   mode="single"
                   selected={card.due_date ? new Date(card.due_date) : undefined}
@@ -1043,7 +1064,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   }}
                   initialFocus
                 />
-                <div className="p-3 border-t border-border flex items-center justify-between gap-2">
+                <div className="p-3 border-t border-white/10 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-400" />
                     <Input
@@ -1056,6 +1077,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           e.currentTarget.blur()
                         }
                       }}
+                      className="w-[100px] h-8 text-sm bg-white/5 border-white/10 focus-visible:ring-emerald-500/50"
                       onBlur={async () => {
                         if (!card.due_date) return
                         const d = new Date(card.due_date)
@@ -1086,14 +1108,13 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           onChange()
                         }
                       }}
-                      className="w-[100px] h-8 text-sm"
                     />{' '}
                   </div>
                   {card.due_date && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-500 hover:text-red-500 h-8 px-2"
+                      className="text-red-500 hover:text-red-500 hover:bg-red-500/10 h-8 px-2"
                       onClick={async () => {
                         await pb.collection('cards').update(card.id, { due_date: null })
                         await logAct('date_change', 'Removeu a data de entrega')
@@ -1118,12 +1139,15 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all active:scale-[0.98]"
                 >
                   <ArrowRightLeft className="w-4 h-4 mr-2 text-emerald-500/70" /> Mover
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-3" align="end">
+              <PopoverContent
+                className="w-64 p-3 bg-zinc-950/90 backdrop-blur-xl border-white/10"
+                align="end"
+              >
                 <h4 className="font-semibold text-sm mb-3 text-gray-100">Mover para Coluna</h4>
                 <Select
                   value={card.column_id}
@@ -1137,9 +1161,13 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   <SelectTrigger className="rounded-lg border border-white/10 bg-white/5 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-500/50 hover:border-white/20 transition-colors">
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-zinc-950/90 backdrop-blur-xl border-white/10">
                     {columns.map((col: any) => (
-                      <SelectItem key={col.id} value={col.id}>
+                      <SelectItem
+                        key={col.id}
+                        value={col.id}
+                        className="focus:bg-white/10 focus:text-white"
+                      >
                         {col.name}
                       </SelectItem>
                     ))}
@@ -1150,7 +1178,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
 
             <Button
               variant="outline"
-              className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
+              className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all active:scale-[0.98]"
               onClick={handleDuplicate}
             >
               <Copy className="w-4 h-4 mr-2 text-emerald-500/70" /> Duplicar
@@ -1158,7 +1186,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
 
             <Button
               variant="outline"
-              className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
+              className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all active:scale-[0.98]"
               onClick={handleArchive}
             >
               <Archive className="w-4 h-4 mr-2 text-emerald-500/70" /> Arquivar
@@ -1166,7 +1194,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
 
             <Button
               variant="outline"
-              className="w-full justify-start bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 transition-all"
+              className="w-full justify-start bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 transition-all active:scale-[0.98]"
               onClick={handleDelete}
             >
               <Trash2 className="w-4 h-4 mr-2 text-red-500" />{' '}

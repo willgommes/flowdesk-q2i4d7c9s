@@ -105,7 +105,7 @@ export function Checklist({ cardId, items, onChange }: any) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-gray-400 hover:text-red-500"
+                className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-white/5"
                 onClick={() => remove(item.id)}
               >
                 ×
@@ -118,7 +118,7 @@ export function Checklist({ cardId, items, onChange }: any) {
         onChange={(e) => setNewItem(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
         placeholder="Adicionar item..."
-        className="h-8 text-sm"
+        className="h-8 text-sm bg-white/5 border-white/10 focus-visible:ring-emerald-500/50"
       />
     </div>
   )
