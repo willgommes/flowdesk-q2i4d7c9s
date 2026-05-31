@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { AppHeader } from '@/components/AppHeader'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   format,
   addMonths,
@@ -127,6 +128,56 @@ export default function CalendarPage() {
               const isCurrentMonth = isSameMonth(day, monthStart)
               const isTodayDate = isToday(day)
 
+              const allDayItems = [
+                ...dayCards.map((c) => ({ type: 'card', data: c })),
+                ...dayEvents.map((e) => ({ type: 'event', data: e })),
+              ]
+
+              const MAX_VISIBLE = 3
+              const overflowCount =
+                allDayItems.length > MAX_VISIBLE ? allDayItems.length - MAX_VISIBLE + 1 : 0
+              const visibleItems =
+                overflowCount > 0 ? allDayItems.slice(0, MAX_VISIBLE - 1) : allDayItems
+
+              const renderItem = (item: any, isCompact = false) => {
+                if (item.type === 'card') {
+                  const card = item.data
+                  return (
+                    <Link
+                      key={`card-${card.id}`}
+                      to={`/boards/${card.board_id}/cards/${card.id}`}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', card.id)
+                        setDraggedCardId(card.id)
+                      }}
+                      onDragEnd={() => setDraggedCardId(null)}
+                      className={cn(
+                        'block font-medium truncate rounded transition-all duration-200 cursor-grab active:cursor-grabbing backdrop-blur-md shadow-sm hover:shadow-md bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30',
+                        isCompact ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1.5 text-xs',
+                      )}
+                      title={card.title}
+                    >
+                      {card.title}
+                    </Link>
+                  )
+                } else {
+                  const ev = item.data
+                  return (
+                    <div
+                      key={`ev-${ev.id}`}
+                      className={cn(
+                        'block font-medium truncate rounded cursor-default backdrop-blur-md transition-all duration-200 shadow-sm bg-primary/20 border border-primary/30 border-dashed text-primary hover:bg-primary/30',
+                        isCompact ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1.5 text-xs',
+                      )}
+                      title={`Sazonal: ${ev.title} (Quadro: ${ev.board_name})`}
+                    >
+                      🕒 {ev.title}
+                    </div>
+                  )
+                }
+              }
+
               return (
                 <div
                   key={day.toString()}
@@ -188,36 +239,33 @@ export default function CalendarPage() {
                       {format(day, 'd')}
                     </span>
                   </div>
-                  <div className="space-y-1 mt-1 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    {dayCards.map((card) => {
-                      return (
-                        <Link
-                          key={card.id}
-                          to={`/boards/${card.board_id}/cards/${card.id}`}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData('text/plain', card.id)
-                            setDraggedCardId(card.id)
-                          }}
-                          onDragEnd={() => setDraggedCardId(null)}
-                          className="block px-2 py-1.5 text-xs font-medium truncate rounded-md transition-all duration-200 cursor-grab active:cursor-grabbing backdrop-blur-md shadow-sm hover:shadow-md bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30"
-                          title={card.title}
+                  <div className="space-y-1 mt-1 flex-1 flex flex-col overflow-hidden">
+                    {visibleItems.map((item) => renderItem(item, true))}
+                    {overflowCount > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="w-full text-left px-1.5 py-0.5 mt-auto text-[10px] font-semibold rounded text-primary hover:bg-primary/10 transition-colors"
+                          >
+                            + {overflowCount} mais
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-64 p-3 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl z-50 rounded-xl"
+                          align="start"
+                          side="bottom"
+                          sideOffset={4}
                         >
-                          {card.title}
-                        </Link>
-                      )
-                    })}
-                    {dayEvents.map((ev) => {
-                      return (
-                        <div
-                          key={ev.id}
-                          className="block px-2 py-1.5 text-xs font-medium truncate rounded-md cursor-default backdrop-blur-md transition-all duration-200 shadow-sm bg-primary/20 border border-primary/30 border-dashed text-primary hover:bg-primary/30"
-                          title={`Sazonal: ${ev.title} (Quadro: ${ev.board_name})`}
-                        >
-                          🕒 {ev.title}
-                        </div>
-                      )
-                    })}
+                          <div className="text-sm font-semibold mb-3 text-gray-200 border-b border-white/10 pb-2 capitalize">
+                            {format(day, "d 'de' MMMM", { locale: ptBR })}
+                          </div>
+                          <div className="space-y-1.5 max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full pr-1">
+                            {allDayItems.map((item) => renderItem(item, false))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
                   </div>
                 </div>
               )
