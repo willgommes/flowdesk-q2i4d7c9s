@@ -152,6 +152,15 @@
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-[1.02];
   }
+  .calendar-event {
+    background-color: color-mix(in srgb, var(--card-color) 20%, transparent);
+    border-color: color-mix(in srgb, var(--card-color) 30%, transparent);
+    color: color-mix(in srgb, var(--card-color) 10%, #ffffff);
+  }
+  .calendar-event:hover {
+    background-color: color-mix(in srgb, var(--card-color) 30%, transparent);
+    border-color: color-mix(in srgb, var(--card-color) 40%, transparent);
+  }
 }
 
 @media print {

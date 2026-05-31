@@ -190,7 +190,7 @@ export default function CalendarPage() {
                   </div>
                   <div className="space-y-1 mt-1 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {dayCards.map((card) => {
-                      const boardColor = card.expand?.board_id?.color || '#3b82f6'
+                      const boardColor = card.expand?.board_id?.color || 'hsl(var(--primary))'
                       return (
                         <Link
                           key={card.id}
@@ -201,12 +201,8 @@ export default function CalendarPage() {
                             setDraggedCardId(card.id)
                           }}
                           onDragEnd={() => setDraggedCardId(null)}
-                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm transition-opacity hover:opacity-80 border cursor-grab active:cursor-grabbing backdrop-blur-sm"
-                          style={{
-                            backgroundColor: `${boardColor}20`,
-                            borderColor: `${boardColor}40`,
-                            color: '#f8fafc',
-                          }}
+                          className="calendar-event block px-2 py-1.5 text-xs font-medium truncate rounded-md transition-all duration-200 border cursor-grab active:cursor-grabbing backdrop-blur-md shadow-sm hover:shadow-md"
+                          style={{ '--card-color': boardColor } as React.CSSProperties}
                           title={card.title}
                         >
                           {card.title}
@@ -217,7 +213,8 @@ export default function CalendarPage() {
                       return (
                         <div
                           key={ev.id}
-                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm border border-dashed cursor-default bg-white/5 border-white/20 text-gray-300"
+                          className="calendar-event block px-2 py-1.5 text-xs font-medium truncate rounded-md border border-dashed cursor-default backdrop-blur-md transition-all duration-200 shadow-sm"
+                          style={{ '--card-color': 'hsl(var(--primary))' } as React.CSSProperties}
                           title={`Sazonal: ${ev.title} (Quadro: ${ev.board_name})`}
                         >
                           🕒 {ev.title}
