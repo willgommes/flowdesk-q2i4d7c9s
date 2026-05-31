@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ActivityIcon, GripVertical } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -33,8 +34,16 @@ export function ActivitiesWidget({ activities, loading }: { activities: any[]; l
       </CardHeader>
       <CardContent className="flex-1 p-0">
         {loading ? (
-          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/5">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="divide-y divide-white/10 border-t border-white/10">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3 p-4">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2 mt-1">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : activities.length > 0 ? (
           <div className="divide-y divide-white/10 border-t border-white/10">

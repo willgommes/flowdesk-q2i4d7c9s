@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { FolderKanbanIcon, GripVertical } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 
@@ -15,8 +16,16 @@ export function BoardsWidget({ boards, loading }: { boards: any[]; loading: bool
       </CardHeader>
       <CardContent className="flex-1 p-0">
         {loading ? (
-          <div className="h-32 flex items-center justify-center border-t border-white/10 bg-white/5">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="grid grid-cols-1 divide-y divide-white/10 border-t border-white/10">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4">
+                <Skeleton className="w-10 h-10 rounded-md shrink-0" />
+                <div className="overflow-hidden flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : boards.length > 0 ? (
           <div className="grid grid-cols-1 divide-y divide-white/10 border-t border-white/10">

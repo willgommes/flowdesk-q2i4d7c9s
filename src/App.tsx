@@ -36,8 +36,11 @@ const ProtectedRoute = ({
   const { user, isLoading } = useAuth()
   if (isLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-pulse rounded-full bg-primary/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]"></div>
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Carregando...</p>
+        </div>
       </div>
     )
   if (!user) return <Navigate to="/login" replace />
@@ -49,8 +52,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth()
   if (isLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-pulse rounded-full bg-primary/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]"></div>
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Carregando...</p>
+        </div>
       </div>
     )
   if (user) return <Navigate to="/" replace />
