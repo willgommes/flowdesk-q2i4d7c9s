@@ -256,7 +256,7 @@ export function DailyBriefingModal() {
         if (!val) setOpen(false)
       }}
     >
-      <DialogContent className="max-w-2xl bg-white/4 backdrop-blur-xl border-white/3 text-foreground p-6 shadow-2xl sm:rounded-[2rem]">
+      <DialogContent className="max-w-2xl bg-white/10 backdrop-blur-xl border border-white/10 text-foreground p-6 shadow-2xl sm:rounded-[2rem]">
         <DialogHeader className="mb-2 text-left">
           <DialogTitle className="text-2xl font-bold tracking-tight">
             Bom dia! Seu Resumo Diário
@@ -292,11 +292,12 @@ export function DailyBriefingModal() {
           </div>
         </ScrollArea>
 
-        <div className="mt-4 pt-5 border-t border-white/5 flex justify-end">
+        <div className="mt-4 pt-5 border-t border-white/10 flex justify-end">
           <Button
             onClick={handleAcknowledge}
             size="lg"
-            className="rounded-full px-10 font-semibold shadow-md"
+            variant="default"
+            className="rounded-full px-10 font-semibold shadow-md border-none outline-none"
           >
             Ciente
           </Button>
