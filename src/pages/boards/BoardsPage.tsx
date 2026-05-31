@@ -221,7 +221,7 @@ export default function BoardsPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : filteredBoards.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 backdrop-blur-md rounded-lg border border-white/10 border-dashed animate-fade-in">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 border-dashed animate-fade-in">
             <LayoutTemplate className="w-16 h-16 text-gray-400 mb-4 opacity-50" />
             <h3 className="text-lg font-medium mb-2 text-gray-100">Nenhum quadro encontrado</h3>
             <p className="text-gray-400 max-w-sm mb-4">
@@ -239,7 +239,7 @@ export default function BoardsPage() {
               <Card
                 key={board.id}
                 onClick={() => navigate(`/boards/${board.id}`)}
-                className="h-full flex flex-col border-border/60 hover-scale shadow-subtle transition-all cursor-pointer overflow-hidden group relative"
+                className="h-full flex flex-col hover-scale shadow-subtle transition-all cursor-pointer overflow-hidden group relative"
               >
                 <CardHeader className="pb-4 shrink-0">
                   <div className="flex justify-between items-start w-full">
@@ -285,7 +285,10 @@ export default function BoardsPage() {
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent
+                          align="end"
+                          className="border-white/10 bg-[#0b0f17]/95 backdrop-blur-xl"
+                        >
                           <DropdownMenuItem onClick={() => toggleArchiveBoard(board)}>
                             {board.archived ? (
                               <ArchiveRestore className="w-4 h-4 mr-2" />
@@ -377,7 +380,7 @@ export default function BoardsPage() {
           open={!!boardToDelete}
           onOpenChange={(open) => !open && !isDeleting && setBoardToDelete(null)}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-[#0b0f17]/95 backdrop-blur-xl border-white/10">
             <AlertDialogHeader>
               <AlertDialogTitle>Excluir quadro?</AlertDialogTitle>
               <AlertDialogDescription>

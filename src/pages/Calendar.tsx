@@ -70,7 +70,7 @@ export default function CalendarPage() {
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
+    <div className="flex flex-col h-screen overflow-hidden">
       <AppHeader />
       <div className="flex-1 flex flex-col p-4 md:p-8 overflow-hidden max-w-7xl mx-auto w-full animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
@@ -86,7 +86,7 @@ export default function CalendarPage() {
             <Button variant="outline" size="sm" onClick={goToToday}>
               Hoje
             </Button>
-            <div className="flex items-center gap-1 border rounded-md p-1 bg-card">
+            <div className="flex items-center gap-1 border border-white/10 rounded-md p-1 bg-white/5 backdrop-blur-sm">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={prevMonth}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -97,12 +97,12 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="flex-1 border rounded-xl overflow-hidden flex flex-col bg-card shadow-subtle">
-          <div className="grid grid-cols-7 border-b bg-muted/30">
+        <div className="flex-1 border border-white/10 rounded-xl overflow-hidden flex flex-col bg-white/5 backdrop-blur-xl shadow-subtle">
+          <div className="grid grid-cols-7 border-b border-white/10 bg-white/5">
             {weekDays.map((day) => (
               <div
                 key={day}
-                className="p-2 sm:p-3 text-center text-xs sm:text-sm font-semibold text-muted-foreground"
+                className="p-2 sm:p-3 text-center text-xs sm:text-sm font-semibold text-gray-400"
               >
                 {day}
               </div>
@@ -173,8 +173,8 @@ export default function CalendarPage() {
                     }
                   }}
                   className={cn(
-                    'min-h-[100px] border-b border-r p-1 sm:p-2 transition-colors flex flex-col relative',
-                    !isCurrentMonth && 'bg-muted/20 text-muted-foreground/50',
+                    'min-h-[100px] border-b border-r border-white/5 p-1 sm:p-2 transition-colors flex flex-col relative',
+                    !isCurrentMonth && 'bg-white/5 text-gray-500',
                     (i + 1) % 7 === 0 && 'border-r-0',
                   )}
                 >
@@ -182,7 +182,7 @@ export default function CalendarPage() {
                     <span
                       className={cn(
                         'text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full',
-                        isTodayDate && 'bg-primary text-primary-foreground',
+                        isTodayDate && 'bg-emerald-500/20 text-emerald-400',
                       )}
                     >
                       {format(day, 'd')}
@@ -201,11 +201,11 @@ export default function CalendarPage() {
                             setDraggedCardId(card.id)
                           }}
                           onDragEnd={() => setDraggedCardId(null)}
-                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm transition-opacity hover:opacity-80 border cursor-grab active:cursor-grabbing"
+                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm transition-opacity hover:opacity-80 border cursor-grab active:cursor-grabbing backdrop-blur-sm"
                           style={{
-                            backgroundColor: `${boardColor}15`,
-                            borderColor: `${boardColor}30`,
-                            color: boardColor,
+                            backgroundColor: `${boardColor}20`,
+                            borderColor: `${boardColor}40`,
+                            color: '#f8fafc',
                           }}
                           title={card.title}
                         >
@@ -217,12 +217,7 @@ export default function CalendarPage() {
                       return (
                         <div
                           key={ev.id}
-                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm border border-dashed opacity-70 cursor-default"
-                          style={{
-                            backgroundColor: `#f8fafc`,
-                            borderColor: `#cbd5e1`,
-                            color: '#475569',
-                          }}
+                          className="block px-2 py-1 text-[10px] sm:text-xs truncate rounded-sm border border-dashed cursor-default bg-white/5 border-white/20 text-gray-300"
                           title={`Sazonal: ${ev.title} (Quadro: ${ev.board_name})`}
                         >
                           🕒 {ev.title}

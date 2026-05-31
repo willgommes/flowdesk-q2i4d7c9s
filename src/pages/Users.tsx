@@ -244,10 +244,10 @@ export default function Users() {
                 <Plus className="w-4 h-4" /> Adicionar Usuário
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] bg-[#0b0f17]/95 backdrop-blur-xl border-white/10 text-gray-100">
               <DialogHeader>
-                <DialogTitle>Adicionar Novo Usuário</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-gray-100">Adicionar Novo Usuário</DialogTitle>
+                <DialogDescription className="text-gray-400">
                   Crie um novo usuário para ter acesso à plataforma.
                 </DialogDescription>
               </DialogHeader>
@@ -326,9 +326,9 @@ export default function Users() {
       )}
 
       <div className="p-8 max-w-6xl mx-auto w-full animate-fade-in">
-        <div className="rounded-md border bg-card overflow-hidden shadow-subtle">
+        <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-subtle">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader className="bg-white/5">
               <TableRow>
                 <TableHead>Usuário</TableHead>
                 <TableHead>Papel</TableHead>
@@ -353,14 +353,14 @@ export default function Users() {
                   <TableRow key={u.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 relative overflow-hidden">
+                        <Avatar className="h-9 w-9 relative overflow-hidden border border-white/10">
                           <AvatarImage src={u.avatar ? pb.files.getURL(u as any, u.avatar) : ''} />
-                          <AvatarFallback className="bg-primary/10 text-primary">
+                          <AvatarFallback className="bg-emerald-500/20 text-emerald-400">
                             {u.name?.substring(0, 2).toUpperCase() || 'U'}
                           </AvatarFallback>
                           {uploadingUserId === u.id && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-[#0b0f17]/50 backdrop-blur-sm">
+                              <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
                             </div>
                           )}
                         </Avatar>
@@ -372,7 +372,7 @@ export default function Users() {
                               new Date().getHours() >= 10 && (
                                 <Tooltip>
                                   <TooltipTrigger>
-                                    <AlertCircle className="w-4 h-4 text-destructive" />
+                                    <AlertCircle className="w-4 h-4 text-red-400" />
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     Briefing diário pendente (Atrasado)
@@ -380,7 +380,7 @@ export default function Users() {
                                 </Tooltip>
                               )}
                           </span>
-                          <span className="text-xs text-muted-foreground">{u.email}</span>
+                          <span className="text-xs text-gray-400">{u.email}</span>
                         </div>
                       </div>
                     </TableCell>
@@ -392,10 +392,8 @@ export default function Users() {
                         {u.role}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(u.created)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-gray-400">{formatDate(u.created)}</TableCell>
+                    <TableCell className="text-sm text-gray-400">
                       {u.lastActive ? formatDate(u.lastActive) : 'Nunca'}
                     </TableCell>
                     <TableCell>
@@ -413,7 +411,10 @@ export default function Users() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent
+                          align="end"
+                          className="border-white/10 bg-[#0b0f17]/95 backdrop-blur-xl"
+                        >
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuItem
                             onClick={() => setPermissionsUserId(u.id)}

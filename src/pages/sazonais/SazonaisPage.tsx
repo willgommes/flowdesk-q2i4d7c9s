@@ -111,9 +111,9 @@ function CreateSeasonalDialog({ open, onOpenChange, boards, columns, onSuccess }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-[#0b0f17]/95 backdrop-blur-xl border-white/10 text-gray-100">
         <DialogHeader>
-          <DialogTitle>Nova Tarefa Sazonal</DialogTitle>
+          <DialogTitle className="text-gray-100">Nova Tarefa Sazonal</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -217,9 +217,9 @@ function MoveSelectedDialog({ open, onOpenChange, boards, columns, selectedIds, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-[#0b0f17]/95 backdrop-blur-xl border-white/10 text-gray-100">
         <DialogHeader>
-          <DialogTitle>Mover {selectedIds.size} Selecionados</DialogTitle>
+          <DialogTitle className="text-gray-100">Mover {selectedIds.size} Selecionados</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -544,7 +544,7 @@ export default function SazonaisPage() {
   ]
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-muted/10">
+    <div className="flex flex-col h-screen overflow-hidden">
       <AppHeader />
       <div className="flex-1 overflow-auto p-6 md:p-8 animate-fade-in">
         <div className="max-w-7xl mx-auto space-y-8 pb-12">
@@ -567,17 +567,17 @@ export default function SazonaisPage() {
           </div>
 
           <Tabs defaultValue="cartoes" className="w-full space-y-6">
-            <TabsList className="bg-muted/50 border">
+            <TabsList>
               <TabsTrigger value="cartoes">Cartões Sazonais</TabsTrigger>
               <TabsTrigger value="config">Configuração & Preview</TabsTrigger>
             </TabsList>
 
             <TabsContent value="cartoes" className="space-y-6 m-0">
-              <div className="bg-background rounded-xl border shadow-sm p-6 space-y-6">
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-sm p-6 space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
                     <div className="relative w-full sm:max-w-sm">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
                         placeholder="Buscar por nome ou descrição..."
                         value={searchTerm}
@@ -619,9 +619,9 @@ export default function SazonaisPage() {
                   )}
                 </div>
 
-                <div className="border rounded-md overflow-hidden bg-background shadow-sm">
+                <div className="border border-white/10 rounded-md overflow-hidden bg-white/5 shadow-sm">
                   <Table className="w-full text-sm text-left min-w-[800px]">
-                    <TableHeader className="bg-muted/50 border-b">
+                    <TableHeader className="bg-white/5 border-b border-white/10">
                       <TableRow>
                         <TableHead className="w-[40px] text-center">
                           <Checkbox
@@ -670,7 +670,7 @@ export default function SazonaisPage() {
                         paginatedCards.map((c) => (
                           <TableRow
                             key={c.id}
-                            className="hover:bg-muted/30 transition-colors group"
+                            className="hover:bg-white/5 transition-colors group border-b border-white/10"
                           >
                             <TableCell className="w-[40px] text-center">
                               <Checkbox
@@ -679,14 +679,14 @@ export default function SazonaisPage() {
                               />
                             </TableCell>
                             <TableCell
-                              className="px-4 py-3 font-medium text-foreground cursor-pointer"
+                              className="px-4 py-3 font-medium text-gray-100 cursor-pointer"
                               onClick={() => setEditingCardId(c.id)}
                             >
                               {c.title}
                             </TableCell>
-                            <TableCell className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                            <TableCell className="px-4 py-3 text-gray-400 whitespace-nowrap">
                               <div className="flex items-center gap-1.5">
-                                <CalendarDays className="w-4 h-4 text-primary" />
+                                <CalendarDays className="w-4 h-4 text-emerald-400" />
                                 {c.due_date
                                   ? new Date(c.due_date).toLocaleDateString('pt-BR')
                                   : '-'}
@@ -694,12 +694,12 @@ export default function SazonaisPage() {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <div className="flex flex-col">
-                                <span className="font-medium text-foreground">
+                                <span className="font-medium text-gray-100">
                                   {c.expand?.board_id?.expand?.client_id?.name ||
                                     c.expand?.board_id?.client_name ||
                                     'Sem Cliente'}
                                 </span>
-                                <span className="text-xs text-muted-foreground mt-0.5">
+                                <span className="text-xs text-gray-400 mt-0.5">
                                   Quadro: {c.expand?.board_id?.name}
                                 </span>
                               </div>
@@ -707,11 +707,14 @@ export default function SazonaisPage() {
                             <TableCell className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 {c.completed ? (
-                                  <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-200">
+                                  <Badge className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20">
                                     Concluído
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="bg-background">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-white/5 border-white/10 text-gray-300"
+                                  >
                                     {c.expand?.column_id?.name || 'Sem Coluna'}
                                   </Badge>
                                 )}
@@ -741,10 +744,7 @@ export default function SazonaisPage() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell
-                            colSpan={6}
-                            className="text-center py-12 text-muted-foreground"
-                          >
+                          <TableCell colSpan={6} className="text-center py-12 text-gray-400">
                             Nenhum evento sazonal encontrado com os filtros atuais.
                           </TableCell>
                         </TableRow>
@@ -754,7 +754,7 @@ export default function SazonaisPage() {
                 </div>
 
                 {!loading && (
-                  <div className="flex justify-between items-center text-sm text-muted-foreground border-t pt-4">
+                  <div className="flex justify-between items-center text-sm text-gray-400 border-t border-white/10 pt-4">
                     <span>
                       Mostrando {paginatedCards.length} de {filteredCards.length} tarefas.
                       {selectedIds.size > 0 && (
@@ -773,7 +773,7 @@ export default function SazonaisPage() {
                         >
                           Anterior
                         </Button>
-                        <div className="flex items-center text-sm px-2 font-medium text-foreground">
+                        <div className="flex items-center text-sm px-2 font-medium text-gray-100">
                           Página {page} de {totalPages}
                         </div>
                         <Button
@@ -792,7 +792,7 @@ export default function SazonaisPage() {
             </TabsContent>
 
             <TabsContent value="config" className="space-y-6 m-0">
-              <div className="bg-card rounded-xl border shadow-sm p-6">
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-sm p-6">
                 <div className="mb-4">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     Configurações de Integração
@@ -803,11 +803,11 @@ export default function SazonaisPage() {
                   </p>
                 </div>
 
-                <div className="overflow-hidden border rounded-lg bg-card w-full mb-8">
+                <div className="overflow-hidden border border-white/10 rounded-lg bg-white/5 w-full mb-8">
                   <div className="overflow-x-auto w-full">
                     <Table className="min-w-[900px]">
-                      <TableHeader className="bg-muted/50">
-                        <TableRow>
+                      <TableHeader className="bg-white/5">
+                        <TableRow className="border-b border-white/10">
                           <TableHead className="w-[30%]">Calendário</TableHead>
                           <TableHead>Cliente / Quadro</TableHead>
                           <TableHead>Coluna de Destino</TableHead>
@@ -836,19 +836,19 @@ export default function SazonaisPage() {
                                     </span>
                                   </div>
                                   {sync.last_synced_at && (
-                                    <div className="text-xs text-muted-foreground mt-1">
+                                    <div className="text-xs text-gray-400 mt-1">
                                       Última sync:{' '}
                                       {format(new Date(sync.last_synced_at), 'dd/MM/yyyy HH:mm')}
                                     </div>
                                   )}
                                 </TableCell>
                                 <TableCell>
-                                  <div className="font-medium text-sm text-foreground">
+                                  <div className="font-medium text-sm text-gray-100">
                                     {sync.expand?.board_id?.expand?.client_id?.name ||
                                       sync.expand?.board_id?.client_name ||
                                       'Interno'}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-gray-400">
                                     {sync.expand?.board_id?.name}
                                   </div>
                                 </TableCell>
@@ -880,7 +880,7 @@ export default function SazonaisPage() {
                                       }
                                     />
                                     <span
-                                      className={`text-xs font-bold uppercase tracking-wider ${sync.is_active ? 'text-primary' : 'text-muted-foreground'}`}
+                                      className={`text-xs font-bold uppercase tracking-wider ${sync.is_active ? 'text-emerald-400' : 'text-gray-500'}`}
                                     >
                                       {sync.is_active ? 'Ativo' : 'Pausado'}
                                     </span>
@@ -896,10 +896,10 @@ export default function SazonaisPage() {
                 </div>
 
                 <div className="mb-4">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-100">
                     Próximos Eventos (Preview do Google)
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-gray-400 mt-1">
                     Eventos do Google Calendar que ainda serão convertidos em tarefas (nos próximos
                     12 meses).
                   </p>
@@ -969,11 +969,11 @@ export default function SazonaisPage() {
                   </Select>
                 </div>
 
-                <div className="overflow-hidden border rounded-lg bg-card w-full">
+                <div className="overflow-hidden border border-white/10 rounded-lg bg-white/5 w-full">
                   <div className="overflow-x-auto w-full">
                     <Table className="min-w-[800px]">
-                      <TableHeader className="bg-muted/50">
-                        <TableRow>
+                      <TableHeader className="bg-white/5 border-b border-white/10">
+                        <TableRow className="border-b border-white/10">
                           <TableHead>Evento</TableHead>
                           <TableHead>Data</TableHead>
                           <TableHead>Destino</TableHead>
@@ -983,10 +983,8 @@ export default function SazonaisPage() {
                       <TableBody>
                         {paginatedUpcomingEvents.length === 0 ? (
                           <TableRow>
-                            <TableCell
-                              colSpan={4}
-                              className="text-center py-8 text-muted-foreground"
-                            >
+                            <TableCell colSpan={4} className="text-center py-8 text-gray-400">
+                              {' '}
                               Nenhum evento sazonal futuro encontrado.
                             </TableCell>
                           </TableRow>
@@ -1001,7 +999,7 @@ export default function SazonaisPage() {
                                   <div className="font-medium truncate max-w-[200px] sm:max-w-[300px]">
                                     {ev.title}
                                   </div>
-                                  <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px]">
+                                  <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[200px]">
                                     {ev.id}
                                   </div>
                                 </TableCell>
@@ -1012,7 +1010,7 @@ export default function SazonaisPage() {
                                 <TableCell className="text-right">
                                   {convertedCard ? (
                                     <div className="flex justify-end">
-                                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1.5 rounded flex items-center w-max gap-1.5">
+                                      <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1.5 rounded flex items-center w-max gap-1.5">
                                         <CheckCircle2 className="w-3.5 h-3.5" /> Convertido
                                       </span>
                                     </div>
@@ -1035,8 +1033,8 @@ export default function SazonaisPage() {
                     </Table>
                   </div>
                   {seasonalTotalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
-                      <div className="text-sm text-muted-foreground font-medium">
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5">
+                      <div className="text-sm text-gray-400 font-medium">
                         Página {seasonalPage} de {seasonalTotalPages}
                       </div>
                       <div className="flex gap-2">
@@ -1085,7 +1083,7 @@ export default function SazonaisPage() {
       />
 
       <Dialog open={!!editingCardId} onOpenChange={(o) => !o && setEditingCardId(null)}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] p-0 flex flex-col overflow-hidden bg-background border-0 sm:border">
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] p-0 flex flex-col overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border-white/10 sm:border">
           <div className="flex-1 min-h-0 overflow-y-auto">
             {editingCardData && editingBoardData && (
               <CardDetail
@@ -1101,7 +1099,7 @@ export default function SazonaisPage() {
       </Dialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#0b0f17]/95 backdrop-blur-xl border-white/10">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir {selectedIds.size} tarefas sazonais?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -1122,7 +1120,7 @@ export default function SazonaisPage() {
       </AlertDialog>
 
       <AlertDialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#0b0f17]/95 backdrop-blur-xl border-white/10">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir tarefa sazonal?</AlertDialogTitle>
             <AlertDialogDescription>

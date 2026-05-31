@@ -267,8 +267,8 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-muted/10">
-      <AppHeader />
+    <div className="flex flex-col h-screen overflow-hidden">
+      <AppHeader />{' '}
       <div className="flex-1 overflow-auto p-6 md:p-8 animate-fade-in">
         <div className="max-w-4xl mx-auto space-y-8 pb-12">
           <div>
@@ -278,22 +278,22 @@ export default function IntegrationsPage() {
             </p>
           </div>
 
-          <div className="bg-background rounded-xl border border-border shadow-sm p-6">
+          <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-sm p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <Terminal className="w-6 h-6 text-emerald-600" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                  <Terminal className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold">API de Criação de Cards</h2>
-                  <p className="text-sm text-muted-foreground">
+                  <h2 className="text-xl font-semibold text-gray-100">API de Criação de Cards</h2>
+                  <p className="text-sm text-gray-400">
                     Endpoint para criar cards programaticamente via ferramentas externas.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 border-t pt-8 space-y-6">
+            <div className="mt-8 border-t border-white/10 pt-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Webhook URL</Label>
@@ -333,34 +333,34 @@ export default function IntegrationsPage() {
 
               <div className="space-y-2">
                 <Label>Exemplo de Payload (JSON)</Label>
-                <div className="bg-muted p-4 rounded-md overflow-x-auto relative">
+                <div className="bg-white/5 border border-white/10 p-4 rounded-md overflow-x-auto relative">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 h-8 w-8 hover:bg-background/50"
+                    className="absolute top-2 right-2 h-8 w-8 hover:bg-white/10"
                     onClick={() => copyToClipboard(payloadExample, setCopiedPayload)}
                   >
                     {copiedPayload ? (
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-emerald-400" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
                   </Button>
-                  <pre className="text-xs font-mono text-muted-foreground">{payloadExample}</pre>
+                  <pre className="text-xs font-mono text-gray-400">{payloadExample}</pre>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-background rounded-xl border border-border shadow-sm p-6">
+          <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-sm p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <CalendarDays className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                  <CalendarDays className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold">Google Agenda</h2>
-                  <p className="text-sm text-muted-foreground">
+                  <h2 className="text-xl font-semibold text-gray-100">Google Agenda</h2>
+                  <p className="text-sm text-gray-400">
                     Importe seus eventos automaticamente para tarefas nos quadros.
                   </p>
                 </div>
@@ -384,9 +384,9 @@ export default function IntegrationsPage() {
             </div>
 
             {connected && (
-              <div className="mt-8 border-t pt-8">
+              <div className="mt-8 border-t border-white/10 pt-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium">Mapeamentos Ativos</h3>
+                  <h3 className="text-lg font-medium text-gray-100">Mapeamentos Ativos</h3>
                   <Button onClick={handleOpenDialog} size="sm" disabled={saving}>
                     <Plus className="w-4 h-4 mr-2" />
                     Nova Sincronização
@@ -394,17 +394,15 @@ export default function IntegrationsPage() {
                 </div>
 
                 {syncs.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-muted/30">
+                  <div className="text-center py-10 text-gray-400 border-2 border-dashed border-white/10 rounded-lg bg-white/5">
                     <Calendar className="w-10 h-10 mx-auto opacity-20 mb-3" />
-                    <p className="font-medium text-foreground">
-                      Nenhuma sincronização configurada.
-                    </p>
+                    <p className="font-medium text-gray-100">Nenhuma sincronização configurada.</p>
                     <p className="text-sm">Clique no botão acima para mapear uma agenda.</p>
                   </div>
                 ) : (
-                  <div className="border rounded-md overflow-hidden bg-background shadow-sm">
+                  <div className="border border-white/10 rounded-md overflow-hidden bg-white/5 shadow-sm">
                     <table className="w-full text-sm text-left">
-                      <thead className="bg-muted/50 text-muted-foreground border-b">
+                      <thead className="bg-white/5 text-gray-400 border-b border-white/10">
                         <tr>
                           <th className="px-4 py-3 font-medium">Agenda</th>
                           <th className="px-4 py-3 font-medium">Cliente</th>
@@ -415,7 +413,10 @@ export default function IntegrationsPage() {
                       </thead>
                       <tbody className="divide-y">
                         {syncs.map((sync) => (
-                          <tr key={sync.id} className="hover:bg-muted/30 transition-colors">
+                          <tr
+                            key={sync.id}
+                            className="hover:bg-white/5 transition-colors border-b border-white/5"
+                          >
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2 max-w-[200px]">
                                 <Calendar className="w-4 h-4 text-primary shrink-0" />
@@ -436,16 +437,16 @@ export default function IntegrationsPage() {
                                 sync.expand?.board_id?.client_name ||
                                 'Sem Cliente'}
                             </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              <span className="font-medium text-foreground">
+                            <td className="px-4 py-3 text-gray-400">
+                              <span className="font-medium text-gray-100">
                                 {sync.expand?.board_id?.name || 'Desconhecido'}
                               </span>
                               <span className="mx-2">&rarr;</span>
-                              <span className="font-medium text-foreground">
+                              <span className="font-medium text-gray-100">
                                 {sync.expand?.target_column_id?.name || 'Desconhecida'}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                            <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                               <div className="flex items-center gap-1.5">
                                 <RefreshCw className="w-3 h-3" />
                                 {sync.last_synced_at
@@ -488,10 +489,9 @@ export default function IntegrationsPage() {
           </div>
         </div>
       </div>
-
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[450px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="px-6 py-4 border-b shrink-0">
+        <DialogContent className="sm:max-w-[450px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border-white/10 text-gray-100">
+          <DialogHeader className="px-6 py-4 border-b border-white/10 shrink-0">
             <DialogTitle>Nova Sincronização</DialogTitle>
             <DialogDescription>
               Mapeie uma agenda do Google para enviar eventos como tarefas.
@@ -558,7 +558,7 @@ export default function IntegrationsPage() {
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-4 border-t shrink-0 bg-background">
+          <DialogFooter className="px-6 py-4 border-t border-white/10 shrink-0 bg-white/5">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>

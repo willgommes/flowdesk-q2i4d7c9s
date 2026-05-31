@@ -77,7 +77,7 @@ export default function RoutinePerformancePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/10">
+    <div className="flex flex-col min-h-screen">
       <AppHeader />
       <div className="p-8 max-w-5xl mx-auto w-full animate-fade-in space-y-6">
         <div>
@@ -90,20 +90,20 @@ export default function RoutinePerformancePage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-sm overflow-hidden transition-all duration-300 hover:bg-white/10 focus-within:shadow-lg">
+        <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-sm overflow-hidden transition-all duration-300 hover:bg-white/10 focus-within:shadow-lg">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader className="bg-white/5 border-b border-white/10">
               <TableRow>
                 <TableHead>Membro</TableHead>
                 <TableHead className="text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <ListPlus className="w-4 h-4 text-blue-500" />
+                    <ListPlus className="w-4 h-4 text-blue-400" />
                     Rotinas Criadas
                   </div>
                 </TableHead>
                 <TableHead className="text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     Conclusão Atual
                   </div>
                 </TableHead>
@@ -119,7 +119,7 @@ export default function RoutinePerformancePage() {
                 </TableRow>
               ) : performanceData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-12 text-gray-400">
                     Nenhum dado encontrado.
                   </TableCell>
                 </TableRow>
@@ -142,17 +142,19 @@ export default function RoutinePerformancePage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center font-medium">{row.created}</TableCell>
+                    <TableCell className="text-center font-medium text-gray-100">
+                      {row.created}
+                    </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-semibold text-emerald-600">{row.completed}</span>
-                      <span className="text-muted-foreground text-xs mx-1">de</span>
-                      <span className="font-medium">{row.assigned}</span>
+                      <span className="font-semibold text-emerald-400">{row.completed}</span>
+                      <span className="text-gray-500 text-xs mx-1">de</span>
+                      <span className="font-medium text-gray-100">{row.assigned}</span>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-primary rounded-full transition-all duration-500"
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                             style={{ width: `${row.completionRate}%` }}
                           />
                         </div>
