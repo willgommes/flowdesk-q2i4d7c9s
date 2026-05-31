@@ -293,8 +293,8 @@ export default function Index() {
               u.role === 'membro' &&
               (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))),
           ).length > 0 && (
-            <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 dark:bg-amber-950/30 dark:border-amber-900/50">
-              <h3 className="text-amber-800 dark:text-amber-200 font-semibold mb-3 flex items-center gap-2">
+            <div className="mb-6 backdrop-blur-xl border border-amber-500/20 bg-amber-500/10 rounded-xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+              <h3 className="text-amber-400 font-semibold mb-3 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5" />
                 Membros com Briefing Pendente após as 10:00 (
                 {
@@ -317,7 +317,7 @@ export default function Index() {
                     <Badge
                       key={u.id}
                       variant="outline"
-                      className="bg-background text-amber-700 border-amber-200 dark:text-amber-300 dark:border-amber-800"
+                      className="bg-amber-500/20 text-amber-300 border-amber-500/30 hover:bg-amber-500/30 transition-colors"
                     >
                       {u.name}
                     </Badge>
