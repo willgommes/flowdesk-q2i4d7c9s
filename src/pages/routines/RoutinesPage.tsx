@@ -420,7 +420,7 @@ export default function RoutinesPage() {
 
       <div className="space-y-6">
         {canManage && pendingRoutines.length > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 shadow-sm">
+          <div className="bg-amber-500/10 border border-amber-500/20 backdrop-blur-md rounded-xl p-4 shadow-sm">
             <h3 className="text-amber-800 dark:text-amber-400 font-semibold mb-3 flex items-center gap-2">
               <Activity className="w-5 h-5" />
               Sugestões Pendentes de Aprovação ({pendingRoutines.length})
@@ -429,15 +429,15 @@ export default function RoutinesPage() {
               {pendingRoutines.map((r) => (
                 <div
                   key={r.id}
-                  className="bg-background border rounded-lg p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+                  className="bg-white/5 border border-white/10 backdrop-blur-md rounded-lg p-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
                 >
                   <div>
-                    <div className="font-semibold text-sm flex items-center gap-2">
+                    <div className="font-semibold text-sm flex items-center gap-2 text-gray-100">
                       {r.title}
-                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider font-bold">
+                      <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-400 uppercase tracking-wider font-bold">
                         Sugerido por: {r.expand?.created_by?.name || 'Usuário'}
                       </span>
-                    </div>
+                    </div>{' '}
                     <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
                       {r.expand?.board_id?.name} •{' '}
                       {r.description?.replace(/<[^>]*>?/gm, '') || 'Sem descrição'}
@@ -471,7 +471,7 @@ export default function RoutinesPage() {
         )}
 
         {canManage && (
-          <div className="flex items-center justify-between bg-card p-2 rounded-xl border shadow-sm">
+          <div className="flex items-center justify-between bg-white/5 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-sm">
             <Tabs
               value={viewMode}
               onValueChange={(v) => setViewMode(v as 'my' | 'all')}
@@ -485,7 +485,7 @@ export default function RoutinesPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 bg-card p-4 rounded-xl border shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-sm">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
               Cliente
@@ -583,10 +583,10 @@ export default function RoutinesPage() {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl border shadow-sm overflow-hidden w-full">
+        <div className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-sm overflow-hidden w-full">
           <div className="overflow-x-auto w-full">
             <Table className="min-w-[800px]">
-              <TableHeader className="bg-muted/50">
+              <TableHeader className="bg-white/5 border-b border-white/10">
                 <TableRow>
                   <TableHead className="w-[30%]">Rotina</TableHead>
                   <TableHead>Quadro / Cliente</TableHead>
@@ -627,17 +627,20 @@ export default function RoutinesPage() {
                   ))
                 ) : routines.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-12 text-gray-400">
                       Nenhuma rotina encontrada com os filtros atuais.
                     </TableCell>
                   </TableRow>
                 ) : (
                   routines.map((r) => (
-                    <TableRow key={r.id} className="group hover:bg-muted/30 transition-colors">
+                    <TableRow
+                      key={r.id}
+                      className="group hover:bg-white/10 transition-colors border-white/10"
+                    >
                       <TableCell>
-                        <div className="font-semibold text-foreground">{r.title}</div>
+                        <div className="font-semibold text-gray-100">{r.title}</div>
                         {r.description && (
-                          <div className="text-xs text-muted-foreground truncate max-w-[200px] mt-0.5">
+                          <div className="text-xs text-gray-400 truncate max-w-[200px] mt-0.5">
                             {r.description.replace(/<[^>]*>?/gm, '')}
                           </div>
                         )}
@@ -781,8 +784,8 @@ export default function RoutinesPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
-            <div className="text-sm text-muted-foreground font-medium">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5">
+            <div className="text-sm text-gray-400 font-medium">
               {routines.length} rotinas listadas (exibindo todas).
             </div>
           </div>
@@ -810,8 +813,8 @@ export default function RoutinesPage() {
           }
         }}
       >
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] p-0 flex flex-col overflow-hidden bg-background border-0 sm:border">
-          <DialogHeader className="p-4 border-b bg-muted/10 shrink-0 hidden">
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] p-0 flex flex-col overflow-hidden bg-white/10 backdrop-blur-xl border border-white/10">
+          <DialogHeader className="p-4 border-b border-white/10 bg-white/5 shrink-0 hidden">
             <DialogTitle>Editar Rotina</DialogTitle>
           </DialogHeader>
           <div className="flex-1 min-h-0 overflow-y-auto">

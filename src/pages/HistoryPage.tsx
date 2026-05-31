@@ -235,19 +235,19 @@ export default function HistoryPage() {
         </Button>
       </div>
 
-      <div className="border rounded-md bg-card text-card-foreground shadow-sm">
+      <div className="border border-white/10 rounded-md bg-white/5 backdrop-blur-xl text-gray-100 shadow-sm">
         <div className="p-0">
           {isLoading && logs.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-2"></div>
+            <div className="p-8 text-center text-gray-400 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mr-2"></div>
               Carregando histórico...
             </div>
           ) : logs.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="p-8 text-center text-gray-400">
               Nenhuma atividade encontrada com os filtros selecionados.
             </div>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y divide-white/10">
               {logs.map((log) => {
                 const user = log.expand?.user_id
                 const card = log.expand?.card_id
@@ -256,9 +256,9 @@ export default function HistoryPage() {
                 return (
                   <div
                     key={log.id}
-                    className="flex items-start gap-4 p-4 hover:bg-accent/50 transition-colors"
+                    className="flex items-start gap-4 p-4 hover:bg-white/10 transition-colors"
                   >
-                    <Avatar className="h-10 w-10 border">
+                    <Avatar className="h-10 w-10 border border-white/10">
                       <AvatarImage src={avatarUrl} alt={user?.name || 'User'} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {(user?.name || 'U').substring(0, 2).toUpperCase()}
@@ -267,23 +267,21 @@ export default function HistoryPage() {
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium leading-none">
-                          <span className="font-semibold text-foreground">
+                          <span className="font-semibold text-gray-100">
                             {user?.name || 'Usuário Desconhecido'}
                           </span>{' '}
-                          <span className="text-muted-foreground">
+                          <span className="text-gray-400">
                             {ACTION_LABELS[log.action_type] || log.action_type}
                           </span>{' '}
-                          {card && (
-                            <span className="font-medium text-foreground">{card.title}</span>
-                          )}
+                          {card && <span className="font-medium text-gray-100">{card.title}</span>}
                         </p>
-                        <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap ml-4">
+                        <div className="flex items-center text-xs text-gray-400 whitespace-nowrap ml-4">
                           <Clock className="mr-1 h-3 w-3" />
                           {format(parseISO(log.created), "dd 'de' MMM, HH:mm", { locale: ptBR })}
                         </div>
                       </div>
                       {log.description && (
-                        <p className="text-sm text-muted-foreground mt-1 bg-muted/50 p-2 rounded border border-border/50">
+                        <p className="text-sm text-gray-400 mt-1 bg-white/5 p-2 rounded border border-white/10">
                           {log.description}
                         </p>
                       )}

@@ -101,7 +101,7 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-xl border border-white/10 text-gray-100">
         <DialogHeader>
           <DialogTitle>{board ? 'Editar Quadro' : 'Novo Quadro'}</DialogTitle>
         </DialogHeader>

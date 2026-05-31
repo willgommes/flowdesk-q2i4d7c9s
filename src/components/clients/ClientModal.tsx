@@ -264,8 +264,8 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="p-6 pb-4 shrink-0 border-b bg-muted/10">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white/10 backdrop-blur-xl border border-white/10 text-gray-100">
+          <DialogHeader className="p-6 pb-4 shrink-0 border-b border-white/10 bg-white/5">
             <DialogTitle>{client ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
 
@@ -691,7 +691,7 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
             </form>
           </div>
 
-          <DialogFooter className="p-6 pt-4 shrink-0 border-t bg-muted/10">
+          <DialogFooter className="p-6 pt-4 shrink-0 border-t border-white/10 bg-white/5">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

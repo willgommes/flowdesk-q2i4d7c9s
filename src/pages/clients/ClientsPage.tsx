@@ -221,19 +221,19 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-screen bg-muted/10">
+    <div className="flex flex-col h-full min-h-screen bg-[#0b0f17]">
       <AppHeader />
       <div className="p-8 max-w-6xl mx-auto w-full flex-1">
         <Tabs defaultValue="clientes" className="w-full">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Briefcase className="w-5 h-5 text-primary" />
+              <h1 className="text-3xl font-display font-semibold tracking-tight text-gray-100 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                  <Briefcase className="w-5 h-5 text-emerald-500" />
                 </div>
                 Clientes
               </h1>
-              <p className="text-muted-foreground mt-2">
+              <p className="text-gray-400 mt-2">
                 Gerencie os perfis, identidades visuais e contratos dos clientes.
               </p>
             </div>
@@ -257,12 +257,14 @@ export default function ClientsPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : clients.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center bg-background rounded-xl border border-dashed shadow-sm animate-fade-in-up">
-                <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                  <Briefcase className="w-8 h-8 text-muted-foreground opacity-50" />
+              <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 backdrop-blur-md rounded-xl border border-white/10 border-dashed shadow-sm animate-fade-in-up">
+                <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/10">
+                  <Briefcase className="w-8 h-8 text-gray-400 opacity-50" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">Nenhum cliente cadastrado</h3>
-                <p className="text-muted-foreground max-w-sm mb-6">
+                <h3 className="text-lg font-medium mb-2 text-gray-100">
+                  Nenhum cliente cadastrado
+                </h3>
+                <p className="text-gray-400 max-w-sm mb-6">
                   Crie o primeiro cliente para gerenciar seus ativos e atribuir aos quadros de
                   projeto.
                 </p>
@@ -273,13 +275,13 @@ export default function ClientsPage() {
                 {clients.map((client) => (
                   <Card
                     key={client.id}
-                    className="overflow-hidden border-border/60 hover-scale shadow-subtle transition-all cursor-pointer group"
+                    className="overflow-hidden border-white/10 hover-scale shadow-subtle transition-all cursor-pointer group bg-white/10 backdrop-blur-xl"
                     onClick={() => openSheet(client)}
                   >
-                    <CardHeader className="pb-4 relative bg-muted/5 group-hover:bg-muted/10 transition-colors">
+                    <CardHeader className="pb-4 relative bg-white/5 border-b border-white/10 group-hover:bg-white/10 transition-colors">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center border shadow-sm shrink-0 overflow-hidden">
+                          <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 shadow-sm shrink-0 overflow-hidden">
                             {client.logo ? (
                               <img
                                 src={pb.files.getURL(client, client.logo)}
@@ -366,20 +368,20 @@ export default function ClientsPage() {
                       <div className="space-y-4">
                         {client.palette && client.palette.length > 0 && (
                           <div>
-                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2 font-semibold">
+                            <p className="text-[11px] uppercase tracking-wider text-gray-400 mb-2 font-semibold">
                               Paleta
                             </p>
                             <div className="flex gap-1.5">
                               {client.palette.slice(0, 6).map((color: any, idx: number) => (
                                 <div
                                   key={idx}
-                                  className="w-5 h-5 rounded border shadow-sm"
+                                  className="w-5 h-5 rounded border border-white/10 shadow-sm"
                                   style={{ backgroundColor: color.hex }}
                                   title={`${color.name} - ${color.hex}`}
                                 />
                               ))}
                               {client.palette.length > 6 && (
-                                <div className="w-5 h-5 rounded bg-muted flex items-center justify-center text-[9px] border shadow-sm font-medium">
+                                <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center text-[9px] border border-white/10 shadow-sm font-medium text-gray-300">
                                   +{client.palette.length - 6}
                                 </div>
                               )}
@@ -387,8 +389,8 @@ export default function ClientsPage() {
                           </div>
                         )}
 
-                        <div className="flex flex-col gap-2 pt-4 border-t border-border/40">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex flex-col gap-2 pt-4 border-t border-white/10">
+                          <div className="flex items-center justify-between text-xs text-gray-400">
                             <span className="font-medium flex items-center gap-1.5">
                               <FileText className="w-3 h-3" />
                               {Array.isArray(client.contract)
@@ -411,16 +413,16 @@ export default function ClientsPage() {
 
                           {clientStats[client.id] && (
                             <div className="flex flex-col gap-2 mt-2">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center justify-between text-xs text-gray-400">
                                 <span className="font-medium">Quadros Ativos</span>
                                 <Badge
-                                  variant="secondary"
-                                  className="px-1.5 py-0 text-[10px] font-semibold"
+                                  variant="outline"
+                                  className="px-1.5 py-0 text-[10px] font-semibold bg-white/10 border-white/20 text-gray-300"
                                 >
                                   {clientStats[client.id].activeBoards}
                                 </Badge>
                               </div>
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center justify-between text-xs text-gray-400">
                                 <span className="font-medium">Progresso das Tarefas</span>
                                 <span>
                                   {clientStats[client.id].total > 0
@@ -429,14 +431,14 @@ export default function ClientsPage() {
                                 </span>
                               </div>
                               {clientStats[client.id].total > 0 && (
-                                <Progress
-                                  value={
-                                    (clientStats[client.id].completed /
-                                      clientStats[client.id].total) *
-                                    100
-                                  }
-                                  className="h-1.5"
-                                />
+                                <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                                  <div
+                                    className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                                    style={{
+                                      width: `${(clientStats[client.id].completed / clientStats[client.id].total) * 100}%`,
+                                    }}
+                                  />
+                                </div>
                               )}
                             </div>
                           )}
@@ -450,22 +452,22 @@ export default function ClientsPage() {
           </TabsContent>
 
           <TabsContent value="brand_assets" className="mt-0 animate-fade-in-up">
-            <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/20">
-                <h3 className="font-medium">Repositório de Ativos da Marca</h3>
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-sm overflow-hidden text-gray-100">
+              <div className="p-4 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/5">
+                <h3 className="font-medium text-gray-100">Repositório de Ativos da Marca</h3>
                 <div className="relative max-w-md w-full sm:w-auto">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Buscar arquivo ou cliente..."
                     value={fileSearch}
                     onChange={(e) => setFileSearch(e.target.value)}
-                    className="pl-9 bg-background"
+                    className="pl-9 bg-white/5 border-white/10"
                   />
                 </div>
               </div>
               <div className="p-6">
                 {filteredBrandAssets.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
+                  <div className="text-center py-12 text-gray-400">
                     Nenhum ativo de marca encontrado.
                   </div>
                 ) : (
@@ -475,10 +477,10 @@ export default function ClientsPage() {
                       return (
                         <div
                           key={i}
-                          className="group border rounded-lg overflow-hidden bg-muted/10 hover:border-primary/50 transition-all flex flex-col shadow-sm"
+                          className="group border border-white/10 rounded-lg overflow-hidden bg-white/5 hover:border-emerald-500/50 transition-all flex flex-col shadow-sm"
                         >
                           <div
-                            className="aspect-square bg-background flex items-center justify-center p-4 border-b group-hover:bg-muted/30 transition-colors cursor-pointer relative"
+                            className="aspect-square bg-white/5 flex items-center justify-center p-4 border-b border-white/10 group-hover:bg-white/10 transition-colors cursor-pointer relative"
                             onClick={(e) => {
                               e.preventDefault()
                               openPreview(
@@ -494,7 +496,7 @@ export default function ClientsPage() {
                                 className="max-w-full max-h-full object-contain"
                               />
                             ) : (
-                              <FileImage className="w-12 h-12 text-muted-foreground/50" />
+                              <FileImage className="w-12 h-12 text-gray-400/50" />
                             )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Button variant="secondary" size="sm" className="pointer-events-none">
@@ -502,12 +504,15 @@ export default function ClientsPage() {
                               </Button>
                             </div>
                           </div>
-                          <div className="p-3 bg-card relative z-10 flex flex-col justify-between h-full">
+                          <div className="p-3 bg-white/5 relative z-10 flex flex-col justify-between h-full">
                             <div>
-                              <p className="text-xs font-medium truncate" title={asset.filename}>
+                              <p
+                                className="text-xs font-medium truncate text-gray-100"
+                                title={asset.filename}
+                              >
                                 {asset.filename}
                               </p>
-                              <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                              <p className="text-[10px] text-gray-400 truncate mt-0.5">
                                 {asset.clientName}
                               </p>
                             </div>
@@ -522,22 +527,22 @@ export default function ClientsPage() {
           </TabsContent>
 
           <TabsContent value="contratos" className="mt-0 animate-fade-in-up">
-            <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/20">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-sm overflow-hidden text-gray-100">
+              <div className="p-4 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/5">
                 <h3 className="font-medium">Repositório Global de Contratos</h3>
                 <div className="relative max-w-md w-full sm:w-auto">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Buscar contrato ou cliente..."
                     value={fileSearch}
                     onChange={(e) => setFileSearch(e.target.value)}
-                    className="pl-9 bg-background"
+                    className="pl-9 bg-white/5 border-white/10"
                   />
                 </div>
               </div>
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="border-b border-white/10 bg-white/5">
                     <TableRow>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Arquivo</TableHead>
@@ -550,7 +555,7 @@ export default function ClientsPage() {
                       <TableRow key={i}>
                         <TableCell className="font-medium">{c.clientName}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="flex items-center gap-2 text-gray-400">
                             <FileText className="w-4 h-4 shrink-0" />
                             <span
                               className="truncate max-w-[200px] sm:max-w-[300px]"
@@ -588,7 +593,7 @@ export default function ClientsPage() {
                     ))}
                     {filteredContracts.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                        <TableCell colSpan={4} className="text-center py-12 text-gray-400">
                           Nenhum contrato encontrado.
                         </TableCell>
                       </TableRow>

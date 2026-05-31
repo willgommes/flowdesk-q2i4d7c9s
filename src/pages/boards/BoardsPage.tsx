@@ -221,7 +221,7 @@ export default function BoardsPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : filteredBoards.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 rounded-lg border border-dashed animate-fade-in">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 backdrop-blur-md rounded-lg border border-white/10 border-dashed animate-fade-in">
             <LayoutTemplate className="w-16 h-16 text-gray-400 mb-4 opacity-50" />
             <h3 className="text-lg font-medium mb-2 text-gray-100">Nenhum quadro encontrado</h3>
             <p className="text-gray-400 max-w-sm mb-4">
@@ -335,9 +335,9 @@ export default function BoardsPage() {
                       )}
                     </div>
                     {cardCounts[board.id] !== undefined && cardCounts[board.id].total > 0 && (
-                      <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                      <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className="bg-primary h-full rounded-full transition-all duration-500"
+                          className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                           style={{
                             width: `${(cardCounts[board.id].completed / cardCounts[board.id].total) * 100}%`,
                           }}
