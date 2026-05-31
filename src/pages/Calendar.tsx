@@ -190,7 +190,6 @@ export default function CalendarPage() {
                   </div>
                   <div className="space-y-1 mt-1 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {dayCards.map((card) => {
-                      const boardColor = card.expand?.board_id?.color || 'hsl(var(--primary))'
                       return (
                         <Link
                           key={card.id}
@@ -201,8 +200,7 @@ export default function CalendarPage() {
                             setDraggedCardId(card.id)
                           }}
                           onDragEnd={() => setDraggedCardId(null)}
-                          className="calendar-event block px-2 py-1.5 text-xs font-medium truncate rounded-md transition-all duration-200 border cursor-grab active:cursor-grabbing backdrop-blur-md shadow-sm hover:shadow-md"
-                          style={{ '--card-color': boardColor } as React.CSSProperties}
+                          className="block px-2 py-1.5 text-xs font-medium truncate rounded-md transition-all duration-200 cursor-grab active:cursor-grabbing backdrop-blur-md shadow-sm hover:shadow-md bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30"
                           title={card.title}
                         >
                           {card.title}
@@ -213,8 +211,7 @@ export default function CalendarPage() {
                       return (
                         <div
                           key={ev.id}
-                          className="calendar-event block px-2 py-1.5 text-xs font-medium truncate rounded-md border border-dashed cursor-default backdrop-blur-md transition-all duration-200 shadow-sm"
-                          style={{ '--card-color': 'hsl(var(--primary))' } as React.CSSProperties}
+                          className="block px-2 py-1.5 text-xs font-medium truncate rounded-md cursor-default backdrop-blur-md transition-all duration-200 shadow-sm bg-primary/20 border border-primary/30 border-dashed text-primary hover:bg-primary/30"
                           title={`Sazonal: ${ev.title} (Quadro: ${ev.board_name})`}
                         >
                           🕒 {ev.title}
