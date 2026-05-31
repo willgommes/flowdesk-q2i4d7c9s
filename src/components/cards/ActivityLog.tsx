@@ -25,28 +25,33 @@ export function ActivityLog({ cardId }: { cardId: string }) {
 
   if (!open)
     return (
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="w-full">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+        className="w-full bg-white/5 hover:bg-white/10 border-white/10 hover:border-emerald-500/30 text-gray-300 transition-all"
+      >
         Mostrar histórico ({logs.length})
       </Button>
     )
 
   return (
-    <div className="space-y-3 bg-muted/30 p-3 rounded-lg">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-semibold text-gray-400">Histórico de Atividades</span>
+    <div className="space-y-3 bg-white/5 border border-white/10 p-4 rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-sm font-semibold text-gray-300">Histórico de Atividades</span>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setOpen(false)}
-          className="h-6 px-2 text-xs"
+          className="h-6 px-2 text-xs hover:bg-white/10 hover:text-white"
         >
           Ocultar
         </Button>
       </div>
-      <div className="space-y-4 max-h-[300px] overflow-y-auto pl-2 border-l-2 border-border/50 ml-2">
+      <div className="space-y-5 max-h-[300px] overflow-y-auto pl-3 border-l border-white/10 ml-1">
         {logs.map((log) => (
-          <div key={log.id} className="relative flex gap-3 text-sm items-start">
-            <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary/50 border-2 border-background" />
+          <div key={log.id} className="relative flex gap-3 text-sm items-start group">
+            <div className="absolute -left-[17.5px] top-1.5 w-2 h-2 rounded-full border-2 border-emerald-500/50 bg-background group-hover:border-emerald-500 group-hover:shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all" />
             <div className="flex flex-col">
               <div className="flex gap-1.5 items-center">
                 <span className="font-semibold text-gray-100">

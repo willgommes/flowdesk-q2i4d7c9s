@@ -104,7 +104,7 @@ const RichTextEditor = ({ value, onChange, onBlur, minHeight = 'min-h-[120px]' }
       onBlur={onBlur}
       onKeyDown={handleKeyDown}
       className={cn(
-        'prose prose-sm dark:prose-invert max-w-none w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 break-words',
+        'prose prose-sm dark:prose-invert max-w-none w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm ring-offset-background transition-colors hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 break-words',
         minHeight,
       )}
       style={{ outline: 'none', whiteSpace: 'pre-wrap' }}
@@ -215,7 +215,7 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
           <div
             ref={contentRef}
             className={cn(
-              'cursor-pointer rounded-md bg-muted/20 p-3 hover:bg-muted/50 transition-colors prose prose-sm dark:prose-invert max-w-none overflow-hidden whitespace-pre-wrap break-words',
+              'cursor-pointer rounded-md bg-white/5 border border-transparent p-3 hover:bg-white/10 hover:border-white/10 transition-all prose prose-sm dark:prose-invert max-w-none overflow-hidden whitespace-pre-wrap break-words',
               !isExpanded && 'max-h-[200px]',
             )}
             onClick={() => setIsEditing(true)}
@@ -244,7 +244,7 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
         </div>
       ) : (
         <div
-          className="cursor-pointer rounded-md bg-muted/20 p-4 text-sm text-gray-400 hover:bg-muted/50 transition-colors h-24 flex items-center justify-center border border-dashed group-hover:border-primary/50 group-hover:text-primary/70"
+          className="cursor-pointer rounded-md bg-white/5 p-4 text-sm text-gray-400 hover:bg-white/10 transition-all h-24 flex items-center justify-center border border-dashed border-white/10 group-hover:border-emerald-500/30 group-hover:text-emerald-500/70"
           onClick={() => setIsEditing(true)}
         >
           Adicione uma descrição mais detalhada...
@@ -561,7 +561,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             <LayoutTemplate className="w-4 h-4" />
             <span>{board.name}</span>
             {(card.is_recurring || (card.recurrence_days && card.recurrence_days.length > 0)) && (
-              <span className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+              <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                 <Repeat className="w-3 h-3" /> Recorrente
               </span>
             )}
@@ -576,7 +576,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 e.currentTarget.blur()
               }
             }}
-            className={`text-2xl font-bold px-3 py-1 h-auto ${card.completed ? 'line-through text-gray-400' : 'text-gray-100'} rounded-lg border border-white/30 bg-white/10 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50`}
+            className={`text-2xl font-bold px-3 py-2 h-auto ${card.completed ? 'line-through text-gray-400' : 'text-gray-100'} bg-transparent border-transparent hover:border-white/10 hover:bg-white/5 focus:bg-white/5 focus:border-white/10 focus:ring-2 focus:ring-emerald-500/50 shadow-none transition-all`}
           />
           <div className="text-xs text-gray-400">
             Criado por {card.expand?.created_by?.name || 'Sistema'}{' '}
@@ -736,7 +736,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           {!card.completed && (
             <Button
               variant="outline"
-              className="w-full justify-start font-semibold shadow-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              className="w-full justify-start font-semibold shadow-sm text-emerald-500 hover:text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all"
               onClick={() => handleQuickMove('in_progress')}
             >
               <Play className="w-4 h-4 mr-2 fill-current" />
@@ -754,10 +754,10 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="secondary"
-                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                  variant="outline"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
                 >
-                  <Users className="w-4 h-4 mr-2" /> Membros
+                  <Users className="w-4 h-4 mr-2 text-emerald-500/70" /> Membros
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-3" align="end">
@@ -798,10 +798,10 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="secondary"
-                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                  variant="outline"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
                 >
-                  <Tag className="w-4 h-4 mr-2" /> Etiquetas
+                  <Tag className="w-4 h-4 mr-2 text-emerald-500/70" /> Etiquetas
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-3" align="end">
@@ -890,7 +890,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     placeholder="Nome da etiqueta..."
                     required
                     defaultValue={editingLabel?.name}
-                    className="h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                    className="h-8 text-sm"
                   />
                   <div className="flex flex-wrap gap-1.5 justify-between">
                     {LABEL_COLORS.map((c) => (
@@ -922,13 +922,19 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   className={cn(
-                    'w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border',
-                    isRecurring && 'text-indigo-600 dark:text-indigo-400',
+                    'w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all',
+                    isRecurring &&
+                      'text-emerald-500 border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10',
                   )}
                 >
-                  <Repeat className="w-4 h-4 mr-2" />
+                  <Repeat
+                    className={cn(
+                      'w-4 h-4 mr-2',
+                      isRecurring ? 'text-emerald-500' : 'text-emerald-500/70',
+                    )}
+                  />
                   {isRecurring ? 'Recorrente' : 'Recorrência'}
                 </Button>
               </PopoverTrigger>
@@ -951,8 +957,8 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                               className={cn(
                                 'w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center transition-colors',
                                 recurrenceDays.includes(d.value)
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'bg-muted text-gray-400 hover:bg-muted/80',
+                                  ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                                  : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10',
                               )}
                               onClick={() => toggleRecurrenceDay(d.value)}
                             >
@@ -969,7 +975,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           type="time"
                           value={recurrenceTime}
                           onChange={(e) => updateRecurrenceConfig(recurrenceDays, e.target.value)}
-                          className="h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                          className="h-8 text-sm"
                         />
                       </div>
                     </div>
@@ -981,10 +987,10 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="secondary"
-                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                  variant="outline"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
                 >
-                  <Clock className="w-4 h-4 mr-2" />
+                  <Clock className="w-4 h-4 mr-2 text-emerald-500/70" />
                   {card.due_date && dueDateObj
                     ? hasSpecificTime
                       ? format(
@@ -1080,8 +1086,8 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           onChange()
                         }
                       }}
-                      className="w-[100px] h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
-                    />
+                      className="w-[100px] h-8 text-sm"
+                    />{' '}
                   </div>
                   {card.due_date && (
                     <Button
@@ -1111,10 +1117,10 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="secondary"
-                  className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+                  variant="outline"
+                  className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
                 >
-                  <ArrowRightLeft className="w-4 h-4 mr-2" /> Mover
+                  <ArrowRightLeft className="w-4 h-4 mr-2 text-emerald-500/70" /> Mover
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-3" align="end">
@@ -1128,7 +1134,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     onChange()
                   }}
                 >
-                  <SelectTrigger className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50">
+                  <SelectTrigger className="rounded-lg border border-white/10 bg-white/5 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-500/50 hover:border-white/20 transition-colors">
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1143,24 +1149,24 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
             </Popover>
 
             <Button
-              variant="secondary"
-              className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+              variant="outline"
+              className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
               onClick={handleDuplicate}
             >
-              <Copy className="w-4 h-4 mr-2" /> Duplicar
+              <Copy className="w-4 h-4 mr-2 text-emerald-500/70" /> Duplicar
             </Button>
 
             <Button
-              variant="secondary"
-              className="w-full justify-start bg-secondary/40 hover:bg-secondary border border-transparent hover:border-border"
+              variant="outline"
+              className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 text-gray-300 hover:text-white transition-all"
               onClick={handleArchive}
             >
-              <Archive className="w-4 h-4 mr-2" /> Arquivar
+              <Archive className="w-4 h-4 mr-2 text-emerald-500/70" /> Arquivar
             </Button>
 
             <Button
-              variant="secondary"
-              className="w-full justify-start bg-red-500/10 hover:bg-red-500/20 border border-transparent hover:border-red-500/30"
+              variant="outline"
+              className="w-full justify-start bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 transition-all"
               onClick={handleDelete}
             >
               <Trash2 className="w-4 h-4 mr-2 text-red-500" />{' '}

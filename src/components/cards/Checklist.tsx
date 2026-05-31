@@ -70,9 +70,12 @@ export function Checklist({ cardId, items, onChange }: any) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-100">Progresso {percent}%</span>
-        <div className="h-2 flex-1 bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+        <span className="text-sm font-medium text-gray-300">Progresso {percent}%</span>
+        <div className="h-2 flex-1 bg-white/5 border border-white/10 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-emerald-500 transition-all shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+            style={{ width: `${percent}%` }}
+          />
         </div>
       </div>
       <div className="space-y-2">
@@ -81,7 +84,7 @@ export function Checklist({ cardId, items, onChange }: any) {
           .map((item: any) => (
             <div
               key={item.id}
-              className={`flex items-center gap-2 p-1 rounded-md transition-colors ${draggedId === item.id ? 'opacity-50 bg-muted' : 'hover:bg-muted/50'}`}
+              className={`flex items-center gap-2 p-1.5 rounded-md transition-colors border border-transparent ${draggedId === item.id ? 'opacity-50 bg-white/5' : 'hover:bg-white/5 hover:border-white/10'}`}
               draggable
               onDragStart={(e) => handleDragStart(e, item.id)}
               onDragOver={handleDragOver}
@@ -115,7 +118,7 @@ export function Checklist({ cardId, items, onChange }: any) {
         onChange={(e) => setNewItem(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
         placeholder="Adicionar item..."
-        className="h-8 text-sm rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+        className="h-8 text-sm"
       />
     </div>
   )

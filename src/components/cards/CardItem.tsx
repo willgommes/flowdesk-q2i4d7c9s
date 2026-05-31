@@ -143,19 +143,21 @@ export function CardItem({
     const isOverdue = date < now
 
     if (isCompleted) {
-      dateBadgeClass = 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+      dateBadgeClass =
+        'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/20'
     } else if (isOverdue) {
-      dateBadgeClass = 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+      dateBadgeClass = 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20'
     } else if (isToday(cardDate)) {
       dateBadgeClass =
-        'bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20'
+        'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
     } else if (cardDate <= addDays(today, 7)) {
-      dateBadgeClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20'
+      dateBadgeClass = 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
     } else {
-      dateBadgeClass = 'bg-secondary text-gray-100 hover:bg-secondary/80'
+      dateBadgeClass = 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'
     }
   } else {
-    dateBadgeClass = 'bg-muted/50 text-gray-400 border border-dashed border-border'
+    dateBadgeClass =
+      'bg-white/5 text-gray-500 border border-dashed border-white/10 hover:bg-white/10'
   }
 
   const handleOpenChange = (open: boolean) => {
@@ -269,7 +271,7 @@ export function CardItem({
       <div
         onClick={() => navigate(`/boards/${boardId}/cards/${localCard.id}`)}
         className={cn(
-          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-primary/50 hover:bg-white/[0.12] hover:shadow-lg focus-within:shadow-lg transition-all duration-300 relative cursor-pointer backdrop-blur-md animate-fade-in-up fill-mode-both',
+          'group block w-full shrink-0 overflow-hidden p-4 rounded-lg border shadow-sm hover:border-emerald-500/40 hover:bg-white/[0.12] hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300 relative cursor-pointer backdrop-blur-md animate-fade-in-up fill-mode-both',
           isEffectivelyCompleted
             ? 'bg-white/5 opacity-70 border-transparent hover:bg-white/[0.08]'
             : 'bg-white/[0.08] border-white/[0.03]',
@@ -295,7 +297,7 @@ export function CardItem({
             {(localCard.is_recurring ||
               (localCard.recurrence_days && localCard.recurrence_days.length > 0)) && (
               <div
-                className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white leading-none shadow-sm flex items-center gap-1 bg-indigo-500"
+                className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-emerald-500 leading-none shadow-sm flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20"
                 title="Tarefa Recorrente"
               >
                 <Repeat className="w-2.5 h-2.5" /> Recorrente
@@ -321,7 +323,7 @@ export function CardItem({
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
           ) : (
             <div
-              className="w-2 h-2 rounded-full bg-yellow-500 shrink-0 mt-1.5"
+              className="w-2.5 h-2.5 rounded-full border-2 border-emerald-500/50 bg-transparent shrink-0 mt-1"
               aria-hidden="true"
             />
           )}
@@ -378,7 +380,7 @@ export function CardItem({
               }}
               title="Mover para Em Andamento"
             >
-              <Play className="w-3.5 h-3.5 text-blue-500 fill-current" />
+              <Play className="w-3.5 h-3.5 text-emerald-500/70 group-hover:text-emerald-500 fill-current" />
             </div>
           )}
           {!isEffectivelyCompleted && (
