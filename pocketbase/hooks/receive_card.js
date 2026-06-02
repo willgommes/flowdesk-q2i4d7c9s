@@ -106,10 +106,46 @@ routerAdd('POST', '/backend/v1/receive-card', (e) => {
 
   $app.save(record)
 
+  // Assign members
+  let assignedCount = 0
+  const assignedMembers = []
+
+  if (body.members && Array.isArray(body.members)) {
+    let boardMembers = board.get('members') || []
+    if (!Array.isArray(boardMembers)) {
+      boardMembers = boardMembers ? [boardMembers] : []
+    }
+
+    const cardMembersCol = $app.findCollectionByNameOrId('card_members')
+
+    for (const email of body.members) {
+      if (typeof email !== 'string') continue
+
+      try {
+        const user = $app.findAuthRecordByEmail('users', email)
+
+        // Only assign if the user is a member of the board
+        if (boardMembers.includes(user.id)) {
+          const cmRecord = new Record(cardMembersCol)
+          cmRecord.set('card_id', record.id)
+          cmRecord.set('user_id', user.id)
+          $app.save(cmRecord)
+
+          assignedCount++
+          assignedMembers.push(email)
+        }
+      } catch (err) {
+        // User not found or other error, skip
+      }
+    }
+  }
+
   return e.json(201, {
     id: record.id,
     title: record.getString('title'),
     board_id: record.getString('board_id'),
     column_id: record.getString('column_id'),
+    assigned_members_count: assignedCount,
+    assigned_members: assignedMembers,
   })
 })
