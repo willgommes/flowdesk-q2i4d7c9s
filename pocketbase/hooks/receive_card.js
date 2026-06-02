@@ -16,6 +16,7 @@ routerAdd('POST', '/backend/v1/receive-card', (e) => {
   const columnName = body.column_name
   const cardName = body.card_name
   const dueDate = body.due_date
+  const description = body.description
 
   if (!clientName || !boardName || !columnName || !cardName) {
     throw new BadRequestError(
@@ -93,6 +94,10 @@ routerAdd('POST', '/backend/v1/receive-card', (e) => {
 
   if (dueDate) {
     record.set('due_date', dueDate)
+  }
+
+  if (description) {
+    record.set('description', description)
   }
 
   if (adminId) {
