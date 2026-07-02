@@ -3,6 +3,85 @@ routerAdd(
   '/backend/v1/google-calendar/sync',
   (e) => {
     const body = e.requestInfo().body || {}
+
+    const refreshGoogleToken = (user) => {
+      let accessToken = user.getString('google_access_token')
+      let refreshToken = user.getString('google_refresh_token')
+      let expiry = user.getInt('google_token_expiry')
+
+      if (!accessToken) {
+        return { ok: false, reason: 'no_access_token' }
+      }
+
+      if (expiry && Date.now() > expiry) {
+        if (!refreshToken) {
+          $app.logger().error('Google refresh token missing', 'user_id', user.id)
+          return { ok: false, reason: 'no_refresh_token' }
+        }
+
+        const clientId = $secrets.get('GOOGLE_CLIENT_ID')
+        const clientSecret = $secrets.get('GOOGLE_CLIENT_SECRET')
+
+        const refreshRes = $http.send({
+          url: 'https://oauth2.googleapis.com/token',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `client_id=${clientId}&client_secret=${clientSecret}&grant_type=refresh_token&refresh_token=${refreshToken}`,
+          timeout: 15,
+        })
+
+        if (refreshRes.statusCode === 200) {
+          accessToken = refreshRes.json.access_token
+          let newRefreshToken = refreshToken
+          if (refreshRes.json.refresh_token) {
+            newRefreshToken = refreshRes.json.refresh_token
+          }
+          const newExpiry = Date.now() + refreshRes.json.expires_in * 1000 - 60000
+
+          user.set('google_access_token', accessToken)
+          if (refreshRes.json.refresh_token) {
+            user.set('google_refresh_token', newRefreshToken)
+          }
+          user.set('google_token_expiry', newExpiry)
+          $app.save(user)
+        } else {
+          $app
+            .logger()
+            .error(
+              'Google token refresh failed in sync',
+              'status',
+              refreshRes.statusCode,
+              'user_id',
+              user.id,
+            )
+
+          if (
+            refreshRes.statusCode === 400 ||
+            refreshRes.statusCode === 401 ||
+            refreshRes.statusCode === 403
+          ) {
+            const notifCol = $app.findCollectionByNameOrId('notifications')
+            const notif = new Record(notifCol)
+            notif.set('user_id', user.id)
+            notif.set(
+              'message',
+              'Sua conexão com o Google expirou. Reconecte sua conta nas Integrações para retomar a sincronização.',
+            )
+            notif.set('is_read', false)
+            $app.save(notif)
+          }
+
+          return { ok: false, reason: 'refresh_failed' }
+        }
+      }
+
+      return { ok: true, token: accessToken }
+    }
+
+    const user = e.auth
+    const refreshResult = refreshGoogleToken(user)
+    const token = refreshResult.ok ? refreshResult.token : null
+
     let filter = 'is_active = true'
     if (body.sync_id) {
       filter = `id = '${body.sync_id}'`
@@ -24,7 +103,6 @@ routerAdd(
 
     let existingCards = []
     try {
-      // Increase limit to ensure all existing events are mapped (prevents duplication for larger datasets)
       existingCards = $app
         .findRecordsByFilter('cards', "google_event_id != ''", '', 5000, 0)
         .map((r) => r.getString('google_event_id'))
@@ -32,10 +110,8 @@ routerAdd(
 
     const now = new Date()
     const timeMin = now.toISOString()
-    // Fetch up to 7 days ahead as per unified sync window
     const timeMax = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-    const token = e.auth?.getString('google_access_token')
     let totalCreated = 0
 
     for (const sync of syncs) {
@@ -113,7 +189,6 @@ routerAdd(
         if (existingCards.includes(m.id)) continue
 
         const dateStr = m.date ? m.date.substring(0, 10) : new Date().toISOString().substring(0, 10)
-        // Set time to 20:00:00 UTC so that it is perceived as 17:00 in UTC-3
         const eventDate = new Date(`${dateStr}T20:00:00.000Z`)
         const diffTime = eventDate.getTime() - now.getTime()
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
