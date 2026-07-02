@@ -48,6 +48,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Select,
   SelectContent,
@@ -629,12 +630,22 @@ export default function BoardPage() {
 
           <div className="flex -space-x-2 shrink-0 ml-2">
             {board.expand?.members?.map((m: any) => (
-              <Avatar key={m.id} className="w-8 h-8 border-2 border-background">
-                <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : ''} />
-                <AvatarFallback className="text-xs bg-primary/10">
-                  {m.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <Tooltip key={m.id}>
+                <TooltipTrigger asChild>
+                  <Avatar className="w-8 h-8 border-2 border-background hover:z-10 transition-transform hover:scale-110 cursor-pointer">
+                    <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : ''} />
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-medium">
+                      {m.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent className="bg-[#0b0f17]/95 border-white/10 backdrop-blur-xl">
+                  <p className="font-semibold text-sm text-gray-100">{m.name}</p>
+                  <p className="text-xs text-gray-400">
+                    {isAdmin || m.id === user?.id ? m.email || 'Sem email' : 'Email oculto'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             ))}
           </div>
 
@@ -959,18 +970,28 @@ export default function BoardPage() {
                                     {members.map(
                                       (m: any) =>
                                         m && (
-                                          <Avatar
-                                            key={m.id}
-                                            className="w-7 h-7 border-2 border-background shadow-sm"
-                                            title={m.name}
-                                          >
-                                            <AvatarImage
-                                              src={m.avatar ? pb.files.getURL(m, m.avatar) : ''}
-                                            />
-                                            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                                              {m.name.substring(0, 2).toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
+                                          <Tooltip key={m.id}>
+                                            <TooltipTrigger asChild>
+                                              <Avatar className="w-7 h-7 border-2 border-background shadow-sm hover:z-10 transition-transform hover:scale-110 cursor-pointer">
+                                                <AvatarImage
+                                                  src={m.avatar ? pb.files.getURL(m, m.avatar) : ''}
+                                                />
+                                                <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                                                  {m.name.substring(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                              </Avatar>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="bg-[#0b0f17]/95 border-white/10 backdrop-blur-xl">
+                                              <p className="font-semibold text-sm text-gray-100">
+                                                {m.name}
+                                              </p>
+                                              <p className="text-xs text-gray-400">
+                                                {isAdmin || m.id === user?.id
+                                                  ? m.email || 'Sem email'
+                                                  : 'Email oculto'}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
                                         ),
                                     )}
                                     {members.length === 0 && (
@@ -980,9 +1001,29 @@ export default function BoardPage() {
                                 </TableCell>
                                 <TableCell className="py-3 text-xs text-gray-400">
                                   <div className="flex flex-col">
-                                    <span className="font-medium text-gray-100 truncate">
-                                      {card.expand?.created_by?.name || 'Sistema'}
-                                    </span>
+                                    {card.expand?.created_by ? (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="font-medium text-gray-100 truncate cursor-help w-max">
+                                            {card.expand.created_by.name}
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-[#0b0f17]/95 border-white/10 backdrop-blur-xl">
+                                          <p className="font-semibold text-sm text-gray-100">
+                                            {card.expand.created_by.name}
+                                          </p>
+                                          <p className="text-xs text-gray-400">
+                                            {isAdmin || card.expand.created_by.id === user?.id
+                                              ? card.expand.created_by.email || 'Sem email'
+                                              : 'Email oculto'}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    ) : (
+                                      <span className="font-medium text-gray-100 truncate w-max">
+                                        Sistema
+                                      </span>
+                                    )}
                                     <span className="text-[10px]">
                                       {card.created
                                         ? new Date(card.created).toLocaleDateString('pt-BR')

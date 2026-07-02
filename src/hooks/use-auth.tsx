@@ -11,6 +11,7 @@ export interface User {
   theme?: 'light' | 'dark'
   time_format?: '12h' | '24h'
   sound_enabled?: boolean
+  briefing_required?: boolean
   last_briefing_at?: string
   created: string
   updated: string
@@ -112,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         passwordConfirm: password || '',
         role: 'membro',
         sound_enabled: true,
+        briefing_required: true,
       })
       const authData = await pb.collection('users').authWithPassword(email, password || '')
       if (authData.record) {

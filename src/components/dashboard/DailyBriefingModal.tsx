@@ -26,6 +26,8 @@ export function DailyBriefingModal() {
   useEffect(() => {
     if (!user) return
 
+    if (user.briefing_required === false) return
+
     const checkBriefing = async () => {
       const lastBriefing = user.last_briefing_at ? parseISO(user.last_briefing_at) : null
 

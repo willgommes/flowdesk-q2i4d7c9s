@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, MoreHorizontal, Trash2, Camera, Loader2, AlertCircle, Shield } from 'lucide-react'
+import {
+  Plus,
+  MoreHorizontal,
+  Trash2,
+  Camera,
+  Loader2,
+  AlertCircle,
+  Shield,
+  Search,
+} from 'lucide-react'
 import { UserPermissionsModal } from '@/components/UserPermissionsModal'
 import { Switch } from '@/components/ui/switch'
 import { isToday, parseISO } from 'date-fns'
@@ -77,6 +86,7 @@ export default function Users() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [permissionsUserId, setPermissionsUserId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const form = useForm<z.infer<typeof inviteSchema>>({
     resolver: zodResolver(inviteSchema),
@@ -150,6 +160,7 @@ export default function Users() {
         role: values.role,
         password: tempPassword,
         passwordConfirm: tempPassword,
+        briefing_required: true,
       })
       await pb.collection('users').requestPasswordReset(values.email)
 
@@ -200,6 +211,20 @@ export default function Users() {
     }
   }
 
+  const handleToggleBriefingRequired = async (userId: string, checked: boolean) => {
+    try {
+      await pb.collection('users').update(userId, { briefing_required: checked })
+      toast({
+        title: 'Briefing atualizado',
+        description: checked
+          ? 'Briefing diário habilitado para este usuário.'
+          : 'Briefing diário desabilitado para este usuário.',
+      })
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Erro', description: getErrorMessage(err) })
+    }
+  }
+
   const handleDelete = async (userId: string) => {
     if (userId === user?.id) {
       toast({
@@ -226,6 +251,15 @@ export default function Users() {
       year: 'numeric',
     })
   }
+
+  const filteredUsers = users.filter((u) => {
+    const q = searchQuery.toLowerCase()
+    return (
+      (u.name && u.name.toLowerCase().includes(q)) || (u.email && u.email.toLowerCase().includes(q))
+    )
+  })
+
+  const isAdmin = user?.role === 'admin'
 
   return (
     <>
@@ -326,6 +360,18 @@ export default function Users() {
       )}
 
       <div className="p-8 max-w-6xl mx-auto w-full animate-fade-in">
+        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <h1 className="text-2xl font-semibold text-gray-100">Membros da Equipe</h1>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Buscar por nome ou email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10 bg-white/5 border-white/10 text-gray-100 focus:ring-primary/50"
+            />
+          </div>
+        </div>
         <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-subtle">
           <Table>
             <TableHeader className="bg-white/5">
@@ -335,13 +381,14 @@ export default function Users() {
                 <TableHead>Adicionado em</TableHead>
                 <TableHead>Último Acesso</TableHead>
                 <TableHead>Gerenciar Rotinas</TableHead>
+                <TableHead>Briefing</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     <div className="flex items-center justify-center">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       <span className="ml-2 text-muted-foreground">Carregando usuários...</span>
@@ -349,7 +396,7 @@ export default function Users() {
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((u) => (
+                filteredUsers.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -368,6 +415,7 @@ export default function Users() {
                           <span className="font-medium text-sm leading-tight flex items-center gap-2">
                             {u.name} {u.id === user?.id && '(Você)'}
                             {u.role === 'membro' &&
+                              u.briefing_required !== false &&
                               (!u.last_briefing_at || !isToday(parseISO(u.last_briefing_at))) &&
                               new Date().getHours() >= 10 && (
                                 <Tooltip>
@@ -380,7 +428,9 @@ export default function Users() {
                                 </Tooltip>
                               )}
                           </span>
-                          <span className="text-xs text-gray-400">{u.email}</span>
+                          <span className="text-xs text-gray-400">
+                            {isAdmin || u.id === user?.id ? u.email || 'Sem email' : 'Email oculto'}
+                          </span>
                         </div>
                       </div>
                     </TableCell>
@@ -401,6 +451,12 @@ export default function Users() {
                         checked={u.role === 'admin' || !!u.can_manage_routines}
                         disabled={u.role === 'admin'}
                         onCheckedChange={(checked) => handleToggleRoutineManagement(u.id, checked)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={u.briefing_required !== false}
+                        onCheckedChange={(checked) => handleToggleBriefingRequired(u.id, checked)}
                       />
                     </TableCell>
                     <TableCell className="text-right">
@@ -459,9 +515,9 @@ export default function Users() {
                   </TableRow>
                 ))
               )}
-              {!isLoading && users.length === 0 && (
+              {!isLoading && filteredUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center text-gray-400">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>

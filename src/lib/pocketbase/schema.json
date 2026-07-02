@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-02T17:28:35.609Z",
+  "generatedAt": "2026-06-02T17:57:03.148Z",
   "collections": [
     {
       "name": "users",
@@ -110,6 +110,12 @@
         {
           "name": "google_token_expiry",
           "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "briefing_required",
+          "type": "bool",
           "required": false,
           "system": false
         }

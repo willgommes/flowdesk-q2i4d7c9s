@@ -41,6 +41,7 @@ export function UserPermissionsModal({
   const { toast } = useToast()
   const [role, setRole] = useState('membro')
   const [canManageRoutines, setCanManageRoutines] = useState(false)
+  const [briefingRequired, setBriefingRequired] = useState(true)
   const [boards, setBoards] = useState<any[]>([])
   const [selectedBoards, setSelectedBoards] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
@@ -52,6 +53,7 @@ export function UserPermissionsModal({
     if (open && user) {
       setRole(user.role || 'membro')
       setCanManageRoutines(user.can_manage_routines || false)
+      setBriefingRequired(user.briefing_required ?? true)
       loadBoards()
     }
   }, [open, user])
@@ -90,10 +92,15 @@ export function UserPermissionsModal({
     if (!user) return
     setIsSaving(true)
     try {
-      if (user.role !== role || user.can_manage_routines !== canManageRoutines) {
+      if (
+        user.role !== role ||
+        user.can_manage_routines !== canManageRoutines ||
+        user.briefing_required !== briefingRequired
+      ) {
         await pb.collection('users').update(user.id, {
           role,
           can_manage_routines: canManageRoutines,
+          briefing_required: briefingRequired,
         })
       }
 
@@ -171,6 +178,16 @@ export function UserPermissionsModal({
                   disabled={role === 'admin'}
                   onCheckedChange={setCanManageRoutines}
                 />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <Label>Exigir Briefing Diário</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Obriga o usuário a ler e confirmar o briefing todos os dias.
+                  </p>
+                </div>
+                <Switch checked={briefingRequired} onCheckedChange={setBriefingRequired} />
               </div>
             </div>
 
