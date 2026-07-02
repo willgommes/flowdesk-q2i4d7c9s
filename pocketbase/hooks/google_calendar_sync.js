@@ -185,6 +185,7 @@ routerAdd(
 
       for (const m of events) {
         if (!m.id) continue
+        if (!m.title || m.title.indexOf('❤️') === -1) continue
         if (ignoredEvents.includes(m.id)) continue
         if (existingCards.includes(m.id)) continue
 
