@@ -69,6 +69,8 @@ import { AppHeader } from '@/components/AppHeader'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { cn } from '@/lib/utils'
+import { useColumnSort, sortColumnCards, type ColumnSortDirection } from '@/hooks/use-column-sort'
+import { ArrowDown, ArrowUp } from 'lucide-react'
 
 const sortCardsByDueDateAndOrder = (a: any, b: any) => {
   if (a.due_date && b.due_date) {
@@ -165,6 +167,8 @@ export default function BoardPage() {
   }
   const [searchQuery, setSearchQuery] = useState('')
   const [view, setView] = useState<'kanban' | 'list'>('kanban')
+
+  const { getSort, setSort } = useColumnSort(user?.id)
 
   const isAdmin = user?.role === 'admin'
 
@@ -734,6 +738,8 @@ export default function BoardPage() {
                   index={idx}
                   column={col}
                   cards={filteredCards.filter((c) => c.column_id === col.id)}
+                  sortDirection={getSort(col.id)}
+                  onSortChange={(dir: ColumnSortDirection) => setSort(col.id, dir)}
                   onDragStart={(e: any) => handleDragStart(e, col.id)}
                   onDragEnter={(e: any) => handleDragEnter(e, col.id)}
                   onDragEnd={(e: any) => handleDragEnd(e, col.id)}
@@ -868,9 +874,10 @@ export default function BoardPage() {
           ) : (
             <div className="max-w-6xl mx-auto space-y-8 pb-12">
               {columns.map((col) => {
-                const colCards = filteredCards
-                  .filter((c) => c.column_id === col.id)
-                  .sort(sortCardsByDueDateAndOrder)
+                const colCards = sortColumnCards(
+                  filteredCards.filter((c) => c.column_id === col.id),
+                  getSort(col.id),
+                )
 
                 if (colCards.length === 0) return null
 
@@ -1097,6 +1104,8 @@ function Column({
   column,
   index = 0,
   cards = [],
+  sortDirection = 'asc',
+  onSortChange,
   onDragStart,
   onDragEnter,
   onDragEnd,
@@ -1111,6 +1120,12 @@ function Column({
   const [newCardTitle, setNewCardTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Apply the column's persisted sort preference. Memoized so it produces a
+  // stable reference per (cards, direction) pair and never mutates the prop.
+  const sortedCards = useMemo(() => sortColumnCards(cards, sortDirection), [cards, sortDirection])
+
+  const sortLabel = sortDirection === 'asc' ? 'Mais antigos primeiro' : 'Mais novos primeiro'
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -1182,47 +1197,106 @@ function Column({
           </div>
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+        <div className="flex items-center gap-1">
+          {/* Controle de ordenação por data — glassmorphism / Dark Elegance */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-7 w-7 rounded-md border border-white/10 bg-white/10 backdrop-blur transition-colors',
+                  'hover:bg-white/20',
+                )}
+                title={sortLabel}
+              >
+                {sortDirection === 'asc' ? (
+                  <ArrowUp className="h-3.5 w-3.5 text-gray-300" />
+                ) : (
+                  <ArrowDown className="h-3.5 w-3.5 text-gray-300" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="bg-white/10 backdrop-blur-xl border-white/10"
             >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditing(true)}>Renomear</DropdownMenuItem>
-            <div className="grid grid-cols-4 gap-1.5 p-2 justify-items-center">
-              {[
-                '#e2e8f0',
-                '#64748b',
-                '#ef4444',
-                '#f97316',
-                '#f59e0b',
-                '#84cc16',
-                '#10b981',
-                '#06b6d4',
-                '#3b82f6',
-                '#6366f1',
-                '#8b5cf6',
-                '#ec4899',
-              ].map((c) => (
-                <button
-                  key={c}
-                  className="w-5 h-5 rounded-full border border-black/10 hover:scale-110 transition-transform"
-                  style={{ backgroundColor: c }}
-                  onClick={() => onUpdate({ color: c })}
-                  title={c}
-                />
-              ))}
-            </div>
-            <DropdownMenuItem onClick={onDelete} className="text-red-500 focus:text-red-500">
-              <Trash2 className="w-4 h-4 mr-2" /> Excluir
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <div className="px-2 py-1.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
+                  <ArrowDownUp className="w-3 h-3" /> Ordenar por data
+                </div>
+                <div className="grid grid-cols-1 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onSortChange?.('asc')}
+                    className={cn(
+                      'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors',
+                      sortDirection === 'asc'
+                        ? 'bg-white/15 text-gray-100 font-medium'
+                        : 'text-gray-300 hover:bg-white/10',
+                    )}
+                  >
+                    <ArrowUp className="w-3.5 h-3.5" /> Mais antigos primeiro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSortChange?.('desc')}
+                    className={cn(
+                      'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors',
+                      sortDirection === 'desc'
+                        ? 'bg-white/15 text-gray-100 font-medium'
+                        : 'text-gray-300 hover:bg-white/10',
+                    )}
+                  >
+                    <ArrowDown className="w-3.5 h-3.5" /> Mais novos primeiro
+                  </button>
+                </div>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditing(true)}>Renomear</DropdownMenuItem>
+              <div className="grid grid-cols-4 gap-1.5 p-2 justify-items-center">
+                {[
+                  '#e2e8f0',
+                  '#64748b',
+                  '#ef4444',
+                  '#f97316',
+                  '#f59e0b',
+                  '#84cc16',
+                  '#10b981',
+                  '#06b6d4',
+                  '#3b82f6',
+                  '#6366f1',
+                  '#8b5cf6',
+                  '#ec4899',
+                ].map((c) => (
+                  <button
+                    key={c}
+                    className="w-5 h-5 rounded-full border border-black/10 hover:scale-110 transition-transform"
+                    style={{ backgroundColor: c }}
+                    onClick={() => onUpdate({ color: c })}
+                    title={c}
+                  />
+                ))}
+              </div>
+              <DropdownMenuItem onClick={onDelete} className="text-red-500 focus:text-red-500">
+                <Trash2 className="w-4 h-4 mr-2" /> Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <div
         className="p-3 flex-1 overflow-y-auto min-h-[100px] flex flex-col gap-2"
@@ -1233,7 +1307,7 @@ function Column({
           if (cardId) onCardDrop(cardId, column.id)
         }}
       >
-        {cards.sort(sortCardsByDueDateAndOrder).map((card: any, idx: number) => (
+        {sortedCards.map((card: any, idx: number) => (
           <CardItem
             key={card.id}
             index={idx}
