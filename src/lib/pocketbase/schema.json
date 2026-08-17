@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-02T19:47:04.968Z",
+  "generatedAt": "2026-08-17T18:09:46.368Z",
   "collections": [
     {
       "name": "users",
@@ -732,11 +732,13 @@
             "assignment_add",
             "assignment_remove",
             "attachment_add",
+            "attachment_remove",
             "comment_add",
             "date_change",
             "completion",
             "briefing_read",
-            "briefing_pending"
+            "briefing_pending",
+            "attachment_remove"
           ]
         },
         {

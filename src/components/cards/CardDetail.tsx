@@ -24,6 +24,16 @@ import {
   ChevronUp,
 } from 'lucide-react'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -427,6 +437,30 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
     onChange()
   }
 
+  const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null)
+  const [isDeletingAttachment, setIsDeletingAttachment] = useState(false)
+
+  const handleDeleteAttachment = async () => {
+    if (!attachmentToDelete) return
+    setIsDeletingAttachment(true)
+    try {
+      await pb.collection('attachments').delete(attachmentToDelete.id)
+      await logAct('attachment_remove', `Removeu o anexo ${attachmentToDelete.name}`)
+      toast({ title: 'Anexo excluído', description: attachmentToDelete.name })
+      onChange()
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Erro ao excluir anexo',
+        description: 'Não foi possível remover o arquivo.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsDeletingAttachment(false)
+      setAttachmentToDelete(null)
+    }
+  }
+
   const handleDelete = async () => {
     if (!confirm('Excluir este cartão permanentemente?')) return
 
@@ -678,28 +712,46 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           {attachments.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {attachments.map((a: any) => (
-                <a
+                <div
                   key={a.id}
-                  href={pb.files.getURL(a, a.file)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex flex-col border border-white/10 rounded-lg overflow-hidden group hover:border-emerald-500/50 shadow-sm transition-all hover:shadow-md bg-white/5"
+                  className="flex flex-col border border-white/10 rounded-lg overflow-hidden group hover:border-emerald-500/50 shadow-sm transition-all hover:shadow-md bg-white/5 relative"
                 >
-                  <div className="bg-black/20 h-24 flex items-center justify-center relative">
-                    {a.type?.includes('image') ? (
-                      <img
-                        src={pb.files.getURL(a, a.file)}
-                        className="object-cover w-full h-full"
-                        alt={a.name}
-                      />
-                    ) : (
-                      <Paperclip className="w-8 h-8 text-gray-400" />
-                    )}
-                  </div>
-                  <div className="p-2 text-xs truncate font-medium bg-transparent text-gray-100 border-t border-white/10">
-                    {a.name}
-                  </div>
-                </a>
+                  <a
+                    href={pb.files.getURL(a, a.file)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex flex-col flex-1"
+                  >
+                    <div className="bg-black/20 h-24 flex items-center justify-center relative">
+                      {a.type?.includes('image') ? (
+                        <img
+                          src={pb.files.getURL(a, a.file)}
+                          className="object-cover w-full h-full"
+                          alt={a.name}
+                        />
+                      ) : (
+                        <Paperclip className="w-8 h-8 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="p-2 text-xs truncate font-medium bg-transparent text-gray-100 border-t border-white/10">
+                      {a.name}
+                    </div>
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-gray-300 hover:text-red-400 hover:bg-red-500/20 hover:border-red-500/40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all shadow-md"
+                    title="Excluir anexo"
+                    aria-label={`Excluir anexo ${a.name}`}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setAttachmentToDelete(a)
+                    }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
               ))}
             </div>
           ) : (
@@ -1203,6 +1255,49 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           </div>
         </div>
       </div>
+
+      <AlertDialog
+        open={!!attachmentToDelete}
+        onOpenChange={(open) => {
+          if (!isDeletingAttachment) setAttachmentToDelete(null)
+        }}
+      >
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/15 border border-red-500/25">
+                <Trash2 className="w-4 h-4 text-red-400" />
+              </span>
+              Excluir anexo
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o anexo{' '}
+              <span className="font-semibold text-gray-200 break-all">
+                {attachmentToDelete?.name}
+              </span>
+              ? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isDeletingAttachment}
+              className="bg-white/5 border-white/10 hover:bg-white/10"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingAttachment}
+              onClick={(e) => {
+                e.preventDefault()
+                handleDeleteAttachment()
+              }}
+              className="bg-red-500/90 hover:bg-red-500 text-white border border-red-500/40"
+            >
+              {isDeletingAttachment ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
