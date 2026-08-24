@@ -268,7 +268,7 @@ export function ImageLightbox({ images, startIndex, onClose }: ImageLightboxProp
       </div>
 
       {/* Center Image Container */}
-      <div className="w-full h-full flex items-center justify-center p-4 sm:p-12" onClick={onClose}>
+      <div className="w-full h-full flex items-center justify-center p-4 sm:p-12">
         <img
           key={current.id || current.file}
           src={pb.files.getURL(current, current.file)}
