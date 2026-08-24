@@ -66,6 +66,7 @@ import { Checklist } from './Checklist'
 import { Comments } from './Comments'
 import { ActivityLog } from './ActivityLog'
 import { ImageLightbox } from './ImageLightbox'
+import { CardAttachments, getFileKind } from './CardAttachments'
 
 const LABEL_COLORS = [
   '#10b981',
@@ -272,210 +273,6 @@ const DescriptionContainer = ({ card, description, setDescription, onChange, log
   )
 }
 
-const getFileKind = (a: any): 'image' | 'pdf' | 'doc' | 'video' | 'audio' | 'file' => {
-  const type = (a.type || '').toLowerCase()
-  const name = (a.name || '').toLowerCase()
-  if (type.includes('image')) return 'image'
-  if (type === 'application/pdf' || name.endsWith('.pdf')) return 'pdf'
-  if (
-    type.includes('word') ||
-    type.includes('officedocument.wordprocessing') ||
-    name.endsWith('.doc') ||
-    name.endsWith('.docx')
-  )
-    return 'doc'
-  if (type.includes('video')) return 'video'
-  if (type.includes('audio')) return 'audio'
-  return 'file'
-}
-
-const FileIcon = ({ kind, className }: { kind: string; className?: string }) => {
-  if (kind === 'doc' || kind === 'pdf') return <FileText className={className} />
-  if (kind === 'video' || kind === 'audio') return <FileType className={className} />
-  return <Paperclip className={className} />
-}
-
-const AttachmentItem = ({
-  a,
-  onChange,
-  logAct,
-  onPreview,
-  onImagePreview,
-  onDelete,
-}: {
-  a: any
-  onChange: () => void
-  logAct: (type: string, desc: string, targetCardId?: string) => Promise<void>
-  onPreview: (a: any) => void
-  onImagePreview: (a: any) => void
-  onDelete: (a: any) => void
-}) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editName, setEditName] = useState(a.name || '')
-  const [isSaving, setIsSaving] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { toast } = useToast()
-
-  const kind = getFileKind(a)
-  const fileUrl = pb.files.getURL(a, a.file)
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [isEditing])
-
-  const startEdit = () => {
-    setEditName(a.name || '')
-    setIsEditing(true)
-  }
-
-  const saveName = async () => {
-    const trimmed = editName.trim()
-    if (!trimmed) {
-      toast({ title: 'O nome não pode estar vazio', variant: 'destructive' })
-      setEditName(a.name || '')
-      setIsEditing(false)
-      return
-    }
-    if (trimmed === a.name) {
-      setIsEditing(false)
-      return
-    }
-    setIsSaving(true)
-    try {
-      await pb.collection('attachments').update(a.id, { name: trimmed })
-      await logAct('attachment_rename', `Renomeou o anexo de "${a.name}" para "${trimmed}"`)
-      toast({ title: 'Anexo renomeado', description: trimmed })
-      onChange()
-    } catch (err) {
-      console.error(err)
-      toast({ title: 'Erro ao renomear anexo', variant: 'destructive' })
-      setEditName(a.name || '')
-    } finally {
-      setIsSaving(false)
-      setIsEditing(false)
-    }
-  }
-
-  return (
-    <div
-      key={a.id}
-      className="flex flex-col border border-white/10 rounded-lg overflow-hidden group hover:border-emerald-500/50 shadow-sm transition-all hover:shadow-md bg-white/5 relative"
-    >
-      <div
-        className="bg-black/20 h-28 flex items-center justify-center relative cursor-pointer overflow-hidden"
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          if (kind === 'image') {
-            onImagePreview(a)
-          } else if (kind === 'pdf') {
-            onPreview(a)
-          } else {
-            window.open(fileUrl, '_blank', 'noreferrer')
-          }
-        }}
-      >
-        {kind === 'image' ? (
-          <img src={fileUrl} className="object-cover w-full h-full" alt={a.name} />
-        ) : kind === 'pdf' ? (
-          <div className="relative w-full h-full">
-            <iframe
-              src={fileUrl}
-              title={a.name}
-              className="w-full h-full pointer-events-none"
-              style={{ border: 'none' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-2">
-              <span className="text-[10px] font-semibold text-white/90 flex items-center gap-1 bg-black/40 backdrop-blur-md border border-white/10 rounded px-1.5 py-0.5">
-                <FileText className="w-3 h-3" /> PDF
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-1.5 py-2">
-            <FileIcon kind={kind} className="w-9 h-9 text-gray-300" />
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">
-              {kind === 'doc'
-                ? 'Documento'
-                : kind === 'video'
-                  ? 'Vídeo'
-                  : kind === 'audio'
-                    ? 'Áudio'
-                    : 'Arquivo'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {isEditing ? (
-        <div className="p-2 border-t border-white/10 bg-white/5">
-          <div className="flex items-center gap-1">
-            <Input
-              ref={inputRef}
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  saveName()
-                } else if (e.key === 'Escape') {
-                  e.preventDefault()
-                  setEditName(a.name || '')
-                  setIsEditing(false)
-                }
-              }}
-              onBlur={saveName}
-              disabled={isSaving}
-              className="h-7 text-xs bg-white/10 border-white/10 focus-visible:ring-emerald-500/50 px-1.5"
-            />
-            {isSaving && <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin shrink-0" />}
-          </div>
-          <p className="text-[9px] text-gray-500 mt-1">Enter para salvar · Esc para cancelar</p>
-        </div>
-      ) : (
-        <div className="p-2 text-xs truncate font-medium bg-transparent text-gray-100 border-t border-white/10 flex items-center justify-between gap-1">
-          <span className="truncate" title={a.name}>
-            {a.name}
-          </span>
-          <div className="flex items-center gap-0.5 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
-              title="Renomear anexo"
-              aria-label={`Renomear anexo ${a.name}`}
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                startEdit()
-              }}
-            >
-              <Pencil className="w-3 h-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-gray-400 hover:text-red-400 hover:bg-red-500/20 transition-all"
-              title="Excluir anexo"
-              aria-label={`Excluir anexo ${a.name}`}
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                onDelete(a)
-              }}
-            >
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 export function CardDetail({ card, board, columns = [], onChange, onClose }: any) {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -634,91 +431,8 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
     onChange()
   }
 
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<{
-    name: string
-    done: number
-    total: number
-  } | null>(null)
-
-  const handleFileUpload = async (e: any) => {
-    const files = Array.from(e.target.files || []) as File[]
-    if (files.length === 0) return
-    e.target.value = ''
-
-    setIsUploading(true)
-    let success = 0
-    let failed = 0
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      setUploadProgress({ name: file.name, done: i, total: files.length })
-      try {
-        const formData = new FormData()
-        formData.append('card_id', card.id)
-        formData.append('file', file)
-        formData.append('name', file.name)
-        formData.append('type', file.type)
-        formData.append('size', file.size.toString())
-        formData.append('user_id', user.id)
-        await pb.collection('attachments').create(formData)
-        await logAct('attachment_add', `Anexou o arquivo ${file.name}`)
-        success++
-        if (files.length > 1) {
-          toast({ title: `Anexo enviado (${i + 1}/${files.length})`, description: file.name })
-        }
-      } catch (err) {
-        console.error(err)
-        failed++
-        toast({
-          title: 'Erro ao enviar anexo',
-          description: file.name,
-          variant: 'destructive',
-        })
-      }
-    }
-
-    setUploadProgress(null)
-    setIsUploading(false)
-
-    if (files.length > 1) {
-      toast({
-        title: 'Envio concluído',
-        description: `${success} arquivo(s) enviado(s)${failed ? `, ${failed} falhou/falharam` : ''}.`,
-        variant: failed ? 'destructive' : 'default',
-      })
-    } else if (success && failed === 0) {
-      toast({ title: 'Anexo enviado', description: files[0].name })
-    }
-
-    onChange()
-  }
-
-  const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null)
-  const [isDeletingAttachment, setIsDeletingAttachment] = useState(false)
   const [previewAttachment, setPreviewAttachment] = useState<any>(null)
   const [imagePreview, setImagePreview] = useState<any>(null)
-
-  const handleDeleteAttachment = async () => {
-    if (!attachmentToDelete) return
-    setIsDeletingAttachment(true)
-    try {
-      await pb.collection('attachments').delete(attachmentToDelete.id)
-      await logAct('attachment_remove', `Removeu o anexo ${attachmentToDelete.name}`)
-      toast({ title: 'Anexo excluído', description: attachmentToDelete.name })
-      onChange()
-    } catch (error) {
-      console.error(error)
-      toast({
-        title: 'Erro ao excluir anexo',
-        description: 'Não foi possível remover o arquivo.',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsDeletingAttachment(false)
-      setAttachmentToDelete(null)
-    }
-  }
 
   const handleDelete = async () => {
     if (!confirm('Excluir este cartão permanentemente?')) return
@@ -961,79 +675,15 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-100">
-              <Paperclip className="w-5 h-5 text-gray-400" /> Anexos
-            </h3>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-gray-300"
-              onClick={() => document.getElementById('file-upload')?.click()}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Paperclip className="w-4 h-4 mr-2" />
-                  Adicionar Anexo
-                </>
-              )}
-            </Button>
-            <input
-              type="file"
-              id="file-upload"
-              multiple
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-          </div>
-
-          {isUploading && uploadProgress && (
-            <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-md animate-fade-in">
-              <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-gray-200 truncate font-medium">
-                  Enviando {uploadProgress.name}
-                </div>
-                <div className="text-[10px] text-gray-400">
-                  Arquivo {uploadProgress.done + 1} de {uploadProgress.total}
-                </div>
-              </div>
-              <div className="w-24 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-300"
-                  style={{
-                    width: `${((uploadProgress.done + 1) / uploadProgress.total) * 100}%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {attachments.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {attachments.map((a: any) => (
-                <AttachmentItem
-                  key={a.id}
-                  a={a}
-                  onChange={onChange}
-                  logAct={logAct}
-                  onPreview={(att) => setPreviewAttachment(att)}
-                  onImagePreview={openImageLightbox}
-                  onDelete={(att) => setAttachmentToDelete(att)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-sm text-gray-400 border-2 border-dashed border-white/10 bg-white/5 p-6 text-center rounded-lg">
-              Nenhum anexo neste cartão.
-            </div>
-          )}
+          <CardAttachments
+            card={card}
+            userId={user.id}
+            attachments={attachments}
+            onChange={onChange}
+            logAct={logAct}
+            onPreview={(att) => setPreviewAttachment(att)}
+            onImagePreview={openImageLightbox}
+          />
         </div>
 
         <div className="space-y-3">
@@ -1530,49 +1180,6 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           </div>
         </div>
       </div>
-
-      <AlertDialog
-        open={!!attachmentToDelete}
-        onOpenChange={(open) => {
-          if (!isDeletingAttachment) setAttachmentToDelete(null)
-        }}
-      >
-        <AlertDialogContent className="max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/15 border border-red-500/25">
-                <Trash2 className="w-4 h-4 text-red-400" />
-              </span>
-              Excluir anexo
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o anexo{' '}
-              <span className="font-semibold text-gray-200 break-all">
-                {attachmentToDelete?.name}
-              </span>
-              ? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={isDeletingAttachment}
-              className="bg-white/5 border-white/10 hover:bg-white/10"
-            >
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isDeletingAttachment}
-              onClick={(e) => {
-                e.preventDefault()
-                handleDeleteAttachment()
-              }}
-              className="bg-red-500/90 hover:bg-red-500 text-white border border-red-500/40"
-            >
-              {isDeletingAttachment ? 'Excluindo...' : 'Excluir'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog
         open={!!previewAttachment}
