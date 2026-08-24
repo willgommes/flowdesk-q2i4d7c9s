@@ -1024,7 +1024,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   onChange={onChange}
                   logAct={logAct}
                   onPreview={(att) => setPreviewAttachment(att)}
-                  onImagePreview={(att) => setImagePreview(att)}
+                  onImagePreview={openImageLightbox}
                   onDelete={(att) => setAttachmentToDelete(att)}
                 />
               ))}
@@ -1118,7 +1118,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           onChange()
                         }}
                       >
-                        <Checkbox checked={isAssigned} readOnly />
+                        <Checkbox checked={isAssigned} />
                         <Avatar className="w-6 h-6">
                           <AvatarFallback className="text-[10px]">{m.name?.[0]}</AvatarFallback>
                         </Avatar>
@@ -1156,7 +1156,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                           className="flex items-center gap-2 cursor-pointer flex-1"
                           onClick={() => toggleLabel(l)}
                         >
-                          <Checkbox checked={isActive} readOnly />
+                          <Checkbox checked={isActive} />
                           <div
                             className="flex-1 px-2 py-1 rounded-md text-xs font-medium text-white shadow-sm"
                             style={{ backgroundColor: l.color }}

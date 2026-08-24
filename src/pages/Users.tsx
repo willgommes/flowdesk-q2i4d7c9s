@@ -73,8 +73,10 @@ import { getErrorMessage, extractFieldErrors } from '@/lib/pocketbase/errors'
 const inviteSchema = z.object({
   email: z.string().email('Email inválido'),
   name: z.string().min(2, 'Nome é obrigatório'),
-  role: z.enum(['admin', 'membro', 'cliente']).default('membro'),
+  role: z.enum(['admin', 'membro', 'cliente']),
 })
+
+type InviteFormValues = z.infer<typeof inviteSchema>
 
 export default function Users() {
   const { user } = useAuth()
@@ -88,7 +90,7 @@ export default function Users() {
   const [permissionsUserId, setPermissionsUserId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const form = useForm<z.infer<typeof inviteSchema>>({
+  const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
     defaultValues: { email: '', name: '', role: 'membro' },
   })
@@ -151,7 +153,7 @@ export default function Users() {
     loadUsers()
   })
 
-  const handleInvite = async (values: z.infer<typeof inviteSchema>) => {
+  const handleInvite = async (values: InviteFormValues) => {
     try {
       const tempPassword = Math.random().toString(36).slice(-8) + 'A1!'
       await pb.collection('users').create({

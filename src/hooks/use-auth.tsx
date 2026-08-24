@@ -11,8 +11,10 @@ export interface User {
   theme?: 'light' | 'dark'
   time_format?: '12h' | '24h'
   sound_enabled?: boolean
+  notifications_enabled?: boolean
   briefing_required?: boolean
   last_briefing_at?: string
+  dashboard_layout?: any
   created: string
   updated: string
   lastActive?: string

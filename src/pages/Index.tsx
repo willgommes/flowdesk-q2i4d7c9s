@@ -102,10 +102,14 @@ export default function Index() {
       const memberFilter = selectedMember === 'all' ? undefined : selectedMember
 
       const activitiesData = await getRecentActivities(boardIds, memberFilter)
-      setActivities(activitiesData.items || activitiesData)
+      setActivities((activitiesData as any).items || activitiesData)
 
       const dData = await getDashboardData(explicitBoardIds, memberFilter)
-      setCardsData(dData)
+      setCardsData({
+        cards: dData.cards || [],
+        priorityCards: dData.priorityCards || [],
+        recurringCards: dData.recurringCards || [],
+      })
     } catch (e) {
       console.error(e)
     } finally {

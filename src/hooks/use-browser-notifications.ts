@@ -20,7 +20,7 @@ export function useBrowserNotifications() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const bufferRef = useRef<NotificationEvent[]>([])
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleNotificationClick = (boardId: string, cardId: string) => {
     window.focus()
