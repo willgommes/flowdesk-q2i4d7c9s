@@ -65,6 +65,7 @@ import { cn } from '@/lib/utils'
 import { Checklist } from './Checklist'
 import { Comments } from './Comments'
 import { ActivityLog } from './ActivityLog'
+import { ImageLightbox } from './ImageLightbox'
 
 const LABEL_COLORS = [
   '#10b981',
@@ -788,6 +789,13 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   const checklist = card.expand?.checklist_items_via_card_id || []
   const comments = card.expand?.comments_via_card_id || []
   const attachments = card.expand?.attachments_via_card_id || []
+
+  // Imagens anexadas ao card — usadas para a navegação do lightbox
+  const imageAttachments = attachments.filter((a: any) => getFileKind(a) === 'image')
+  const openImageLightbox = (att: any) => {
+    const idx = imageAttachments.findIndex((a: any) => a.id === att.id)
+    setImagePreview({ startIndex: idx >= 0 ? idx : 0 })
+  }
 
   const [boardLabels, setBoardLabels] = useState<any[]>([])
   const [editingLabel, setEditingLabel] = useState<any>(null)
@@ -1607,55 +1615,12 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </DialogContent>
       </Dialog>
 
-      {imagePreview && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl animate-fade-in p-4"
-          onClick={() => setImagePreview(null)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setImagePreview(null)
-          }}
-          role="button"
-          tabIndex={0}
-        >
-          {/* Close button */}
-          <button
-            onClick={() => setImagePreview(null)}
-            className="absolute top-4 right-4 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/20 text-gray-200 hover:text-white backdrop-blur-md transition-all"
-            aria-label="Fechar visualização"
-            title="Fechar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          {/* Download button */}
-          <a
-            href={pb.files.getURL(imagePreview, imagePreview.file)}
-            download={imagePreview.name || 'imagem'}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-1.5 text-xs font-medium text-gray-200 hover:text-emerald-400 bg-white/5 hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/30 rounded-md px-3 py-2 backdrop-blur-md transition-all"
-            title="Baixar imagem"
-          >
-            <Download className="w-4 h-4" />
-            Baixar
-          </a>
-
-          {/* Filename */}
-          <div className="absolute bottom-4 left-4 z-10 max-w-[60%]">
-            <span className="inline-block text-xs font-medium text-gray-200 bg-black/40 backdrop-blur-md border border-white/10 rounded-md px-3 py-1.5 truncate">
-              {imagePreview.name}
-            </span>
-          </div>
-
-          {/* Image */}
-          <img
-            src={pb.files.getURL(imagePreview, imagePreview.file)}
-            alt={imagePreview.name}
-            onClick={(e) => e.stopPropagation()}
-            className="max-w-[92vw] max-h-[85vh] object-contain rounded-lg shadow-2xl border border-white/10"
-          />
-        </div>
+      {imagePreview && imageAttachments.length > 0 && (
+        <ImageLightbox
+          images={imageAttachments}
+          startIndex={imagePreview.startIndex ?? 0}
+          onClose={() => setImagePreview(null)}
+        />
       )}
     </div>
   )

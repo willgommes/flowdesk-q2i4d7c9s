@@ -291,6 +291,53 @@ export default function BoardPage() {
     loadData()
   }, [id])
 
+  // Atalho global: Ctrl+N (Cmd+N no Mac) cria um novo card na primeira coluna visível
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isShortcut = (e.ctrlKey || e.metaKey) && (e.key === 'n' || e.key === 'N')
+      if (!isShortcut) return
+      // Ignora se o foco estiver em um campo de edição de texto
+      const tag = (e.target as HTMLElement)?.tagName
+      const isEditable =
+        tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable
+      if (isEditable) return
+
+      e.preventDefault()
+      const targetCol = columns[0]
+      if (!targetCol || !id) return
+
+      const authId = pb.authStore.record?.id
+      pb.collection('cards')
+        .create({
+          board_id: id,
+          column_id: targetCol.id,
+          title: 'Novo cartão',
+          sort_order: Math.floor(cards.length),
+          created_by: authId,
+          completed: false,
+        })
+        .then((newCard) => {
+          pb.collection('activity_logs').create({
+            card_id: newCard.id,
+            user_id: authId,
+            action_type: 'creation',
+            description: 'Criou este cartão',
+          })
+          toast({ title: 'Cartão criado', description: 'Edite o título e os detalhes.' })
+          navigate(`/boards/${id}/cards/${newCard.id}`)
+        })
+        .catch((err) => {
+          toast({
+            title: 'Erro ao criar cartão',
+            description: getErrorMessage(err),
+            variant: 'destructive',
+          })
+        })
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [columns, cards, id, navigate])
+
   useRealtime('boards', (e) => {
     if (e.record.id === id) {
       if (e.action === 'delete') navigate('/boards')
