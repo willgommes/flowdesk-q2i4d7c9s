@@ -221,50 +221,74 @@ export function ImageLightbox({ images, startIndex, onClose }: ImageLightboxProp
         </div>
       </div>
 
-      {/* Navigation arrows */}
-      {hasMultiple && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              goPrev()
-            }}
-            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 inline-flex items-center justify-center w-12 h-12 rounded-full bg-black/60 hover:bg-white/20 border border-white/10 hover:border-white/20 text-gray-200 hover:text-white backdrop-blur-md transition-all active:scale-95 shadow-xl cursor-pointer"
-            aria-label="Imagem anterior"
-            title="Anterior (←)"
-          >
-            <ChevronLeft className="w-7 h-7" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              goNext()
-            }}
-            className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 inline-flex items-center justify-center w-12 h-12 rounded-full bg-black/60 hover:bg-white/20 border border-white/10 hover:border-white/20 text-gray-200 hover:text-white backdrop-blur-md transition-all active:scale-95 shadow-xl cursor-pointer"
-            aria-label="Próxima imagem"
-            title="Próxima (→)"
-          >
-            <ChevronRight className="w-7 h-7" />
-          </button>
-        </>
-      )}
-
-      {/* Bottom mobile download button */}
-      <div className="sm:hidden absolute bottom-4 right-4 z-30">
-        <a
-          href={pb.files.getURL(current, current.file)}
-          download={current.name || 'imagem'}
-          target="_blank"
-          rel="noreferrer"
+      {/* Fixed bottom control bar */}
+      <div className="absolute bottom-4 inset-x-4 z-30 flex items-center justify-center pointer-events-none">
+        <div
+          className="pointer-events-auto flex items-center gap-2 sm:gap-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-1.5 shadow-lg"
           onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-200 hover:text-emerald-400 bg-black/60 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/40 rounded-full px-3.5 py-2 backdrop-blur-md transition-all shadow-lg cursor-pointer"
-          title="Baixar imagem"
         >
-          <Download className="w-4 h-4" />
-          Baixar
-        </a>
+          {hasMultiple && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  goPrev()
+                }}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/60 hover:bg-white/20 border border-white/10 hover:border-white/20 text-gray-200 hover:text-white backdrop-blur-md transition-all active:scale-95 shadow-md cursor-pointer"
+                aria-label="Imagem anterior"
+                title="Anterior (←)"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <span className="text-xs font-medium text-gray-200 px-2 tabular-nums select-none">
+                {index + 1} / {images.length}
+              </span>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  goNext()
+                }}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/60 hover:bg-white/20 border border-white/10 hover:border-white/20 text-gray-200 hover:text-white backdrop-blur-md transition-all active:scale-95 shadow-md cursor-pointer"
+                aria-label="Próxima imagem"
+                title="Próxima (→)"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <div className="h-4 w-px bg-white/15 mx-0.5" />
+            </>
+          )}
+
+          <a
+            href={pb.files.getURL(current, current.file)}
+            download={current.name || 'imagem'}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-200 hover:text-emerald-400 bg-black/60 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/40 rounded-full px-3 py-2 backdrop-blur-md transition-all shadow-md cursor-pointer active:scale-95"
+            title="Baixar imagem"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Baixar</span>
+          </a>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-black/60 hover:bg-white/20 border border-white/10 hover:border-white/20 text-gray-200 hover:text-white backdrop-blur-md transition-all shadow-md cursor-pointer active:scale-95"
+            aria-label="Fechar visualização"
+            title="Fechar (Esc)"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Center Image Container */}
