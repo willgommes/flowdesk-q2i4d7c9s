@@ -268,7 +268,7 @@ export function ImageLightbox({ images, startIndex, onClose }: ImageLightboxProp
       </div>
 
       {/* Center Image Container */}
-      <div className="w-full h-full flex items-center justify-center p-4 sm:p-12">
+      <div className="w-full h-full flex items-center justify-center p-4 sm:p-12 pointer-events-none">
         <img
           key={current.id || current.file}
           src={pb.files.getURL(current, current.file)}
@@ -279,7 +279,7 @@ export function ImageLightbox({ images, startIndex, onClose }: ImageLightboxProp
             setZoom((z) => (z > 1 ? 1 : 2))
           }}
           draggable={false}
-          className="max-w-[90vw] max-h-[82vh] w-auto h-auto object-contain rounded-lg shadow-2xl border border-white/10 select-none transition-transform duration-150 ease-out cursor-zoom-in"
+          className="pointer-events-auto max-w-[90vw] max-h-[82vh] w-auto h-auto object-contain rounded-lg shadow-2xl border border-white/10 select-none transition-transform duration-150 ease-out cursor-zoom-in"
           style={{ transform: `scale(${zoom})` }}
         />
       </div>
