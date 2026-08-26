@@ -10,12 +10,12 @@ export function DocumentPreviewModal({ open, onOpenChange, url, filename }: any)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0">
-        <DialogHeader className="p-4 border-b shrink-0 flex flex-row items-center justify-between">
-          <DialogTitle className="truncate pr-4" title={filename}>
+      <DialogContent className="sm:max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-gray-100">
+        <DialogHeader className="p-4 border-b border-white/10 shrink-0 flex flex-row items-center justify-between min-w-0">
+          <DialogTitle className="truncate pr-4 flex-1 min-w-0 text-gray-100" title={filename}>
             {filename}
           </DialogTitle>
-          <div className="flex gap-2 mr-6">
+          <div className="flex gap-2 mr-6 shrink-0">
             <Button variant="outline" size="sm" asChild>
               <a href={url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4 mr-2" />

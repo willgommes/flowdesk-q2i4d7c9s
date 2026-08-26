@@ -661,8 +661,8 @@ export function CardAttachments({
         </div>
 
         {isEditingThis ? (
-          <div className="p-2 border-t border-white/10 bg-white/5">
-            <div className="flex items-center gap-1">
+          <div className="p-2 border-t border-white/10 bg-white/5 min-w-0">
+            <div className="flex items-center gap-1 min-w-0">
               <Input
                 autoFocus
                 value={editingAttachmentName}
@@ -677,7 +677,7 @@ export function CardAttachments({
                   }
                 }}
                 disabled={isSavingAttachmentName}
-                className="h-7 text-xs bg-white/10 border-white/10 focus-visible:ring-emerald-500/50 px-1.5"
+                className="h-7 text-xs bg-white/10 border-white/10 focus-visible:ring-emerald-500/50 px-1.5 flex-1 min-w-0"
               />
               {isSavingAttachmentName ? (
                 <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin shrink-0" />
@@ -685,18 +685,20 @@ export function CardAttachments({
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6 text-emerald-400 hover:text-emerald-300"
+                  className="h-6 w-6 text-emerald-400 hover:text-emerald-300 shrink-0"
                   onClick={() => handleSaveRename(a)}
                 >
                   <Check className="w-3 h-3" />
                 </Button>
               )}
             </div>
-            <p className="text-[9px] text-gray-500 mt-1">Enter para salvar · Esc para cancelar</p>
+            <p className="text-[9px] text-gray-500 mt-1 truncate">
+              Enter para salvar · Esc para cancelar
+            </p>
           </div>
         ) : (
-          <div className="p-2 text-xs truncate font-medium bg-transparent text-gray-100 border-t border-white/10 flex items-center justify-between gap-1">
-            <span className="truncate flex-1" title={a.name}>
+          <div className="p-2 text-xs font-medium bg-transparent text-gray-100 border-t border-white/10 flex items-center justify-between gap-1 min-w-0">
+            <span className="truncate flex-1 min-w-0" title={a.name}>
               {a.name}
             </span>
             <div className="flex items-center gap-0.5 shrink-0">
@@ -784,7 +786,7 @@ export function CardAttachments({
 
   return (
     <div
-      className="space-y-4 relative"
+      className="space-y-4 relative min-w-0 w-full"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}

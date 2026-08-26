@@ -137,20 +137,22 @@ export function UserPermissionsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Gerenciar Permissões: {user?.name}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh] flex flex-col p-6 overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-gray-100">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="truncate" title={user?.name}>
+            Gerenciar Permissões: {user?.name}
+          </DialogTitle>
+          <DialogDescription className="text-gray-400">
             Ajuste o papel do usuário e gerencie o acesso aos boards.
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex justify-center p-8">
+          <div className="flex justify-center p-8 flex-1">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 overflow-y-auto overflow-x-hidden flex-1 pr-1">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Papel</Label>
@@ -212,7 +214,8 @@ export function UserPermissionsModal({
                         />
                         <Label
                           htmlFor={`board-${board.id}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 truncate min-w-0 flex-1"
+                          title={board.name}
                         >
                           {board.name}
                         </Label>
@@ -230,7 +233,7 @@ export function UserPermissionsModal({
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 pt-2 border-t border-white/10">
           <DialogClose asChild>
             <Button variant="outline" disabled={isSaving}>
               Cancelar

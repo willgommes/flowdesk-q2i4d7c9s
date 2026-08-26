@@ -264,18 +264,24 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white/10 backdrop-blur-xl border border-white/10 text-gray-100">
+        <DialogContent className="sm:max-w-[600px] w-full max-h-[90vh] flex flex-col p-0 overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-gray-100">
           <DialogHeader className="p-6 pb-4 shrink-0 border-b border-white/10 bg-white/5">
             <DialogTitle>{client ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-6 pt-2">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 pt-4">
             <form id="client-form" onSubmit={handleSubmit}>
-              <Tabs defaultValue="brand" className="w-full">
+              <Tabs defaultValue="general" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="general">Geral</TabsTrigger>
-                  <TabsTrigger value="brand">Arquivos da Marca</TabsTrigger>
-                  <TabsTrigger value="contracts">Contratos</TabsTrigger>
+                  <TabsTrigger value="general" className="truncate">
+                    Geral
+                  </TabsTrigger>
+                  <TabsTrigger value="brand" className="truncate">
+                    Arquivos da Marca
+                  </TabsTrigger>
+                  <TabsTrigger value="contracts" className="truncate">
+                    Contratos
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* ABA GERAL */}
@@ -356,7 +362,7 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                   <div className="space-y-3">
                     <Label>Paleta de Cores</Label>
                     <div className="flex flex-col gap-3">
-                      <div className="flex gap-2 items-end">
+                      <div className="flex flex-wrap sm:flex-nowrap gap-2 items-end">
                         <div className="space-y-1 shrink-0 relative">
                           <Input
                             type="color"
@@ -367,10 +373,10 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                             }
                             onChange={(e) => setNewColorHex(e.target.value)}
                             disabled={loading}
-                            className="w-12 h-10 p-1 cursor-pointer absolute opacity-0 inset-0"
+                            className="w-10 h-9 p-1 cursor-pointer absolute opacity-0 inset-0"
                           />
                           <div
-                            className="w-12 h-10 rounded-md border shadow-sm flex items-center justify-center pointer-events-none"
+                            className="w-10 h-9 rounded-md border border-white/20 shadow-sm flex items-center justify-center pointer-events-none"
                             style={{
                               backgroundColor:
                                 newColorHex.startsWith('#') || newColorHex.startsWith('rgb')
@@ -379,12 +385,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                             }}
                           />
                         </div>
-                        <div className="space-y-1 flex-1">
+                        <div className="space-y-1 min-w-[100px] flex-1">
                           <Input
                             placeholder="HEX ou RGB"
                             value={newColorHex}
                             onChange={(e) => setNewColorHex(e.target.value)}
                             disabled={loading}
+                            className="h-9 text-xs"
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && newColorName.trim()) {
                                 e.preventDefault()
@@ -393,12 +400,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                             }}
                           />
                         </div>
-                        <div className="space-y-1 flex-1">
+                        <div className="space-y-1 min-w-[100px] flex-1">
                           <Input
                             placeholder="Nome da cor"
                             value={newColorName}
                             onChange={(e) => setNewColorName(e.target.value)}
                             disabled={loading}
+                            className="h-9 text-xs"
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault()
@@ -411,7 +419,9 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                           type="button"
                           onClick={handleAddColor}
                           variant="secondary"
+                          size="sm"
                           disabled={loading}
+                          className="h-9 shrink-0"
                         >
                           Adicionar
                         </Button>
@@ -419,18 +429,23 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                     </div>
 
                     {palette.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                         {palette.map((color, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/10 shadow-sm"
+                            className="flex items-center justify-between border border-white/10 rounded-md p-2 text-sm bg-white/5 shadow-sm min-w-0"
                           >
-                            <div className="flex items-center gap-2 truncate">
+                            <div className="flex items-center gap-2 truncate min-w-0 flex-1 mr-2">
                               <div
-                                className="w-4 h-4 rounded-full border shadow-sm shrink-0"
+                                className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
                                 style={{ backgroundColor: color.hex }}
                               />
-                              <span className="truncate font-medium">{color.name}</span>
+                              <span
+                                className="truncate font-medium text-xs text-gray-200"
+                                title={color.name}
+                              >
+                                {color.name}
+                              </span>
                             </div>
                             <Button
                               type="button"
@@ -447,7 +462,6 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                       </div>
                     )}
                   </div>
-
                   <div className="space-y-2 pt-2 border-t border-border/40">
                     <Label>Ativos da Marca (Secundários, Ícones, Diretrizes)</Label>
                     <div>
@@ -535,11 +549,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                         {brandAssetsFiles.map((file, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/5"
+                            className="flex items-center justify-between border border-white/10 rounded-md p-2 text-sm bg-white/5 min-w-0"
                           >
-                            <div className="flex items-center gap-2 truncate">
+                            <div className="flex items-center gap-2 truncate min-w-0 flex-1 mr-2">
                               <FileImage className="w-4 h-4 text-muted-foreground shrink-0" />
-                              <span className="truncate">{file.name}</span>
+                              <span className="truncate text-xs text-gray-200" title={file.name}>
+                                {file.name}
+                              </span>
                             </div>
                             <Button
                               type="button"
@@ -625,9 +641,12 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                           {savedContracts.map((c: string, i: number) => (
                             <li
                               key={i}
-                              className="flex items-center justify-between bg-background p-2 rounded border shadow-sm"
+                              className="flex items-center justify-between bg-white/5 p-2 rounded border border-white/10 shadow-sm min-w-0"
                             >
-                              <span className="truncate mr-2 flex-1 text-sm" title={c}>
+                              <span
+                                className="truncate mr-2 flex-1 text-xs text-gray-200 min-w-0"
+                                title={c}
+                              >
                                 {c}
                               </span>
                               <div className="flex items-center gap-1 shrink-0">
@@ -665,11 +684,13 @@ export function ClientModal({ open, onOpenChange, client, onSuccess }: any) {
                         {contractFiles.map((file, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between border rounded-md p-2 text-sm bg-muted/5"
+                            className="flex items-center justify-between border border-white/10 rounded-md p-2 text-sm bg-white/5 min-w-0"
                           >
-                            <div className="flex items-center gap-2 truncate">
+                            <div className="flex items-center gap-2 truncate min-w-0 flex-1 mr-2">
                               <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                              <span className="truncate">{file.name}</span>
+                              <span className="truncate text-xs text-gray-200" title={file.name}>
+                                {file.name}
+                              </span>
                             </div>
                             <Button
                               type="button"

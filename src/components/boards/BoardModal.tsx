@@ -101,12 +101,15 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-xl border border-white/10 text-gray-100">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] w-full max-h-[90vh] flex flex-col p-6 overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-gray-100">
+        <DialogHeader className="shrink-0 pb-2">
           <DialogTitle>{board ? 'Editar Quadro' : 'Novo Quadro'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto overflow-x-hidden pr-1 flex-1"
+        >
+          <div className="space-y-2 min-w-0">
             <Label htmlFor="name">Nome *</Label>
             <Input
               id="name"
@@ -116,10 +119,10 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
               className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <Label>Cliente</Label>
             <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50">
+              <SelectTrigger className="rounded-lg border border-white/30 bg-white/10 text-gray-100 backdrop-blur focus:outline-none focus:ring-2 focus:ring-emerald-400/50 w-full">
                 <SelectValue placeholder="Selecione um cliente" />
               </SelectTrigger>
               <SelectContent>
@@ -132,7 +135,7 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <Label htmlFor="desc">Descrição</Label>
             <Textarea
               id="desc"
@@ -148,32 +151,39 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
               }}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <Label>Cor</Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {['#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b'].map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full border-2 ${color === c ? 'border-primary' : 'border-transparent'}`}
+                  className={`w-8 h-8 rounded-full border-2 shrink-0 ${color === c ? 'border-primary' : 'border-transparent'}`}
                   style={{ backgroundColor: c }}
                 />
               ))}
             </div>
           </div>
           {isAdmin && (
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <Label>Membros</Label>
-              <div className="max-h-32 overflow-y-auto space-y-1 border rounded-md p-2">
+              <div className="max-h-36 overflow-y-auto overflow-x-hidden space-y-1 border border-white/10 rounded-md p-2 bg-white/5">
                 {users.map((u) => (
-                  <label key={u.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <label
+                    key={u.id}
+                    className="flex items-center gap-2 text-sm cursor-pointer p-1 rounded hover:bg-white/5 transition-colors min-w-0"
+                  >
                     <input
                       type="checkbox"
                       checked={members.includes(u.id)}
                       onChange={() => toggleMember(u.id)}
+                      className="shrink-0"
                     />
-                    {u.name} ({u.email})
+                    <span className="truncate min-w-0 flex-1" title={`${u.name} (${u.email})`}>
+                      <span className="font-medium">{u.name}</span>{' '}
+                      <span className="text-gray-400 text-xs">({u.email})</span>
+                    </span>
                   </label>
                 ))}
               </div>
@@ -181,24 +191,26 @@ export function BoardModal({ open, onOpenChange, board, onSuccess }: BoardModalP
           )}
 
           {board && syncData && (
-            <div className="space-y-2 pt-4 border-t">
+            <div className="space-y-2 pt-4 border-t border-white/10 min-w-0">
               <Label>Sincronização Google Calendar</Label>
-              <div className="text-sm text-gray-400 flex flex-col gap-1">
-                <span>Status: {syncData.is_active ? '🟢 Ativa' : '🔴 Inativa'}</span>
-                <span>
+              <div className="text-sm text-gray-400 flex flex-col gap-1 min-w-0">
+                <span className="truncate">
+                  Status: {syncData.is_active ? '🟢 Ativa' : '🔴 Inativa'}
+                </span>
+                <span className="truncate">
                   Última sinc:{' '}
                   {syncData.last_synced_at
                     ? new Date(syncData.last_synced_at).toLocaleString()
                     : 'Nunca'}
                 </span>
-                <span className="truncate" title={syncData.calendar_id}>
+                <span className="truncate block min-w-0" title={syncData.calendar_id}>
                   Calendário: {syncData.calendar_id}
                 </span>
               </div>
             </div>
           )}
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-4 shrink-0">
             <Button type="submit" disabled={loading || !name.trim()}>
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>

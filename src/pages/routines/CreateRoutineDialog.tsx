@@ -187,11 +187,11 @@ export function CreateRoutineDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b shrink-0">
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-gray-100">
+        <DialogHeader className="px-6 py-4 border-b border-white/10 shrink-0">
           <DialogTitle>{initialData ? 'Duplicar Rotina' : 'Nova Rotina'}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 overflow-x-hidden">
           <form id="routine-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">1. Estrutura e Localização</h3>

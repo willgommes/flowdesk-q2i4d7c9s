@@ -259,8 +259,8 @@ export function DailyBriefingModal() {
         if (!val) setOpen(false)
       }}
     >
-      <DialogContent className="max-w-2xl bg-white/10 backdrop-blur-xl border border-white/10 text-foreground p-6 shadow-2xl sm:rounded-[2rem]">
-        <DialogHeader className="mb-2 text-left">
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] flex flex-col overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-foreground p-6 shadow-2xl sm:rounded-[2rem]">
+        <DialogHeader className="mb-2 text-left shrink-0">
           <DialogTitle className="text-2xl font-bold tracking-tight">
             Bom dia! Seu Resumo Diário
           </DialogTitle>
@@ -269,7 +269,7 @@ export function DailyBriefingModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[55vh] pr-4 -mr-4">
+        <ScrollArea className="max-h-[55vh] overflow-x-hidden pr-4 -mr-4 flex-1">
           <div className="space-y-6 pb-2 pt-2">
             <Section
               title="Vencidas / Atrasadas"

@@ -568,14 +568,16 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
   }
 
   return (
-    <div className="flex h-auto md:h-full md:max-h-full flex-col md:flex-row md:overflow-hidden">
-      <div className="flex-1 md:overflow-y-auto p-4 md:p-6 space-y-6 md:space-y-8 bg-transparent">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center text-sm text-gray-400 gap-2 font-medium">
-            <LayoutTemplate className="w-4 h-4" />
-            <span>{board.name}</span>
+    <div className="flex h-auto md:h-full md:max-h-full flex-col md:flex-row md:overflow-hidden min-w-0 w-full">
+      <div className="flex-1 md:overflow-y-auto overflow-x-hidden p-4 md:p-6 space-y-6 md:space-y-8 bg-transparent min-w-0">
+        <div className="space-y-2 min-w-0">
+          <div className="flex flex-wrap items-center text-sm text-gray-400 gap-2 font-medium min-w-0">
+            <LayoutTemplate className="w-4 h-4 shrink-0" />
+            <span className="truncate max-w-[280px]" title={board.name}>
+              {board.name}
+            </span>
             {(card.is_recurring || (card.recurrence_days && card.recurrence_days.length > 0)) && (
-              <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+              <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shrink-0">
                 <Repeat className="w-3 h-3" /> Recorrente
               </span>
             )}
@@ -590,9 +592,9 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                 e.currentTarget.blur()
               }
             }}
-            className={`text-2xl font-bold px-3 py-2 h-auto ${card.completed ? 'line-through text-gray-400' : 'text-gray-100'} bg-transparent border-transparent hover:border-white/10 hover:bg-white/5 focus:bg-white/5 focus:border-white/10 focus:ring-2 focus:ring-emerald-500/50 shadow-none transition-all`}
+            className={`text-2xl font-bold px-3 py-2 h-auto w-full ${card.completed ? 'line-through text-gray-400' : 'text-gray-100'} bg-transparent border-transparent hover:border-white/10 hover:bg-white/5 focus:bg-white/5 focus:border-white/10 focus:ring-2 focus:ring-emerald-500/50 shadow-none transition-all truncate`}
           />
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-gray-400 truncate">
             Criado por {card.expand?.created_by?.name || 'Sistema'}{' '}
             {card.created
               ? `em ${format(new Date(card.created), "d 'de' MMM, yyyy 'às' HH:mm", {
@@ -602,8 +604,8 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-6">
-          <div className="space-y-1.5">
+        <div className="flex flex-wrap gap-6 min-w-0">
+          <div className="space-y-1.5 min-w-0">
             <h4 className="text-xs font-semibold text-gray-400 uppercase">Membros</h4>
             <div className="flex flex-wrap gap-1.5 items-center">
               {members.length > 0 ? (
@@ -613,16 +615,15 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                   return (
                     <Tooltip key={cm.id}>
                       <TooltipTrigger asChild>
-                        <Avatar className="w-8 h-8 border border-white/10 shadow-sm cursor-help">
+                        <Avatar className="w-8 h-8 border border-white/10 shadow-sm cursor-help shrink-0">
                           <AvatarImage src={m.avatar ? pb.files.getURL(m, m.avatar) : undefined} />
                           <AvatarFallback className="text-xs font-medium">
-                            {' '}
                             {m.name?.[0]?.toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{m.name}</p>
+                        <p className="truncate max-w-xs">{m.name}</p>
                       </TooltipContent>
                     </Tooltip>
                   )
@@ -634,7 +635,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
           </div>
 
           {labels.length > 0 && (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <h4 className="text-xs font-semibold text-gray-400 uppercase">Etiquetas</h4>
               <div className="flex flex-wrap gap-2">
                 {labels.map(
@@ -642,10 +643,11 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
                     cl.expand?.label_id && (
                       <div
                         key={cl.id}
-                        className="px-3 py-1.5 rounded-md text-xs font-medium text-white flex items-center shadow-sm h-8"
+                        className="px-3 py-1.5 rounded-md text-xs font-medium text-white flex items-center shadow-sm h-8 max-w-[200px] truncate"
                         style={{ backgroundColor: cl.expand.label_id.color }}
+                        title={cl.expand.label_id.name}
                       >
-                        {cl.expand.label_id.name}
+                        <span className="truncate">{cl.expand.label_id.name}</span>
                       </div>
                     ),
                 )}
@@ -701,7 +703,7 @@ export function CardDetail({ card, board, columns = [], onChange, onClose }: any
         </div>
       </div>
 
-      <div className="w-full md:w-[280px] shrink-0 bg-white/5 p-4 pt-12 md:p-6 md:pt-14 space-y-6 border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto backdrop-blur-md">
+      <div className="w-full md:w-[280px] shrink-0 bg-white/5 p-4 pt-12 md:p-6 md:pt-14 space-y-6 border-t md:border-t-0 md:border-l border-white/10 md:overflow-y-auto overflow-x-hidden backdrop-blur-md">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-2">
           <Button
             variant={card.completed ? 'outline' : 'default'}
