@@ -1167,6 +1167,7 @@ function Column({
   const [newCardTitle, setNewCardTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const cardInputRef = useRef<HTMLInputElement>(null)
 
   // Apply the column's persisted sort preference. Memoized so it produces a
   // stable reference per (cards, direction) pair and never mutates the prop.
@@ -1244,7 +1245,28 @@ function Column({
           </div>
         )}
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Botão de adicionar novo card no topo da coluna */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsAdding(true)
+              setTimeout(() => {
+                cardInputRef.current?.focus()
+              }, 50)
+            }}
+            className={cn(
+              'h-7 w-7 rounded-md border border-white/10 bg-white/10 backdrop-blur transition-colors text-gray-300 hover:text-white',
+              'hover:bg-white/20',
+            )}
+            title="Adicionar cartão nesta coluna"
+            aria-label="Adicionar cartão nesta coluna"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+
           {/* Controle de ordenação por data — glassmorphism / Dark Elegance */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1376,6 +1398,7 @@ function Column({
         {isAdding ? (
           <div className="bg-white/[0.08] backdrop-blur-md p-2 rounded-lg border border-white/[0.03] mt-1 shadow-sm">
             <Input
+              ref={cardInputRef}
               autoFocus
               value={newCardTitle}
               onChange={(e) => setNewCardTitle(e.target.value)}
