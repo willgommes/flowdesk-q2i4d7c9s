@@ -24,6 +24,10 @@ export async function getBriefingCards(userId: string, role: string) {
   const next24hCards: any[] = []
 
   cards.forEach((card) => {
+    const isDone =
+      card.completed || card.expand?.column_id?.name?.trim()?.toUpperCase() === 'CONCLUÍDO'
+    if (isDone) return
+
     const dueDate = parseISO(card.due_date)
     if (isBefore(dueDate, now)) {
       overdue.push(card)

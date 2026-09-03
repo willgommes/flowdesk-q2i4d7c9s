@@ -8,6 +8,7 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart'
 import { PieChart, Pie, Cell } from 'recharts'
+import { isCardCompleted } from '@/services/dashboard'
 
 export function AnalyticsDistributionWidget({
   cards,
@@ -20,9 +21,9 @@ export function AnalyticsDistributionWidget({
 }) {
   const chartData = useMemo(() => {
     if (!cards || !priorityCards) return []
-    const completed = cards.filter((c) => c.completed).length
-    const priority = priorityCards.filter((c) => !c.completed).length
-    const pendingNormal = cards.filter((c) => !c.completed).length - priority
+    const completed = cards.filter((c) => isCardCompleted(c)).length
+    const priority = priorityCards.filter((c) => !isCardCompleted(c)).length
+    const pendingNormal = cards.filter((c) => !isCardCompleted(c)).length - priority
 
     return [
       { name: 'Concluídas', value: completed, fill: 'var(--color-completed)' },

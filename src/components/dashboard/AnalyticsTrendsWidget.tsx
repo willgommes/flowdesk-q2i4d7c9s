@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { format, subDays, startOfDay } from 'date-fns'
+import { isCardCompleted } from '@/services/dashboard'
 
 export function AnalyticsTrendsWidget({ cards, loading }: { cards: any[]; loading: boolean }) {
   const chartData = useMemo(() => {
@@ -17,7 +18,7 @@ export function AnalyticsTrendsWidget({ cards, loading }: { cards: any[]; loadin
     })
 
     cards.forEach((c) => {
-      if (c.completed && c.updated) {
+      if (isCardCompleted(c) && c.updated) {
         const ud = new Date(c.updated)
         const dayMatch = days.find((d) => d.date.getTime() === startOfDay(ud).getTime())
         if (dayMatch) {

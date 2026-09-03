@@ -2,10 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CheckCircle2, GripVertical } from 'lucide-react'
+import { isCardCompleted } from '@/services/dashboard'
 
 export function ProgressWidget({ cards, loading }: { cards: any[]; loading: boolean }) {
   const totalCards = cards.length
-  const completedCards = cards.filter((c) => c.completed).length
+  const completedCards = cards.filter((c) => isCardCompleted(c)).length
   const progressPercentage = totalCards === 0 ? 0 : Math.round((completedCards / totalCards) * 100)
 
   return (

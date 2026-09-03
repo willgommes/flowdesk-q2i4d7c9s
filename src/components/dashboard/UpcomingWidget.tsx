@@ -5,10 +5,11 @@ import { CalendarIcon, Clock, GripVertical } from 'lucide-react'
 import { format, isPast, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { isCardCompleted } from '@/services/dashboard'
 
 export function UpcomingWidget({ cards, loading }: { cards: any[]; loading: boolean }) {
   const upcomingTasks = cards
-    .filter((c) => c.due_date && !c.completed && !c.is_recurring)
+    .filter((c) => c.due_date && !isCardCompleted(c) && !c.is_recurring)
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .filter((c) => {
       const due = new Date(c.due_date)

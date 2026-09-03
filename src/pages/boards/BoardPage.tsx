@@ -849,7 +849,12 @@ export default function BoardPage() {
                       const oldColId = card.column_id
 
                       // Move card to new column
+                      const targetColObj = columns.find((c) => c.id === colId)
+                      const isTargetDone = targetColObj?.name?.trim()?.toUpperCase() === 'CONCLUÍDO'
+                      const newCompleted = isTargetDone ? true : false
+
                       card.column_id = colId
+                      card.completed = newCompleted
 
                       // Filter cards for the target column
                       let colCards = currentCards
@@ -876,13 +881,21 @@ export default function BoardPage() {
                         prev.map((c) => {
                           const updated = colCards.find((cc) => cc.id === c.id)
                           return updated
-                            ? { ...c, column_id: updated.column_id, sort_order: updated.sort_order }
+                            ? {
+                                ...c,
+                                column_id: updated.column_id,
+                                completed: updated.completed,
+                                sort_order: updated.sort_order,
+                              }
                             : c
                         }),
                       )
 
                       if (oldColId !== colId) {
-                        await pb.collection('cards').update(cardId, { column_id: colId })
+                        await pb.collection('cards').update(cardId, {
+                          column_id: colId,
+                          completed: newCompleted,
+                        })
                         await pb.collection('activity_logs').create({
                           card_id: cardId,
                           user_id: user?.id,

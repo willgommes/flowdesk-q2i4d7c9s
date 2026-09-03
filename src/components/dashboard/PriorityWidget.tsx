@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircleIcon, CheckCircle2, GripVertical, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getDashboardData } from '@/services/dashboard'
+import { getDashboardData, isCardCompleted } from '@/services/dashboard'
 import pb from '@/lib/pocketbase/client'
 
 export function PriorityWidget({
@@ -50,7 +50,7 @@ export function PriorityWidget({
   useRealtime('card_labels', reloadData)
   useRealtime('cards', reloadData)
 
-  const priorityTasks = priorityCards.filter((c) => !c.completed).slice(0, 5)
+  const priorityTasks = priorityCards.filter((c) => !isCardCompleted(c)).slice(0, 5)
 
   return (
     <Card className="flex flex-col h-full group/widget">

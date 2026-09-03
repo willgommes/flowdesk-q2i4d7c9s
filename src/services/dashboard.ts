@@ -1,5 +1,12 @@
 import pb from '@/lib/pocketbase/client'
 
+export function isCardCompleted(card: any): boolean {
+  if (!card) return false
+  if (card.completed) return true
+  const colName = card.expand?.column_id?.name?.trim()?.toUpperCase()
+  return colName === 'CONCLUÍDO'
+}
+
 export const getDashboardData = async (boardIds: string[], memberId?: string) => {
   if (!boardIds || boardIds.length === 0) return { cards: [], priorityCards: [] }
 
@@ -25,7 +32,7 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
 
     const chunkCards = await pb.collection('cards').getFullList({
       filter: `archived = false && (${boardsFilter})`,
-      expand: 'board_id,board_id.client_id',
+      expand: 'board_id,board_id.client_id,column_id',
     })
 
     cards.push(...chunkCards.filter((c) => !c.is_recurring))
@@ -53,7 +60,7 @@ export const getDashboardData = async (boardIds: string[], memberId?: string) =>
     const labelsIds = priorityLabels.map((l) => `label_id='${l.id}'`).join('||')
     const cardLabels = await pb.collection('card_labels').getFullList({
       filter: `(${labelsIds})`,
-      expand: 'card_id,card_id.board_id,card_id.board_id.client_id,label_id',
+      expand: 'card_id,card_id.board_id,card_id.board_id.client_id,card_id.column_id,label_id',
     })
 
     const pCardsRaw = cardLabels

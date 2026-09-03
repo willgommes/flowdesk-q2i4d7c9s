@@ -2,9 +2,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircleIcon } from 'lucide-react'
 import { isPast, format } from 'date-fns'
 
+import { isCardCompleted } from '@/services/dashboard'
+
 export function OverdueAlert({ cards }: { cards: any[] }) {
   const overdueTasks = cards.filter(
-    (c) => c.due_date && !c.completed && !c.archived && isPast(new Date(c.due_date)),
+    (c) => c.due_date && !isCardCompleted(c) && !c.archived && isPast(new Date(c.due_date)),
   )
 
   if (overdueTasks.length === 0) return null

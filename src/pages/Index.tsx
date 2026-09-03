@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { AppHeader } from '@/components/AppHeader'
 import { getBoards } from '@/services/boards'
 import { getRecentActivities } from '@/services/activity_logs'
-import { getDashboardData } from '@/services/dashboard'
+import { getDashboardData, isCardCompleted } from '@/services/dashboard'
 import { getUsers } from '@/services/users'
 import { useRealtime } from '@/hooks/use-realtime'
 import {
@@ -185,8 +185,10 @@ export default function Index() {
         const board = escapeCSV(c.expand?.board_id?.name)
         const column = escapeCSV(c.expand?.column_id?.name)
         const dueDate = c.due_date ? escapeCSV(format(new Date(c.due_date), 'dd/MM/yyyy')) : '""'
-        const completed = c.completed ? '"Sim"' : '"Não"'
-        const priority = cardsData.priorityCards.find((pc) => pc.id === c.id)
+        const completed = isCardCompleted(c) ? '"Sim"' : '"Não"'
+        const priority = cardsData.priorityCards.find(
+          (pc) => pc.id === c.id && !isCardCompleted(pc),
+        )
           ? '"Alta"'
           : '"Normal"'
         csvRows.push(`${title},${board},${column},${dueDate},${completed},${priority}`)
@@ -404,7 +406,7 @@ export default function Index() {
                 Concluídas
               </p>
               <p className="text-3xl font-bold text-green-800">
-                {cardsData.cards.filter((c) => c.completed).length}
+                {cardsData.cards.filter((c) => isCardCompleted(c)).length}
               </p>
             </div>
             <div className="p-4 border rounded-lg border-amber-200 bg-amber-50">
@@ -412,7 +414,7 @@ export default function Index() {
                 Pendentes
               </p>
               <p className="text-3xl font-bold text-amber-800">
-                {cardsData.cards.filter((c) => !c.completed).length}
+                {cardsData.cards.filter((c) => !isCardCompleted(c)).length}
               </p>
             </div>
           </div>
