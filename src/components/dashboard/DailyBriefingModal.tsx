@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
+
 import { getBriefingCards } from '@/services/briefing'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
@@ -259,8 +259,8 @@ export function DailyBriefingModal() {
         if (!val) setOpen(false)
       }}
     >
-      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] flex flex-col overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-foreground p-6 shadow-2xl sm:rounded-[2rem]">
-        <DialogHeader className="mb-2 text-left shrink-0">
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] flex flex-col p-6 overflow-hidden bg-[#0b0f17]/95 backdrop-blur-xl border border-white/10 text-foreground shadow-2xl sm:rounded-[2rem]">
+        <DialogHeader className="mb-2 text-left shrink-0 select-none">
           <DialogTitle className="text-2xl font-bold tracking-tight">
             Bom dia! Seu Resumo Diário
           </DialogTitle>
@@ -269,7 +269,7 @@ export function DailyBriefingModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[55vh] overflow-x-hidden pr-4 -mr-4 flex-1">
+        <div className="flex-1 min-h-0 max-h-[calc(90vh-12rem)] sm:max-h-[65vh] overflow-y-auto overflow-x-hidden pr-2 -mr-2">
           <div className="space-y-6 pb-2 pt-2">
             <Section
               title="Vencidas / Atrasadas"
@@ -293,10 +293,10 @@ export function DailyBriefingModal() {
               sectionKey="next24hCards"
             />
           </div>
-        </ScrollArea>
+        </div>
 
         <div
-          className="mt-4 pt-5 border-t border-white/10 flex justify-end animate-fade-in-up fill-mode-both"
+          className="mt-4 pt-4 border-t border-white/10 flex justify-end shrink-0 animate-fade-in-up fill-mode-both"
           style={{ animationDelay: '300ms' }}
         >
           <Button
