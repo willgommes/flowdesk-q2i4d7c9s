@@ -8,8 +8,10 @@ import {
   AlertCircle,
   Shield,
   Search,
+  KeyRound,
 } from 'lucide-react'
 import { UserPermissionsModal } from '@/components/UserPermissionsModal'
+import { ResetPasswordModal } from '@/components/ResetPasswordModal'
 import { Switch } from '@/components/ui/switch'
 import { isToday, parseISO } from 'date-fns'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -88,6 +90,7 @@ export default function Users() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [permissionsUserId, setPermissionsUserId] = useState<string | null>(null)
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
   const form = useForm<InviteFormValues>({
@@ -361,6 +364,14 @@ export default function Users() {
         />
       )}
 
+      {resetPasswordUserId && (
+        <ResetPasswordModal
+          user={users.find((u) => u.id === resetPasswordUserId) || null}
+          open={!!resetPasswordUserId}
+          onOpenChange={(open) => !open && setResetPasswordUserId(null)}
+        />
+      )}
+
       <div className="p-8 max-w-6xl mx-auto w-full animate-fade-in">
         <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-100">Membros da Equipe</h1>
@@ -480,6 +491,15 @@ export default function Users() {
                           >
                             <Shield className="w-4 h-4 mr-2" /> Gerenciar Permissões
                           </DropdownMenuItem>
+
+                          {isAdmin && (
+                            <DropdownMenuItem
+                              onClick={() => setResetPasswordUserId(u.id)}
+                              className="cursor-pointer"
+                            >
+                              <KeyRound className="w-4 h-4 mr-2" /> Redefinir Senha
+                            </DropdownMenuItem>
+                          )}
 
                           <DropdownMenuSeparator />
 
