@@ -1,5 +1,20 @@
 onRecordAfterCreateSuccess((e) => {
   const attachment = e.record
+
+  // Ignorar automação quando o anexo for criado pelo usuário neo@artistica.online
+  const userId = attachment.get('user_id')
+  if (userId) {
+    try {
+      const user = $app.findRecordById('users', userId)
+      const email = (user.getString('email') || user.get('email') || '').toLowerCase().trim()
+      if (email === 'neo@artistica.online') {
+        return e.next()
+      }
+    } catch (userErr) {
+      $app.logger().error('Failed to lookup attachment creator user', 'error', userErr.message)
+    }
+  }
+
   const cardId = attachment.get('card_id')
   if (!cardId) return e.next()
 
